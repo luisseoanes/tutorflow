@@ -1,5 +1,5 @@
-# CI de TutorFlow (FABRICA.md §5.2). Todos los jobs de este archivo son bloqueantes: no hay continue-on-error.
-# Llega despues (no se crea vacio): evals-llm (T-10, no bloqueante).
+# CI de TutorFlow (FABRICA.md §5.2). Los jobs bloqueantes no usan continue-on-error.
+# Unica excepcion: evals-llm (T-10), NO bloqueante, solo por workflow_dispatch y solo si existe el secreto LLM_API_KEY.
 name: ci
 
 on:
@@ -7,6 +7,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      combinacion:
+        description: "Combinacion de evals [eval] (gasta cuota del proveedor): a = flash-lite + full-context, b = flash-lite + bm25, c = 3.8-flash + full-context"
+        type: choice
+        options: ["a", "b", "c"]
+        default: "a"
 
 permissions:
   contents: read
@@ -181,3 +188,43 @@ jobs:
       - name: Apagar compose (siempre)
         if: always()
         run: docker compose -p tutorflow-smoke -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml down -v --remove-orphans
+
+  # NO bloqueante (FABRICA.md §5.2): llama al LLM real. Solo por ejecucion manual y se omite limpiamente sin el secreto LLM_API_KEY.
+  evals-llm:
+    name: evals-llm
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    continue-on-error: true
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      COMBINACION: ${{ inputs.combinacion }}
+    steps:
+      - name: Comprobar el secreto LLM_API_KEY
+        id: llave
+        run: |
+          if [ -n "$LLM_API_KEY" ]; then
+            echo "disponible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "disponible=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No existe el secreto LLM_API_KEY: evals-llm se omite (no es un fallo)."
+          fi
+      - uses: actions/checkout@v4.2.2
+        if: steps.llave.outputs.disponible == 'true'
+      - uses: actions/setup-dotnet@v4.3.1
+        if: steps.llave.outputs.disponible == 'true'
+        with:
+          global-json-file: global.json
+      - name: Bateria [eval] con el LLM real (combinacion elegida)
+        if: steps.llave.outputs.disponible == 'true'
+        env:
+          EVAL_CI: "1"
+          EVAL_RUNNER: host
+        run: bash evals/correr-eval.sh "$COMBINACION" --pausa-ms 6000
+      - name: Publicar el crudo (sin llave ni cabeceras)
+        if: always() && steps.llave.outputs.disponible == 'true'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: evals-llm-${{ inputs.combinacion }}
+          path: evals/runs/eval-*.json
+          if-no-files-found: ignore
