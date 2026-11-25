@@ -1,6 +1,6 @@
 # evals/
 
-Conjunto etiquetado de TutorFlow (SPEC §7.6). Contiene solo datos: el runner `[ret]`/`[eval]` llega en T-07 y T-10.
+Conjunto etiquetado de TutorFlow (SPEC §7.6). Datos y runners: el runner `[ret]` (T-07a) está en `evals/TutorFlow.Evals/`; el runner `[eval]` llega en T-10.
 
 ## `dataset.jsonl`
 
@@ -46,3 +46,23 @@ Reglas de interpretación (para los runners):
 ## `runs/` y `RESULTADOS.md`
 
 Aún no existen. `RESULTADOS.md` solo se escribe con ejecuciones reales; los archivos crudos van en `evals/runs/<fecha>-<sha>.json`.
+
+## Runner `[ret]` (determinista, sin LLM ni red)
+
+```bash
+dotnet run --project evals/TutorFlow.Evals -- ret                       # tabla + métricas; exit 1 si algo falla
+dotnet run --project evals/TutorFlow.Evals -- ret --json                # además escribe evals/runs/ret-<fecha>-<sha>.json
+dotnet run --project evals/TutorFlow.Evals -- ret --json-out <ruta>     # JSON en una ruta concreta (CI)
+# En la fábrica (SDK en Docker): docker compose -f scripts/sdk/compose.yml run --rm sdk dotnet run --project evals/TutorFlow.Evals -- ret
+```
+
+Carga el corpus real (`q10/material/reglamento`, cuarentena `bienestar_y_becas.md#Anexo` por defecto). Los criterios `[ret]` se leen de `escenarios/`; se evalúan los casos del dataset con algún criterio `[ret]` y expectativas de recuperación.
+
+**Regla (SPEC §7.6 y criterios `[ret]`: "en el top 4 de la estrategia por defecto").** Los criterios y los umbrales se evalúan sobre la **estrategia por defecto**, que es la que resuelve `RETRIEVAL_STRATEGY` (variable de entorno; si está vacía, `IaServiceCollectionExtensions.DefaultStrategy` de IA, hoy `full-context`, provisional hasta T-10; el runner referencia esa constante, no la duplica).
+
+- `full-context` como defecto: exige presencia de `chunks_relevantes` y ausencia de `chunks_prohibidos` (`*` final = prefijo). Recall@4 y MRR **no aplican** (SPEC §7.6).
+- `bm25` como defecto: todos los `chunks_relevantes` en el top 4 y ningún prohibido, más los umbrales Recall@4 ≥ 0.95 y MRR ≥ 0.85. Un caso es acierto de Recall@4 si **todos** sus relevantes están en el top 4; el rango del MRR es el del primer relevante (0 si ninguno).
+- Las demás estrategias disponibles se evalúan y se **reportan siempre** (tabla, métricas y top-4 real de los casos que no cumplen; también en el JSON) como "experimento, no bloqueante": insumo de T-09/T-10.
+- Código de salida 1 solo si falla un criterio `[ret]` o un umbral aplicable sobre la estrategia por defecto, o falta un caso. Los umbrales y casos no se relajan.
+
+**Advertencia:** si T-10 elige `bm25` como estrategia por defecto, hoy no cumple (Recall@4 = 0.8333, MRR = 0.7500; fallan `q04`/ACAD-07.a y `RAG-12-a`/RAG-12.a). Se puede comprobar con `RETRIEVAL_STRATEGY=bm25`.

@@ -75,8 +75,12 @@
         "ADV-07.a", "ADV-07.b", "ADV-08.a", "ADV-14.a", "ADV-15.b", "ADV-15.c"
       ]
     },
-    "T-07": {
-      "descripcion": "Arnes: contrato, mutantes, smoke y runner [ret]. RES-02 mas los [ret] y [cont] (por regla).",
+    "T-07a": {
+      "descripcion": "Arnes: runner [ret] determinista, job retrieval e infraestructura de mutantes (INT-010). Todos los [ret], por regla.",
+      "criterios": []
+    },
+    "T-07b": {
+      "descripcion": "Arnes: pruebas de contrato RES-02, smoke en contenedor y exigencia completa de mutantes (INT-010). RES-02 mas los [cont] (por regla).",
       "criterios": ["RES-02.a", "RES-02.b", "RES-02.c"]
     },
     "T-08": {
@@ -96,8 +100,8 @@
   },
   "reglas": [
     { "si_nivel": "dom", "tarea": "T-02", "nota": "T-02 = los [dom] de ACAD y AUTH-22.a (FABRICA §6); T-01 los suyos explicitos." },
-    { "si_nivel": "ret", "tarea": "T-07", "nota": "Criterios [ret] -> la tarea de Arnes que ejecuta el runner determinista (brief T-04)." },
-    { "si_nivel": "cont", "tarea": "T-07", "nota": "Criterios [cont] -> smoke (T-07)." },
+    { "si_nivel": "ret", "tarea": "T-07a", "nota": "Criterios [ret] -> T-07a, que crea el runner determinista (INT-010; brief T-04)." },
+    { "si_nivel": "cont", "tarea": "T-07b", "nota": "Criterios [cont] -> smoke (T-07b, INT-010)." },
     { "si_nivel": "eval", "tarea": "T-10", "nota": "Criterios [eval] -> evals reales (T-10)." },
     { "si_nivel": ["app", "api"], "tarea": "T-08", "nota": "Regla de cierre de FABRICA §6: todo [app]/[api] no listado ni de IA ni de Arnes -> T-08." }
   ],
@@ -117,8 +121,8 @@
     { "criterio": "RAG-13.b", "tarea": "T-06", "motivo": "Abstencion posterior (T-06)." },
     { "criterio": "ACAD-07.b", "tarea": "T-06", "motivo": "Citas del flujo con LLM guionizado (T-06)." },
     { "criterio": "RES-05.a/b/d, RES-06.a/b, RES-07.a/b/c", "tarea": "T-06", "motivo": "Proveedores, reintentos, salida invalida y tokens/costo son el alcance de T-06 (FABRICA §6 W2)." },
-    { "criterio": "RES-02.a/b/c", "tarea": "T-07", "motivo": "La ficha Arnes lo asigna; T-07 es la tarea de pruebas de contrato." },
-    { "criterio": "[ret] y [cont] (regla)", "tarea": "T-07", "motivo": "Indicado en el brief de T-04: [ret] -> T-07, [cont] -> T-07 (T-07 crea el runner [ret] y el smoke)." },
+    { "criterio": "RES-02.a/b/c", "tarea": "T-07b", "motivo": "La ficha Arnes lo asigna; T-07b es la tarea de pruebas de contrato (INT-010)." },
+    { "criterio": "[ret] y [cont] (regla)", "tarea": "T-07a/T-07b", "motivo": "Brief de T-04 y INT-010: [ret] -> T-07a (runner), [cont] -> T-07b (smoke)." },
     { "criterio": "[eval] (regla)", "tarea": "T-10", "motivo": "Indicado en el brief de T-04." },
     { "criterio": "T-02 = [dom] de ACAD y AUTH-22.a", "tarea": "T-02", "motivo": "Texto de FABRICA §6 en la regla de cierre; se aplica como regla por nivel dom (ACAD-05.b y RES-12.b explicitos en T-01)." }
   ]

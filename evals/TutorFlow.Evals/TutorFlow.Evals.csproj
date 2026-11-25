@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Runner de evals de TutorFlow. No pertenece a TutorFlow.sln (es de Core); se ejecuta con dotnet run (ver evals/README.md). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>TutorFlow.Evals</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TutorFlow.Application\TutorFlow.Application.csproj" />
+    <!-- Solo para leer IaServiceCollectionExtensions.DefaultStrategy (unica fuente de la estrategia por defecto). -->
+    <ProjectReference Include="..\..\src\TutorFlow.Infrastructure\TutorFlow.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

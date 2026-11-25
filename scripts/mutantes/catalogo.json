@@ -1,0 +1,240 @@
+{
+  "version": 1,
+  "fuente": "FABRICA.md 5.3 (catalogo M1-M16); tarea que introduce el codigo segun brief T-07a / FABRICA 6.",
+  "mutantes": [
+    {
+      "id": "M1",
+      "descripcion": "AwayFromZero -> ToEven",
+      "tarea": "T-02",
+      "criterios": [
+        "ACAD-02.a",
+        "ACAD-05.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Domain/Academico/Redondeo.cs",
+          "buscar": "MidpointRounding.AwayFromZero)",
+          "reemplazar": "MidpointRounding.ToEven)",
+          "todas": true
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "descripcion": "decimal -> double en la definitiva",
+      "tarea": "T-02",
+      "criterios": [
+        "ACAD-02.a",
+        "ACAD-03.a",
+        "ACAD-04.a",
+        "ACAD-05.b"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Domain/Academico/Redondeo.cs",
+          "buscar": "public static decimal Definitiva(decimal bruta) => Math.Round(bruta, 1, MidpointRounding.AwayFromZero);",
+          "reemplazar": "public static decimal Definitiva(decimal bruta) => (decimal)Math.Round((double)bruta, 1, MidpointRounding.AwayFromZero);"
+        }
+      ],
+      "nota": "Rango ACAD-02.a..ACAD-04.a de FABRICA 5.3: ACAD-02.a, ACAD-03.a y ACAD-04.a."
+    },
+    {
+      "id": "M3",
+      "descripcion": "Umbral de inasistencia 15 -> 20",
+      "tarea": "T-02",
+      "criterios": [
+        "ACAD-08.a",
+        "ACAD-09.a",
+        "AUTH-20.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Domain/Academico/Inasistencia.cs",
+          "buscar": "> 15L * clasesProgramadas.Value",
+          "reemplazar": "> 20L * clasesProgramadas.Value"
+        }
+      ],
+      "nota": "AUTH-20.a lo introduce T-05d; hasta entonces el filtro solo ejecuta ACAD-08.a y ACAD-09.a."
+    },
+    {
+      "id": "M4",
+      "descripcion": ">  -> >= en el umbral de inasistencia",
+      "tarea": "T-02",
+      "criterios": [
+        "ACAD-10.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Domain/Academico/Inasistencia.cs",
+          "buscar": "* 100 > 15L",
+          "reemplazar": "* 100 >= 15L"
+        }
+      ]
+    },
+    {
+      "id": "M5",
+      "descripcion": "Habilitacion 2.0 -> 1.5",
+      "tarea": "T-02",
+      "criterios": [
+        "ACAD-15.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Domain/Academico/AsignaturaPeriodo.cs",
+          "buscar": "NotaMinimaHabilitacion = 2.0m",
+          "reemplazar": "NotaMinimaHabilitacion = 1.5m"
+        }
+      ]
+    },
+    {
+      "id": "M6",
+      "descripcion": "Las asignaturas sin definitiva cuentan como 0 en el promedio",
+      "tarea": "T-02",
+      "criterios": [
+        "ACAD-14.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Domain/Academico/ResumenAcademico.cs",
+          "buscar": "            if (a.DefinitivaEfectiva is { } d)\n            {",
+          "reemplazar": "            var d = a.DefinitivaEfectiva ?? 0m;\n            if (true)\n            {"
+        }
+      ]
+    },
+    {
+      "id": "M7",
+      "descripcion": "Authorize devuelve siempre Permitido",
+      "tarea": "T-02",
+      "criterios": [
+        "AUTH-22.a",
+        "ADV-10.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Domain/Authorization/AuthorizationPolicy.cs",
+          "buscar": "        ArgumentNullException.ThrowIfNull(recurso);\n\n        return recurso.Tipo switch",
+          "reemplazar": "        ArgumentNullException.ThrowIfNull(recurso);\n        return DecisionAutorizacion.Permitir();\n\n        return recurso.Tipo switch"
+        }
+      ],
+      "nota": "Deja codigo inalcanzable (CS0162): la corrida usa -p:TreatWarningsAsErrors=false. ADV-10.a es de T-08 (E2E)."
+    },
+    {
+      "id": "M8",
+      "descripcion": "L2a desactivada",
+      "tarea": "T-05c",
+      "criterios": [
+        "AUTH-03.c"
+      ],
+      "parches": [],
+      "nota": "Parche por definir cuando se integre T-05c (guardia L2a). Mientras la tarea no este integrada es PENDIENTE; si lo esta y no hay parche, FALLA (catalogo desactualizado)."
+    },
+    {
+      "id": "M9",
+      "descripcion": "La cuarentena del Anexo desactivada",
+      "tarea": "T-03",
+      "criterios": [
+        "RAG-14.a",
+        "ADV-07.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Retrieval/ChunkSegmenter.cs",
+          "buscar": ".Select(c => q.Contains(c.ChunkId) ? c with { Untrusted = true } : c)",
+          "reemplazar": ".Select(c => c)"
+        }
+      ],
+      "nota": "ADV-07.a lo introduce T-06; hasta entonces solo se ejecuta RAG-14.a."
+    },
+    {
+      "id": "M10",
+      "descripcion": "La validacion de citas desactivada",
+      "tarea": "T-06",
+      "criterios": [
+        "RAG-13.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Llm/GeneradorRespuesta.cs",
+          "buscar": "            if (recuperados.TryGetValue(id, out var f))\n            {\n                citas.Add(new CitaDocumental(f.Documento, f.Seccion));\n            }",
+          "reemplazar": "            var partes = id.Split('#', 2);\n            citas.Add(new CitaDocumental(partes[0], partes.Length > 1 ? partes[1] : string.Empty));"
+        }
+      ],
+      "nota": "Acepta todo chunkId citado por el LLM aunque no haya sido recuperado."
+    },
+    {
+      "id": "M11",
+      "descripcion": "Comparacion de rol que ignora mayusculas",
+      "tarea": "T-05b",
+      "criterios": [
+        "AUTH-10.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Identity/ValidadorIdentidad.cs",
+          "buscar": "        var esEstudiante = string.Equals(rol, RolEstudiante, StringComparison.Ordinal);\n        var esCoordinador = string.Equals(rol, RolCoordinador, StringComparison.Ordinal);",
+          "reemplazar": "        var esEstudiante = string.Equals(rol, RolEstudiante, StringComparison.OrdinalIgnoreCase);\n        var esCoordinador = string.Equals(rol, RolCoordinador, StringComparison.OrdinalIgnoreCase);"
+        }
+      ],
+      "nota": "La lista blanca de rol acepta cualquier combinacion de mayusculas."
+    },
+    {
+      "id": "M12",
+      "descripcion": "El coordinador sin verificacion de programa en L4",
+      "tarea": "T-08",
+      "criterios": [
+        "AUTH-17.b",
+        "AUTH-18.a"
+      ],
+      "parches": [],
+      "nota": "Parche por definir al integrar T-08 (el despachador L4 llega en T-05d; la prueba E2E en T-08)."
+    },
+    {
+      "id": "M13",
+      "descripcion": "El roster se cuenta en estudiantesConsultados",
+      "tarea": "T-05e",
+      "criterios": [
+        "AUTH-24.b"
+      ],
+      "parches": [],
+      "nota": "Parche por definir al integrar T-05e."
+    },
+    {
+      "id": "M14",
+      "descripcion": "La abstencion posterior desactivada (responde sin citas)",
+      "tarea": "T-06",
+      "criterios": [
+        "RAG-09.a"
+      ],
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Llm/GeneradorRespuesta.cs",
+          "buscar": "if (finales.Count == 0)",
+          "reemplazar": "if (false)"
+        }
+      ],
+      "nota": "Deja codigo inalcanzable: la corrida usa -p:TreatWarningsAsErrors=false."
+    },
+    {
+      "id": "M15",
+      "descripcion": "L2b desactivada",
+      "tarea": "T-05c",
+      "criterios": [
+        "AUTH-06.b",
+        "AUTH-18.c",
+        "ADV-01.c"
+      ],
+      "parches": [],
+      "nota": "Parche por definir al integrar T-05c."
+    },
+    {
+      "id": "M16",
+      "descripcion": "R2 invertida (un sujeto generico SD basta para marcar)",
+      "tarea": "T-05c",
+      "criterios": [
+        "AUTH-25.a"
+      ],
+      "parches": [],
+      "nota": "Parche por definir al integrar T-05c."
+    }
+  ]
+}
