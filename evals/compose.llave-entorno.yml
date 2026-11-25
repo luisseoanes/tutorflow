@@ -1,0 +1,8 @@
+# Solo para CI (job evals-llm): la llave llega del ENTORNO del proceso (secreto de GitHub Actions), no de un archivo .env.
+# Local no se usa: ahi la llave llega por el env_file del compose base. Gemini por su endpoint compatible con OpenAI (INT-012/INT-013).
+services:
+  tutorflow:
+    environment:
+      LLM_API_KEY: ${LLM_API_KEY:?LLM_API_KEY no esta definida en el entorno}
+      LLM_PROVIDER: openai-compatible
+      LLM_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai

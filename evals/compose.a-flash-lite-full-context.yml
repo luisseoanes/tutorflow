@@ -1,0 +1,15 @@
+# Combinacion (a) de evals: gemini-3.5-flash-lite + full-context (defecto). T-10, INT-013.
+# Sobrescribe SOLO variables NO secretas del servicio. La llave llega por el env_file del compose base (INT-014);
+# aqui no se nombra ni se toca su valor. Si el .env no esta junto al compose (p. ej. en un worktree),
+# TUTORFLOW_ENV_FILE puede apuntar a su RUTA (solo la ruta; docker lo lee, ningun agente).
+# Precios USD por millon de tokens: https://ai.google.dev/gemini-api/docs/pricing (consultada 2026-11-25).
+services:
+  tutorflow:
+    env_file:
+      - path: ${TUTORFLOW_ENV_FILE:-./.env}
+        required: false
+    environment:
+      LLM_MODEL: "gemini-3.5-flash-lite"
+      RETRIEVAL_STRATEGY: "full-context"
+      LLM_PRICE_INPUT_PER_MTOK: "0.30"
+      LLM_PRICE_OUTPUT_PER_MTOK: "2.50"
