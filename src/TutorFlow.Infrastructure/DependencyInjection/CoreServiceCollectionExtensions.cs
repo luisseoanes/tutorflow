@@ -56,6 +56,7 @@ public static class CoreServiceCollectionExtensions
         services.AddSingleton<IRosterProvider>(sp => sp.GetRequiredService<RosterProvider>());
         services.AddSingleton<IHostedService>(sp => new RosterRefreshService(sp.GetRequiredService<RosterProvider>(), ttl));
 
+        services.AddTutorFlowTools();
         services.AddSingleton<IValidadorIdentidad, ValidadorIdentidad>();
         services.AddSingleton<IPreguntarAsistente, PreguntarAsistente>();
         return services;
