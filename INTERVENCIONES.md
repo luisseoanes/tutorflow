@@ -256,7 +256,16 @@
 - **Efecto sobre T-10.2 (mismas respuestas, sin corrida nueva):** con los umbrales vigentes, (a) full-context sigue sin cumplir (precisión de citas 0.887) y (b) bm25 sigue sin cumplir (cobertura de citas 0.889). Ninguna combinación cumple todavía.
 - **Decisión sobre bm25 (candidato):** "con bm25 decidi documentemos tal cual". (b) bm25 queda documentado como **no cumple** (cobertura de citas 0.889 < 0.90) sin relajar ese umbral ni gastar la 3.ª corrida (FABRICA §7.1). En consecuencia, no hay estrategia ganadora según SPEC §7.3: el producto mantiene el valor por defecto actual de `RETRIEVAL_STRATEGY` (`full-context`, `IaServiceCollectionExtensions.DefaultStrategy`) y REPORTE.md lo declara como criterio `[eval]` RAG-10.b no satisfecho.
 - **Aplicación:** el candidato aplicó personalmente el parche de SPEC (v1.6) porque los permisos impiden al orquestador editar `SPEC.md`.
-- **Acción del orquestador:** actualiza SPEC y despacha a Arnés el cambio de constantes del runner (`evals/TutorFlow.Evals/EvalRunner.cs`) y la reevaluación offline de los crudos de T-10.2 con los umbrales vigentes, sin llamadas al LLM.
+- **Acción del orquestador (INT-022):** actualiza SPEC y despacha a Arnés el cambio de constantes del runner (`evals/TutorFlow.Evals/EvalRunner.cs`) y la reevaluación offline de los crudos de T-10.2 con los umbrales vigentes, sin llamadas al LLM.
+
+### INT-023 · 2026-11-25 · F2 · Decisión (cifras calculadas y experimento con Anthropic Sonnet)
+- **Instrucción del candidato:** "reforcemos que use la cifra calculada, expliquemos realmente porque no cumple el umbral [...] y adicionalmente usa la clave de anthropic sonnet prueba todo ya la puse en el .env, Corridas bajas, asi podemos decir que no pasa umbrales por la calidad del modelo".
+- **Decisiones:**
+  1. **T-06.4 (IA):** reforzar el prompt para que la respuesta reproduzca textualmente las cifras devueltas por las herramientas y no use datos del estudiante en preguntas solo normativas. Sin cálculo en IA ni inserción determinista de cifras (eso sería un cambio de SPEC).
+  2. **Experimento de modelo:** tras T-06.4, una batería por combinación sobre el **mismo commit**: Gemini flash-lite (3.ª y última corrida permitida por FABRICA §7.1) y Anthropic Sonnet (`claude-sonnet-5-5`, combinación nueva), con la llave que el candidato configuró en `.env` (el orquestador no lee `.env`). Pocas corridas para limitar el costo.
+  3. **Explicación del incumplimiento** en `evals/RESULTADOS.md` y REPORTE.md, por caso.
+- **Condición de honestidad (orquestador):** la conclusión "no pasa umbrales por la calidad del modelo" solo se escribirá si los datos la sostienen, es decir, si con el mismo código y dataset Sonnet cumple, o mejora claramente, donde flash-lite no. Si Sonnet tampoco cumple, se reportará así y se analizará la causa (prompt, dataset o evaluador).
+- **Acción del orquestador:** despacha T-06.4 (IA); el experimento lo ejecutará Arnés después de integrar T-06.4.
 
 ---
 
