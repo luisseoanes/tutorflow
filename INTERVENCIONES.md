@@ -95,6 +95,19 @@
 - **Impacto:** `SPEC.md` (v1.2), `AGENTS.md`, `FABRICA.md`, `escenarios/authorization.md`, `escenarios/adversarial.md`, `logs/README.md` e `INTERVENCIONES.md`.
 - **Evidencia:** el commit de esta corrección; transcripción de la sesión (pendiente de exportar por Arnés en F2).
 
+### INT-006 · 2026-11-25 · F1 · Decisión + Dirección
+- **Qué pasó:** la verificación de las condiciones de entrada de F2 detectó que faltaban `CLAUDE.md`, `.claude/settings.json` y `.claude/agents/{core,ia,arnes}.md`, y que D-09 seguía pendiente. F2 no se inició.
+- **Qué hizo el humano:**
+  1. **Ratificó expresamente D-09:** las transcripciones de agentes se conservan en `/logs`, sanitizadas y con su manifiesto de integridad; la auditoría funcional de TutorFlow se emite a `stdout` en formato estructurado; ambos registros son independientes; los logs de Claude Code no sustituyen la auditoría funcional; un fallo al escribir la copia opcional de auditoría no impide atender una solicitud válida.
+  2. **Autorizó al agente a preparar** los cinco archivos de configuración (que según FABRICA §2 son de autoría humana), validarlos y publicarlos en un único commit, **sin** iniciar F2, implementar ni lanzar agentes.
+- **Acción del agente:**
+  - Creó `CLAUDE.md`, los tres perfiles (modelo `claude-sonnet-5-5`, herramientas `Read, Write, Edit, Bash`, rutas exactas de FABRICA §4.1) y `.claude/settings.json`.
+  - Validó `settings.json` contra el esquema de SchemaStore (0 errores) y con `claude doctor` 2.1.318; corrigió las reglas `Write(path)`, que doctor señaló como ineficaces.
+  - En los perfiles, aclaró, sin cambiar FABRICA, que las evals son de Arnés y que IA aporta calidad RAG con pruebas `[app]` en sus rutas.
+- **Por qué:** desbloquear las condiciones de entrada de F2 sin ampliar el alcance.
+- **Impacto:** `CLAUDE.md`, `.claude/**` y este archivo. No se modificaron SPEC, AGENTS, FABRICA ni los escenarios.
+- **Evidencia:** el commit de configuración; transcripción de la sesión (la exportará Arnés en F2).
+
 ---
 
 ## Notas de transparencia
@@ -107,6 +120,7 @@ El enunciado asigna al candidato la autoría de SPEC, AGENTS, FABRICA, escenario
 - Las decisiones D-01..D-12 de `SPEC.md` §13, el modelo por defecto del producto (`claude-haiku-5-5`) y la exclusión del PDF del repositorio público las **propuso el agente** y quedan **pendientes de ratificación humana**.
 - *Actualización (INT-004):* con la aprobación de los hallazgos quedan ratificadas D-01, D-02, D-03, D-05, D-10 y las nuevas D-13 y D-14 en su redacción v1.1. Siguen pendientes de ratificación explícita D-04, D-06, D-07, D-08 (exclusión del PDF), D-11, D-12 y el modelo por defecto del producto. Los documentos corregidos en INT-004 también los redactó Claude Code; el commit lleva el trailer.
 - *Actualización (INT-005):* quedan ratificadas D-04, D-06, D-07, D-08, D-11 y D-12, y Haiku como modelo candidato inicial (sujeto a evals). Única decisión de SPEC §13 sin ratificación explícita: **D-09** (`/logs` = transcripciones de agentes; auditoría de la app en `stdout` + archivo opcional).
+- *Actualización (INT-006):* D-09 ratificado expresamente por el candidato. Todas las decisiones D-01..D-14 de SPEC §13 están ratificadas.
 
 ### NT-02 · Valores de referencia
 Los valores golden (SPEC §5.8, `escenarios/academic-data.md`) los calculó el agente en F0 con un *script* desechable de Python con aritmética `Decimal` *half-up* sobre `datos.json`. El *script* no forma parte del repositorio (era una herramienta de análisis, no código del producto). Los mismos valores deben reproducirse de forma independiente con las pruebas de F2.
@@ -117,8 +131,8 @@ Los valores golden (SPEC §5.8, `escenarios/academic-data.md`) los calculó el a
 
 - [x] Revisión crítica de SPEC, AGENTS, FABRICA y escenarios (INT-004).
 - [x] Ratificar D-04, D-06, D-07, D-08, D-11, D-12 y Haiku como modelo candidato (INT-005).
-- [ ] Ratificar D-09.
-- [ ] Crear `.claude/agents/{core,ia,arnes}.md` y `.claude/settings.json` (configuración de agentes, de autoría humana; FABRICA §2).
+- [x] Ratificar D-09 (INT-006).
+- [x] Crear `CLAUDE.md`, `.claude/agents/{core,ia,arnes}.md` y `.claude/settings.json` (redactados por el agente con autorización expresa, INT-006). Pendiente: revisión del candidato antes de autorizar T-01.
 - [x] Crear el repositorio público en GitHub (`tutorflow`) y activar *secret scanning* y *push protection* (2026-11-25, INT-003).
 - [x] Primer commit (lo firmó el agente con el trailer, NT-01).
 - [ ] Exportar y sanitizar la transcripción de las sesiones F0/F1 a `/logs` (lo hará Arnés en F2 a solicitud del orquestador; FABRICA §11).
