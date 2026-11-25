@@ -250,7 +250,7 @@ jobs:
       - uses: actions/setup-node@v4.4.0
         if: steps.cambios.outputs.aplica == 'true'
         with:
-          node-version: "22.12.0"
+          node-version: "22"
       - name: npm ci
         if: steps.cambios.outputs.aplica == 'true'
         working-directory: web
@@ -294,12 +294,12 @@ jobs:
           else
             echo "aplica=true" >> "$GITHUB_OUTPUT"
           fi
-      - name: Levantar API sin llave + servicio web (perfil web, override de T-07b)
+      - name: Levantar API sin llave + servicio web (sin perfil, override de T-07b)
         if: steps.cambios.outputs.aplica == 'true'
-        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml --profile web up -d --build --wait
+        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml up -d --build --wait
       - name: Playwright [e2e] (imagen oficial fijada, scripts/web/compose.yml)
         if: steps.cambios.outputs.aplica == 'true'
-        run: docker compose -f scripts/web/compose.yml run --rm playwright sh -c "npm ci && npx playwright test"
+        run: docker compose -f scripts/web/compose.yml run --rm playwright sh /work/scripts/web/e2e.sh
       - name: Publicar informe y trazas de Playwright
         if: always() && steps.cambios.outputs.aplica == 'true'
         uses: actions/upload-artifact@v4.6.2
@@ -311,10 +311,10 @@ jobs:
           if-no-files-found: ignore
       - name: Logs de los servicios si fallo
         if: failure() && steps.cambios.outputs.aplica == 'true'
-        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml --profile web logs --no-color --tail 80
+        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml logs --no-color --tail 80
       - name: Apagar compose (siempre)
         if: always() && steps.cambios.outputs.aplica == 'true'
-        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml --profile web down -v --remove-orphans
+        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml down -v --remove-orphans
 
   # NO bloqueante (FABRICA.md §5.2): llama al LLM real. Solo por ejecucion manual y se omite limpiamente sin el secreto LLM_API_KEY.
   evals-llm:

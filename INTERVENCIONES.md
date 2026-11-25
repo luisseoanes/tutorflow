@@ -267,6 +267,13 @@
 - **Condición de honestidad (orquestador):** la conclusión "no pasa umbrales por la calidad del modelo" solo se escribirá si los datos la sostienen, es decir, si con el mismo código y dataset Sonnet cumple, o mejora claramente, donde flash-lite no. Si Sonnet tampoco cumple, se reportará así y se analizará la causa (prompt, dataset o evaluador).
 - **Acción del orquestador:** despacha T-06.4 (IA); el experimento lo ejecutará Arnés después de integrar T-06.4.
 
+### INT-024 · 2026-11-25 · F2 · Aceptación humana de la interfaz web (G9)
+- **Instrucción del candidato:** "acepto la web".
+- **Objeto aceptado:** `agent/core/t13-web` en el commit `9b8f426` (T-13 + T-13.1, T-13.2 y T-13.3), con el informe QA `qa/revisiones/T-13-r4.md` **APPROVED** sobre ese commit exacto (45/45 corridas e2e, sin hallazgos críticos, altos ni medios abiertos).
+- **Hallazgos bajos que quedan abiertos y se aceptan:** QA-T13-r1-01 (foco dentro de la región `aria-live` con `role="alert"`), QA-T13-r1-02 (`Failed to load resource` de Chromium por 4xx/5xx esperados, no atribuible a la app), QA-T13-r1-03 (el indicador vuelve a "Disponible" en el siguiente sondeo) y QA-T13-r2-01 (bucle en lugar de `it.each` en `guards.test.ts`).
+- **Historia de la revisión:** r1 APPROVED → el orquestador detectó en trazabilidad que WEB-14.b no tenía marcador → T-13.1 → r2 APPROVED → el orquestador reprodujo un e2e intermitente de contraste (5/6) que r2 no vio → T-13.2 → r3 APPROVED con un medio (teclado intermitente) → T-13.3 → r4 APPROVED.
+- **Acción del orquestador:** integra T-13, las ramas de QA r1–r4 y T-12.1/T-12.2 con `merge --no-ff` y verifica la CI.
+
 ---
 
 ## Notas de transparencia
