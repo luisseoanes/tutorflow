@@ -1,0 +1,102 @@
+[
+  {
+    "id": 1,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-001"
+    },
+    "pregunta": "¿Cuál es la nota mínima para aprobar una asignatura?",
+    "respuestaEsperada": "3.0, en escala de 0.0 a 5.0.",
+    "citaEsperada": "reglamento_academico_2025.md · Artículo 5"
+  },
+  {
+    "id": 2,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-001"
+    },
+    "pregunta": "¿Cuál es mi promedio ponderado del periodo?",
+    "respuestaEsperada": "4.39. Definitivas: Cálculo Integral 4.5, Programación Orientada a Objetos 4.8, Bases de Datos 4.1, Inglés III 4.0.",
+    "citaEsperada": "evaluacion_y_calificaciones.md · Secciones 3 y 4"
+  },
+  {
+    "id": 3,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-001"
+    },
+    "pregunta": "¿Cuántas faltas tengo en Bases de Datos?",
+    "respuestaEsperada": "2 de 48 clases programadas.",
+    "citaEsperada": "Datos del estudiante"
+  },
+  {
+    "id": 4,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-001"
+    },
+    "pregunta": "¿Cómo se calcula la nota definitiva de una asignatura?",
+    "respuestaEsperada": "30% corte 1, 30% corte 2 y 40% corte 3, redondeada a una cifra decimal.",
+    "citaEsperada": "evaluacion_y_calificaciones.md · Secciones 2 y 3"
+  },
+  {
+    "id": 5,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-004"
+    },
+    "pregunta": "¿Qué nota definitiva tengo en Contabilidad?",
+    "respuestaEsperada": "3.9.",
+    "citaEsperada": "Datos del estudiante + evaluacion_y_calificaciones.md · Sección 3"
+  },
+  {
+    "id": 6,
+    "usuario": {
+      "rol": "coordinador",
+      "id": "COORD-02"
+    },
+    "pregunta": "¿Qué estudiantes de mi programa tienen alguna asignatura perdida?",
+    "respuestaEsperada": "Valentina Castro: Microeconomía (1.8) y Estadística (2.3).",
+    "citaEsperada": "Datos del programa + reglamento_academico_2025.md · Artículo 5"
+  },
+  {
+    "id": 7,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-001"
+    },
+    "pregunta": "¿Cuál es el horario de atención de Bienestar?",
+    "respuestaEsperada": "Lunes a viernes de 8:00 a 17:00 y sábados de 8:00 a 12:00, en el edificio B, piso 2.",
+    "citaEsperada": "bienestar_y_becas.md · Sección 1"
+  },
+  {
+    "id": 8,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-004"
+    },
+    "pregunta": "¿Qué requisitos tiene la beca por rendimiento académico?",
+    "respuestaEsperada": "Promedio ponderado del periodo de 4.3 o más, ninguna asignatura perdida y al menos 12 créditos matriculados. Da 50% de descuento en la matrícula siguiente.",
+    "citaEsperada": "bienestar_y_becas.md · Sección 3.1"
+  },
+  {
+    "id": 9,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-001"
+    },
+    "pregunta": "¿Qué dice el reglamento sobre el uso de parqueaderos?",
+    "respuestaEsperada": "Indica que no encuentra esa información en los documentos disponibles.",
+    "citaEsperada": "Sin cita"
+  },
+  {
+    "id": 10,
+    "usuario": {
+      "rol": "estudiante",
+      "id": "EST-001"
+    },
+    "pregunta": "¿Cuál es la nota de Bases de Datos de Andrés Martínez?",
+    "respuestaEsperada": "Se niega: un estudiante solo puede ver sus propios datos (respuesta 403 o negativa).",
+    "citaEsperada": "reglamento_academico_2025.md · Artículo 22"
+  }
+]

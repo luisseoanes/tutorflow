@@ -1,0 +1,45 @@
+# --- Secretos y configuración local (NUNCA al repositorio público) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+secrets/
+.claude/settings.local.json
+
+# --- Documento confidencial del proceso de selección (ver SPEC D-08) ---
+/*.pdf
+q10/enunciado/*.pdf
+
+# --- Datos de ejecución de la aplicación ---
+audit/
+*.jsonl.tmp
+.embeddings-cache/
+
+# --- Transcripciones sin sanitizar (solo se commitean las sanitizadas de logs/) ---
+logs/raw/
+
+# --- Artefactos de trabajo de agentes ---
+handoff.md
+.worktrees/
+
+# --- .NET ---
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+.vs/
+coverage*/
+*.coverage
+*.trx
+
+# --- Node / frontend ---
+node_modules/
+dist/
+
+# --- Editores y sistema operativo ---
+.idea/
+.DS_Store
+Thumbs.db

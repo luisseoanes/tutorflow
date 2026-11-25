@@ -1,0 +1,29 @@
+# Configuración de gitleaks para TutorFlow (repositorio público).
+# La CI de la fase 2 (DevOps Agent) la ejecuta sobre el diff y la historia completa.
+# Localmente: gitleaks git --config .gitleaks.toml   ·   gitleaks dir --config .gitleaks.toml .
+
+title = "TutorFlow"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "tutorflow-llm-api-key"
+description = "Asignación de LLM_API_KEY con un valor (debe venir solo del entorno)"
+regex = '''(?i)LLM_API_KEY\s*[:=]\s*["']?([A-Za-z0-9_\-\.]{12,})'''
+secretGroup = 1
+keywords = ["llm_api_key"]
+
+[[rules]]
+id = "tutorflow-email-en-logs"
+description = "Correo electrónico en transcripciones de agentes (deben sanitizarse antes de publicar)"
+regex = '''[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}'''
+path = '''^logs/'''
+keywords = ["@"]
+  [rules.allowlist]
+  description = "Correos ficticios del material y direcciones genéricas sin dato personal"
+  regexes = ['''@horizonte\.edu\.co''', '''noreply@anthropic\.com''', '''@example\.(com|org)''']
+
+[allowlist]
+description = "Marcadores conocidos sin secreto"
+regexes = ['''test-key-NOT-REAL''']
