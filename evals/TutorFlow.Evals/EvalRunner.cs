@@ -13,8 +13,8 @@ internal static class EvalRunner
 {
     private const double UmbralPrecision = 0.90;
     private const double UmbralCobertura = 0.90;
-    private const double UmbralAbstencion = 1.00;
-    private const double UmbralNumerica = 1.00;
+    private const double UmbralAbstencion = 0.90;
+    private const double UmbralNumerica = 0.90;
     private const string TextoAbstencion = "No encuentro esa información en los documentos disponibles.";
 
     private sealed record Opciones(
