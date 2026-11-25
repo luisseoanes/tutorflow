@@ -279,6 +279,36 @@ Totales: (a) 36 de 42 criterios ejecutables CUMPLE (6 NO CUMPLE: ACAD-07.c, ACAD
 - Si el humano decide que q04 es un falso negativo del evaluador y que `Artículo 7` en ACAD-08-c/AUTH-16-c es legítimo, (a) quedaría con RAG-06-a, RAG-07-a y AUTH-02-b-nombre como únicos fallos y (b) con RAG-06-a, RAG-10-c, ACAD-12-c y ACAD-15-c; seguiría sin cumplir. Esto es una hipótesis, no un resultado.
 - Con 47 casos, una sola corrida por combinación y variabilidad del LLM (en (b) 3 casos pasaron a fallar y 6 a pasar entre corridas), las diferencias pequeñas no son concluyentes. Quedan como máximo una corrida más por combinación (FABRICA §7.1).
 
+## T-10.3 · Umbrales INT-022 (reevaluación offline de T-10.2)
+
+> **No es una corrida nueva.** No hubo llamadas al LLM, ni a la API, ni se usaron llaves: se recalcularon con `reevaluar` los **mismos crudos de T-10.2** (`eval-20261125T181100Z-cd31f51-gemini-3.5-flash-lite-full-context.json` y `eval-20261125T181712Z-cd31f51-gemini-3.5-flash-lite-bm25.json`, sin modificar). Rama `agent/arnes/t103-umbrales`.
+>
+> **Relajación posterior a ver los resultados.** INT-022 (SPEC v1.6 §7.6) bajó los umbrales de exactitud de abstención y de exactitud numérica de `= 1.00` a `>= 0.90` **después** de conocer los resultados de T-10 y T-10.2. Los cambios de umbral no se justifican por una mejora del producto: el producto no cambió. Precisión y cobertura de citas (>= 0.90), Recall@4 y MRR no cambian. El runner compara con `>=` (`UmbralAbstencion` y `UmbralNumerica` en `EvalRunner.cs`).
+
+| Métrica | Umbral original | Umbral vigente | (a) flash-lite + full-context | (b) flash-lite + bm25 |
+|---|---|---|---|---|
+| Precisión de citas | >= 0.90 | >= 0.90 | 0.8871 **NO CUMPLE** | 0.9107 CUMPLE |
+| Cobertura de citas | >= 0.90 | >= 0.90 | 0.9630 CUMPLE | 0.8889 **NO CUMPLE** |
+| Exactitud de abstención | = 1.00 | >= 0.90 | 1.0000 CUMPLE (11 casos) | 1.0000 CUMPLE (11 casos) |
+| Exactitud numérica | = 1.00 | >= 0.90 | 0.8500 **NO CUMPLE** (20 casos) | 0.9500 CUMPLE (antes NO CUMPLE) (20 casos) |
+| Recall@4 / MRR | >= 0.95 / >= 0.85 | sin cambio | no aplica | 1.0000 / 0.9167 CUMPLE (con la advertencia de sobreajuste) |
+| `cumpleUmbrales` | | | **NO** | **NO** |
+
+Salida literal de `reevaluar` (47 casos; 41 OK y 6 con falla en ambas, igual que en T-10.2):
+
+```
+(a) Precision 0.8871 (NO CUMPLE) · Cobertura 0.9630 (CUMPLE) · Abstencion 1.0000 (umbral >= 0.90: CUMPLE) · Numerica 0.8500 (umbral >= 0.90: NO CUMPLE)
+(b) Precision 0.9107 (CUMPLE) · Cobertura 0.8889 (NO CUMPLE) · Abstencion 1.0000 (umbral >= 0.90: CUMPLE) · Numerica 0.9500 (umbral >= 0.90: CUMPLE)
+```
+
+### Recomendación SPEC §7.3 (T-10.3)
+
+**Sigue sin recomendarse una estrategia ni un modelo por defecto: ninguna combinación cumple todos los umbrales con los nuevos valores.**
+
+- (a) incumple precisión de citas (0.8871) y exactitud numérica (0.85).
+- (b) incumple solo cobertura de citas (0.8889, a 0.0111 del umbral). La exactitud numérica (0.95) pasa por el cambio de umbral, no por una mejora.
+- (b) es la más cercana a cumplir, pero con 47 casos, una corrida y variabilidad del LLM (ver T-10.2) eso no basta para recomendarla. Queda abierta una corrida más por combinación (FABRICA §7.1) si el humano la autoriza.
+
 ## Cómo repetir
 
 ```bash
