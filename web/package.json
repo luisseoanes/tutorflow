@@ -18,6 +18,9 @@
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
+  "overrides": {
+    "playwright-core": "1.64.1"
+  },
   "devDependencies": {
     "@axe-core/playwright": "4.14.1",
     "@playwright/test": "1.64.1",

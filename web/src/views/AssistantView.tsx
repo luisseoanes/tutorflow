@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useReducer, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, ReactElement } from "react";
 import { Button } from "../components/Button";
 import { Select, TextArea, TextField } from "../components/Fields";
@@ -29,6 +29,7 @@ function esTactil(): boolean {
 }
 
 export function AssistantView(): ReactElement {
+  const identityTitleId = useId();
   const { status, markDown } = useApiStatus();
   const [state, dispatch] = useReducer(conversationReducer, initialConversation);
   const [rol, setRol] = useState<Rol>("estudiante");
@@ -141,8 +142,10 @@ export function AssistantView(): ReactElement {
 
       <main className="app-main">
         <form className="stack" onSubmit={onSubmit} noValidate>
-          <fieldset className="identity">
-            <legend className="identity__legend">Identidad declarada — no es una autenticación</legend>
+          <div className="identity" role="group" aria-labelledby={identityTitleId}>
+            <h2 className="identity__legend" id={identityTitleId}>
+              Identidad declarada — no es una autenticación
+            </h2>
             <p className="identity__note">
               <Icon name="lock" size="sm" />
               <span>La API solo comprueba que el rol y el identificador sean consistentes entre sí.</span>
@@ -169,7 +172,7 @@ export function AssistantView(): ReactElement {
                 spellCheck={false}
               />
             </div>
-          </fieldset>
+          </div>
 
           <Card tone="default" className="composer">
             <TextArea
