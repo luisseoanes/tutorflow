@@ -152,8 +152,14 @@
       "criterios": [
         "RAG-13.a"
       ],
-      "parches": [],
-      "nota": "Parche por definir al integrar T-06."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Llm/GeneradorRespuesta.cs",
+          "buscar": "            if (recuperados.TryGetValue(id, out var f))\n            {\n                citas.Add(new CitaDocumental(f.Documento, f.Seccion));\n            }",
+          "reemplazar": "            var partes = id.Split('#', 2);\n            citas.Add(new CitaDocumental(partes[0], partes.Length > 1 ? partes[1] : string.Empty));"
+        }
+      ],
+      "nota": "Acepta todo chunkId citado por el LLM aunque no haya sido recuperado."
     },
     {
       "id": "M11",
@@ -193,8 +199,14 @@
       "criterios": [
         "RAG-09.a"
       ],
-      "parches": [],
-      "nota": "Parche por definir al integrar T-06."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Llm/GeneradorRespuesta.cs",
+          "buscar": "if (finales.Count == 0)",
+          "reemplazar": "if (false)"
+        }
+      ],
+      "nota": "Deja codigo inalcanzable: la corrida usa -p:TreatWarningsAsErrors=false."
     },
     {
       "id": "M15",
