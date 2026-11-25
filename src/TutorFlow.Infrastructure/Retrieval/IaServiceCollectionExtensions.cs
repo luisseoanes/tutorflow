@@ -26,17 +26,17 @@ public static class IaServiceCollectionExtensions
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var estrategia = Valor(configuration["RETRIEVAL_STRATEGY"], DefaultStrategy).ToLowerInvariant();
 
+        // vector/hybrid solo con EMBEDDING_* completo: se valida al registrar (arranque), antes de cualquier peticion.
+        var embedding = EmbeddingOptions.FromConfig(k => configuration[k]);
+        RetrieverFactory.Validar(estrategia, embedding);
+
         services.AddSingleton<IChunkCatalog>(_ => new KnowledgeCatalog(path, cuarentena));
+        services.AddSingleton(embedding);
         services.AddSingleton<IRetriever>(sp =>
         {
             var catalog = sp.GetRequiredService<IChunkCatalog>();
-            return estrategia switch
-            {
-                "full-context" => new FullContextRetriever(catalog),
-                "bm25" => new Bm25Retriever(catalog),
-                _ => throw new InvalidOperationException(
-                    $"RETRIEVAL_STRATEGY '{estrategia}' no disponible en ejecucion (full-context | bm25)."),
-            };
+            var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("TutorFlow.Embeddings");
+            return RetrieverFactory.Crear(estrategia, catalog, embedding, null, m => Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(logger, "{Mensaje}", m));
         });
         services.AddTutorFlowLlm(configuration);
         return services;
