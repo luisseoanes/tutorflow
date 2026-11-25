@@ -193,7 +193,7 @@ public class IdentidadApiTests
             + "\"estudianteId\":\"EST-002\",\"Usuario\":{\"rol\":\"coordinador\",\"id\":\"COORD-02\"}}";
         var r = await PostAsync(http, json);
 
-        // Pasa L1 y el roster; el resto del flujo esta pendiente (503 explicito). Solo se valido EST-001.
+        // Pasa L1, el roster y L2; sin LLM_API_KEY el flujo termina en 503 antes de leer datos. Solo se valido EST-001.
         await AfirmarProblema(r, HttpStatusCode.ServiceUnavailable);
         Assert.Equal(["GET estudiante EST-001"], f.Fuente.Llamadas);
     }

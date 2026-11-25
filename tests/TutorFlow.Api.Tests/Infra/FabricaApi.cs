@@ -33,6 +33,8 @@ internal sealed class FabricaApi : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // El flujo completo indexa el reglamento real del material (solo lectura); sin llave el LLM real responde 503.
+        builder.UseSetting("KNOWLEDGE_PATH", RutaRepo.Reglamento);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IHostedService>();

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Net.Http.Headers;
+using TutorFlow.Application.Ports;
 using TutorFlow.Application.Preguntar;
 
 namespace TutorFlow.Api.Http;
@@ -51,7 +52,9 @@ public static class PreguntarBodyReader
 
         using (doc)
         {
-            return Evaluar(doc.RootElement, requestId);
+            var lectura = Evaluar(doc.RootElement, requestId);
+            // SPEC 9.2: en un 400 el usuario se audita solo si es legible.
+            return lectura.Comando is null ? lectura with { UsuarioLegible = ExtraerUsuarioLegible(doc.RootElement) } : lectura;
         }
     }
 
@@ -111,6 +114,26 @@ public static class PreguntarBodyReader
         var rol = LeerString(usuario, "rol");
         var id = LeerString(usuario, "id");
         return LecturaCuerpo.Ok(new PreguntarComando(pregunta, rol, id, requestId));
+    }
+
+    /// <summary>
+    /// <c>usuario.rol</c> y <c>usuario.id</c> como strings, solo si no hay ambiguedad (sin propiedades duplicadas en la
+    /// raiz ni en <c>usuario</c>). Solo para la auditoria de un 400: nunca decide permisos.
+    /// </summary>
+    private static UsuarioAuditado? ExtraerUsuarioLegible(JsonElement raiz)
+    {
+        if (raiz.ValueKind != JsonValueKind.Object
+            || TieneDuplicados(raiz)
+            || !raiz.TryGetProperty("usuario", out var usuario)
+            || usuario.ValueKind != JsonValueKind.Object
+            || TieneDuplicados(usuario))
+        {
+            return null;
+        }
+
+        var rol = LeerString(usuario, "rol");
+        var id = LeerString(usuario, "id");
+        return rol is null || id is null ? null : new UsuarioAuditado(rol, id);
     }
 
     private static string? LeerString(JsonElement objeto, string nombre)
@@ -179,7 +202,7 @@ public static class PreguntarBodyReader
 }
 
 /// <summary>Resultado de leer el cuerpo: un comando valido o un 400 con un detalle fijo (sin eco de la entrada).</summary>
-public sealed record LecturaCuerpo(PreguntarComando? Comando, string? Detalle)
+public sealed record LecturaCuerpo(PreguntarComando? Comando, string? Detalle, UsuarioAuditado? UsuarioLegible = null)
 {
     public static LecturaCuerpo Ok(PreguntarComando comando) => new(comando, null);
 

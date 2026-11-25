@@ -1,5 +1,6 @@
 using TutorFlow.Application.Audit;
 using TutorFlow.Application.Errores;
+using TutorFlow.Application.Llm;
 using TutorFlow.Domain.Academico;
 
 namespace TutorFlow.Api.Http;
@@ -55,9 +56,11 @@ public sealed class ErrorHandlingMiddleware
             _logger.LogError("La fuente de datos devolvio un dato invalido.");
             await Problema(context, 503, "Servicio no disponible", "Una dependencia necesaria devolvio datos invalidos. Intenta de nuevo mas tarde.");
         }
-        catch (PendienteDeIntegracionException)
+        catch (LlmNoDisponibleException ex)
         {
-            await Problema(context, 503, "Funcionalidad pendiente de integracion", "El flujo posterior a la validacion de identidad y del roster aun esta pendiente de integracion.");
+            // Solo el codigo HTTP del proveedor (si lo hay): jamas el mensaje, la llave ni el cuerpo del proveedor.
+            _logger.LogWarning("LLM no disponible (estado del proveedor: {EstadoProveedor}).", ex.StatusCode);
+            await Problema(context, 503, "Servicio no disponible", "El modelo de lenguaje no esta disponible. Intenta de nuevo mas tarde.");
         }
         catch (Exception ex)
         {

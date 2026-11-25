@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TutorFlow.Application.Audit;
 using TutorFlow.Application.Identity;
+using TutorFlow.Application.Llm;
 using TutorFlow.Application.Ports;
 using TutorFlow.Application.Preguntar;
 using TutorFlow.Infrastructure.Audit;
@@ -17,11 +18,12 @@ namespace TutorFlow.Infrastructure.DependencyInjection;
 public static class CoreServiceCollectionExtensions
 {
     public const int DefaultRosterTtlSeconds = 300;
+    private const string DefaultEstrategia = "full-context";
     private const string MockApiClientName = "mock-api";
 
     /// <summary>
     /// Registro de los servicios de Core. T-05a: fuente de datos (MOCK_API_BASE_URL) y roster (ROSTER_TTL_SECONDS).
-    /// T-05b: auditoria minima a stdout, L1 y caso de uso Preguntar (hasta el roster).
+    /// T-05b: auditoria a stdout, L1. T-08: caso de uso Preguntar completo (el LLM y la recuperacion los registra AddTutorFlowIa).
     /// </summary>
     public static IServiceCollection AddTutorFlowCore(this IServiceCollection services, IConfiguration configuration)
     {
@@ -70,7 +72,24 @@ public static class CoreServiceCollectionExtensions
 
         services.AddTutorFlowTools();
         services.AddSingleton<IValidadorIdentidad, ValidadorIdentidad>();
-        services.AddScoped<IPreguntarAsistente, PreguntarAsistente>();
+
+        // T-08: flujo completo (SPEC 12.3). Solo se consumen puertos y servicios que registra AddTutorFlowIa (IRetriever,
+        // IGeneradorRespuesta); se resuelven de forma perezosa para que su configuracion no tumbe los 400 ni los 403 de L1/L2.
+        var estrategia = Valor(configuration["RETRIEVAL_STRATEGY"], DefaultEstrategia).ToLowerInvariant();
+        var modelo = Valor(configuration["LLM_MODEL"], LlmOptions.DefaultModel);
+        services.TryAddSingleton(PreguntarOpciones.PorDefecto);
+        services.TryAddSingleton(new InfoFlujoLlm(estrategia, modelo));
+        services.AddScoped<IPreguntarAsistente>(sp => new PreguntarAsistente(
+            sp.GetRequiredService<IValidadorIdentidad>(),
+            sp.GetRequiredService<IRosterProvider>(),
+            () => sp.GetRequiredService<IRetriever>(),
+            () => sp.GetRequiredService<IGeneradorRespuesta>(),
+            sp.GetRequiredService<IToolDispatcher>(),
+            sp.GetRequiredService<PreguntarOpciones>(),
+            sp.GetRequiredService<InfoFlujoLlm>(),
+            sp.GetService<IContextoAuditoria>()));
         return services;
     }
+
+    private static string Valor(string? v, string porDefecto) => string.IsNullOrWhiteSpace(v) ? porDefecto : v.Trim();
 }

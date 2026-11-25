@@ -244,14 +244,15 @@ public class GuardiasApiTests
     }
 
     [Fact]
-    public async Task Una_pregunta_legitima_supera_L2_y_sigue_al_punto_pendiente_de_integracion()
+    public async Task Una_pregunta_legitima_supera_L2_y_llega_al_llm()
     {
         var (f, llm) = Crear();
         using var _ = f;
 
         var r = await PreguntarAsync(f, "estudiante", "EST-001", "¿Cuántas faltas puede tener un estudiante antes de perder una materia?");
 
-        await AfirmarProblema(r, HttpStatusCode.ServiceUnavailable);
-        Assert.Equal(0, llm.Invocaciones);
+        // El espia responde texto no JSON: el generador reintenta una vez y se abstiene (RES-06.a), siempre con 200.
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.True(llm.Invocaciones > 0);
     }
 }
