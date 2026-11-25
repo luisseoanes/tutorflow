@@ -109,7 +109,7 @@ public class HerramientasTests
 
     [Fact]
     [Trait("Criterio", "ADV-11.a")]
-    public async Task Programa_ajeno_y_coordinador_sin_estudianteId_siguen_denegados_sin_leer()
+    public async Task Programa_ajeno_sigue_denegado_sin_leer()
     {
         var (d, f) = Crear();
 
@@ -117,12 +117,30 @@ public class HerramientasTests
             () => d.DespacharAsync(Coord2(), Inv("asignaturas_perdidas_programa", """{"programaId":"ING-SIS"}"""), default));
         Assert.Equal("politica", ajeno.Motivo);
 
-        // El coordinador debe indicar el estudiante (argumento ausente, no de forma invalida: sin cambios).
-        var sinId = await Assert.ThrowsAsync<AccesoDenegadoException>(
-            () => d.DespacharAsync(Coord1(), Inv("obtener_notas"), default));
-        Assert.Equal("herramienta", sinId.Motivo);
+        Assert.Empty(f.Lecturas);
+    }
+
+    // INT-021: el coordinador sin estudianteId es error de forma (argumento ausente), no 403; mensaje fijo y sin lecturas.
+    [Theory]
+    [InlineData("obtener_notas")]
+    [InlineData("obtener_asistencia")]
+    [InlineData("obtener_resumen_academico")]
+    [InlineData("evaluar_beca_rendimiento")]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task El_coordinador_sin_estudianteId_recibe_error_de_forma_sin_leer(string nombre)
+    {
+        var (d, f) = Crear();
+
+        var r = await d.DespacharAsync(Coord1(), Inv(nombre), default);
 
         Assert.Empty(f.Lecturas);
+        Assert.False(r.UsoDatosEstudiante);
+        Assert.Null(r.Objetivo);
+        Assert.Empty(r.Citas);
+        using var doc = JsonDocument.Parse(r.Contenido);
+        Assert.Equal(
+            $"Falta el argumento estudianteId para {nombre}: debes proporcionar el id del estudiante a consultar.",
+            doc.RootElement.GetProperty("error").GetString());
     }
 
     [Fact]
