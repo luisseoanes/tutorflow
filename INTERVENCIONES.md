@@ -77,6 +77,24 @@
   - `.env.example`.
 - **Evidencia:** el commit de esta corrección; transcripción de la sesión (pendiente de exportar).
 
+### INT-005 · 2026-11-25 · F1 · Decisión + Corrección
+- **Qué pasó:** el humano revisó el commit `cc72d5c`.
+- **Qué hizo el humano:**
+  1. **Ratificó:** D-04 (citas de datos «Datos del estudiante» y «Datos del programa»); D-06 (`inasistencias: null` = dato no disponible, sin presumir pérdida); D-07 (nota acumulada = aporte ponderado acumulado + porcentaje evaluado); D-08 (el PDF confidencial permanece fuera del repositorio público); D-11 (coordinadores con N programas); D-12 (límite de 1000 caracteres); y Haiku como **modelo candidato inicial**, sujeto a la evaluación comparativa y al cumplimiento de umbrales.
+  2. **Pidió corregir, solo en documentación:**
+     - (a) Unificar en Arnés la propiedad de las exportaciones de `/logs`; el orquestador solicita y verifica su integridad.
+     - (b) Dividir T-05 en tareas Core más pequeñas, con dependencias y criterios.
+     - (c) Revisar D-03 y fortalecer la detección determinista de solicitudes de datos ajenos, sin que el LLM conceda ni deniegue permisos.
+     - (d) Registrar esto aquí.
+     - (e) Comprobar la coherencia entre SPEC, AGENTS y FABRICA.
+- **Acción del agente:**
+  - (a) FABRICA §4.2 (Arnés), §6 (T-11) y §11 (manifiesto + 4 verificaciones de integridad del orquestador); `logs/README.md`.
+  - (b) T-05 se divide en T-05a (fuente de datos y roster), T-05b (cuerpo, L1 y API), T-05c (L2a, L2b y L5), T-05d (herramientas, despachador y citas) y T-05e (auditoría), con rutas, dependencias y criterios; T-08 recoge la integración y una regla de cierre para los criterios no listados.
+  - (c) SPEC §6.2 divide L2 en L2a (referencias explícitas) y L2b (solicitudes de terceros); la nueva §6.7 define vocabularios cerrados (TD, ST, SD), reglas R1–R6 y corpus positivo y negativo; se actualizan D-03 y §15. AUTH-06 pasa a exigir 403 determinista en un corpus de 9 entradas; nuevo AUTH-25 (corpus negativo y falsos positivos aceptados); AUTH-18.c y ADV-01.c; mutantes M15 y M16. Contrato interno `IToolDispatcher` (SPEC §12.1, AGENTS §4) para que el bucle del LLM no pueda ejecutar herramientas por fuera de L3/L4.
+- **Por qué:** cerrar las ambigüedades restantes antes de F2 y reducir el caso de "200 con negativa" a las formulaciones fuera de los patrones.
+- **Impacto:** `SPEC.md` (v1.2), `AGENTS.md`, `FABRICA.md`, `escenarios/authorization.md`, `escenarios/adversarial.md`, `logs/README.md` e `INTERVENCIONES.md`.
+- **Evidencia:** el commit de esta corrección; transcripción de la sesión (pendiente de exportar por Arnés en F2).
+
 ---
 
 ## Notas de transparencia
@@ -88,6 +106,7 @@ El enunciado asigna al candidato la autoría de SPEC, AGENTS, FABRICA, escenario
 - El humano los revisa antes de autorizar la fase 2; **toda modificación humana posterior se registra aquí** como una nueva entrada.
 - Las decisiones D-01..D-12 de `SPEC.md` §13, el modelo por defecto del producto (`claude-haiku-5-5`) y la exclusión del PDF del repositorio público las **propuso el agente** y quedan **pendientes de ratificación humana**.
 - *Actualización (INT-004):* con la aprobación de los hallazgos quedan ratificadas D-01, D-02, D-03, D-05, D-10 y las nuevas D-13 y D-14 en su redacción v1.1. Siguen pendientes de ratificación explícita D-04, D-06, D-07, D-08 (exclusión del PDF), D-11, D-12 y el modelo por defecto del producto. Los documentos corregidos en INT-004 también los redactó Claude Code; el commit lleva el trailer.
+- *Actualización (INT-005):* quedan ratificadas D-04, D-06, D-07, D-08, D-11 y D-12, y Haiku como modelo candidato inicial (sujeto a evals). Única decisión de SPEC §13 sin ratificación explícita: **D-09** (`/logs` = transcripciones de agentes; auditoría de la app en `stdout` + archivo opcional).
 
 ### NT-02 · Valores de referencia
 Los valores golden (SPEC §5.8, `escenarios/academic-data.md`) los calculó el agente en F0 con un *script* desechable de Python con aritmética `Decimal` *half-up* sobre `datos.json`. El *script* no forma parte del repositorio (era una herramienta de análisis, no código del producto). Los mismos valores deben reproducirse de forma independiente con las pruebas de F2.
@@ -97,9 +116,9 @@ Los valores golden (SPEC §5.8, `escenarios/academic-data.md`) los calculó el a
 ## Pendientes del humano antes de la fase 2
 
 - [x] Revisión crítica de SPEC, AGENTS, FABRICA y escenarios (INT-004).
-- [ ] Ratificar D-04, D-06, D-07, D-11, D-12 y el modelo por defecto del producto.
-- [ ] Ratificar la exclusión del PDF ("Confidencial para el candidato") del repositorio público (D-08).
+- [x] Ratificar D-04, D-06, D-07, D-08, D-11, D-12 y Haiku como modelo candidato (INT-005).
+- [ ] Ratificar D-09.
 - [ ] Crear `.claude/agents/{core,ia,arnes}.md` y `.claude/settings.json` (configuración de agentes, de autoría humana; FABRICA §2).
 - [x] Crear el repositorio público en GitHub (`tutorflow`) y activar *secret scanning* y *push protection* (2026-11-25, INT-003).
 - [x] Primer commit (lo firmó el agente con el trailer, NT-01).
-- [ ] Exportar y sanitizar la transcripción de las sesiones F0/F1 a `/logs`.
+- [ ] Exportar y sanitizar la transcripción de las sesiones F0/F1 a `/logs` (lo hará Arnés en F2 a solicitud del orquestador; FABRICA §11).

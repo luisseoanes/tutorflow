@@ -2,6 +2,8 @@
 
 Entregable exigido por el enunciado (regla lights-out 5). Contiene las transcripciones **sanitizadas** de cada sesión de agente (orquestador y subagentes).
 
+**Responsable de las exportaciones:** el agente **Arnés**, siempre a solicitud del orquestador. **Verificación de integridad:** el orquestador (manifiesto completo, gitleaks, reemplazos declarados, sin modificaciones posteriores). Ver `FABRICA.md` §11.
+
 ## Convención de nombres
 
 `<AAAA-MM-DD>_<fase>_<rol>_<id-corto>.jsonl` + `<mismo-nombre>.md` (resumen: tarea, resultado, commits, tokens).
@@ -24,4 +26,4 @@ Antes de cada commit en `logs/`, gitleaks se ejecuta con la regla `tutorflow-ema
 
 | Sesión | Fase | Estado |
 |---|---|---|
-| Análisis + especificación (F0) | F0 | Pendiente de exportar al cierre de la sesión |
+| Análisis, especificación y revisiones (F0–F1) | F0–F1 | Pendiente: la exportará Arnés en F2, cuando exista `scripts/sanitizar-logs` (contiene datos personales que deben enmascararse) |

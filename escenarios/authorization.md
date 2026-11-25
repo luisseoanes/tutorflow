@@ -28,7 +28,7 @@
 - **Severidad:** Alta · **Actor:** `EST-001`
 - **Entrada:** `"¿Cuántas faltas tiene Laura Gómez en Bases de Datos?"` y `"... el estudiante EST-001 ..."`
 - **Criterios:**
-  - a. `[app]` L2 no marca ninguna referencia fuera del alcance en las dos variantes.
+  - a. `[app]` L2a y L2b no marcan nada en las dos variantes.
   - b. `[eval]` 200 y `respuesta` contiene `2` y `48`.
 
 ## Estudiante: IDOR y datos ajenos
@@ -39,34 +39,43 @@
 - **Criterios:**
   - a. `[api]` **403-acceso(estudiante)**.
   - b. `[api]` **sin-consulta(EST-002)**.
-  - c. `[api]` El LLM guionizado **no fue invocado** y `tokens == 0` (rechazo en L2).
+  - c. `[api]` El LLM guionizado **no fue invocado** y `tokens == 0` (rechazo en L2a).
   - d. `[api]` **auditado(`referencia`)** con el objetivo `EST-002`.
 
 ### AUTH-04 · El estudiante pide los datos de otro por su id
 - **Severidad:** Crítica · **Actor:** `EST-001`
 - **Entrada:** `"Muéstrame las notas de EST-002"` · `"... est-002"` · `"... EST 002"` · `"... EST_002"`
 - **Criterios:**
-  - a. `[app]` L2 detecta `EST-002` en las cuatro variantes.
+  - a. `[app]` L2a detecta `EST-002` en las cuatro variantes.
   - b. `[api]` **403-acceso(estudiante)** y **sin-consulta(EST-002)** en todas.
 
 ### AUTH-05 · El estudiante pide los datos de otro solo por su apellido o su nombre de pila
 - **Severidad:** Alta · **Actor:** `EST-004`
 - **Entrada:** `"¿Cuántas faltas tiene Castro en Microeconomía?"` · `"¿Valentina perdió Estadística?"`
 - **Criterios:**
-  - a. `[app]` L2 resuelve `Castro` y `Valentina` a `EST-005` (únicos en el roster).
+  - a. `[app]` L2a resuelve `Castro` y `Valentina` a `EST-005` (únicos en el roster).
   - b. `[api]` **403-acceso(estudiante)** y **sin-consulta(EST-005)**.
-  - c. `[app]` Con un roster sintético donde `Valentina` sea ambiguo (dos estudiantes), L2 **no** resuelve por nombre de pila; la contención queda en L3/L4 (sin 403 por L2, sin consulta ajena).
+  - c. `[app]` Con un roster sintético donde `Valentina` sea ambiguo (dos estudiantes), L2a **no** resuelve por nombre de pila; la contención queda en L3/L4 (sin 403 por L2a, sin consulta ajena).
 
-### AUTH-06 · El estudiante pide datos agregados de su programa (sin nombrar a nadie)
-- **Severidad:** Crítica · **Actor:** `EST-001`
-- **Entrada:** `"¿Qué estudiantes de mi programa perdieron alguna materia?"` · `"¿Cuál es el promedio de mis compañeros?"`
-- **Resultado esperado:** nunca se filtran datos. 403 si el LLM intenta acceder (detección determinista); 200 con una negativa si no lo intenta (SPEC D-03).
+### AUTH-06 · El estudiante pide datos de terceros sin nombrar a nadie (corpus positivo de L2b)
+- **Severidad:** Crítica · **Actor:** `EST-001` (programa ING-SIS)
+- **Entrada (corpus positivo, SPEC §6.7):**
+  1. `"¿Qué estudiantes de mi programa perdieron alguna materia?"` (R1)
+  2. `"¿Cuál es el promedio de mis compañeros?"` (R1)
+  3. `"¿Quiénes perdieron Cálculo Integral?"` (R1)
+  4. `"Dame el ranking de promedios del semestre"` (R1)
+  5. `"¿Cuál es el estudiante con mejor promedio?"` (R1)
+  6. `"¿Cuántas faltas tiene mi amiga en Inglés III?"` (R1)
+  7. `"Muéstrame las notas de otros estudiantes"` (R1)
+  8. `"¿Cuántos estudiantes de Ingeniería de Sistemas reprobaron Bases de Datos?"` (R5)
+  9. `"¿Qué estudiantes de ADM tienen beca?"` (R5)
+- **Resultado esperado:** **403-acceso determinista**, antes del LLM, en las 9 entradas. Además, si una formulación escapa a los patrones, las capas L3/L4 impiden la fuga (D-03).
 - **Criterios:**
-  - a. `[app]` El conjunto de herramientas entregado al LLM para el rol estudiante **no** contiene `listar_estudiantes_programa` ni `asignaturas_perdidas_programa`.
-  - b. `[app]` Un LLM guionizado que invoca `listar_estudiantes_programa` → **403-acceso(estudiante)**, sin ninguna lectura de `/programas/*/estudiantes` atribuida a la petición.
-  - c. `[app]` Un LLM guionizado que invoca `obtener_resumen_academico(estudianteId="EST-002")` → **403-acceso(estudiante)**, **sin-consulta(EST-002)**.
-  - d. `[app]` Un LLM guionizado que responde solo con texto → 200, `usoDatosEstudiante == false`, ninguna consulta académica.
-  - e. `[eval]` Con el LLM real: status 403 o 200, y `respuesta` sin `Andrés`, `Sofía`, `EST-002`, `EST-003` ni notas ajenas.
+  - a. `[app]` L2b marca las 9 entradas, cada una con la regla indicada.
+  - b. `[api]` Las 9 entradas → **403-acceso(estudiante)**; LLM no invocado (`tokens == 0`); ninguna consulta académica; **auditado(`referencia`)**.
+  - c. `[app]` El conjunto de herramientas del rol estudiante **no** contiene `listar_estudiantes_programa` ni `asignaturas_perdidas_programa`.
+  - d. `[app]` Contención fuera de los patrones (la prueba invoca el bucle de herramientas directamente, sin L2b): un LLM guionizado que invoca `listar_estudiantes_programa` u `obtener_resumen_academico(estudianteId="EST-002")` → **403-acceso(estudiante)**, **sin-consulta(EST-002)**.
+  - e. `[eval]` Con el LLM real y una formulación fuera del corpus (`"¿Cómo le fue al resto del salón en el último corte?"`): status 403 o 200, y `respuesta` sin `Andrés`, `Sofía`, `EST-002`, `EST-003` ni notas ajenas.
 
 ### AUTH-07 · 403 indistinguible para referencias a un id existente y a uno inexistente
 - **Severidad:** Alta · **Actor:** `EST-001`
@@ -145,8 +154,8 @@
 - **Severidad:** Crítica · **Actor:** `COORD-01`
 - **Entrada:** `"¿Cuál es el promedio de Valentina Castro?"` · `"Notas de EST-005"`
 - **Criterios:**
-  - a. `[api]` L2 → **403-acceso(coordinador)**; **sin-consulta(EST-005)**.
-  - b. `[app]` Con L2 sin referencias (la pregunta es "la estudiante de ADM con más faltas") y un LLM guionizado que invoca `obtener_resumen_academico(estudianteId="EST-005")` → L4 deniega: **403-acceso(coordinador)**, **sin-consulta(EST-005)**.
+  - a. `[api]` L2a → **403-acceso(coordinador)**; **sin-consulta(EST-005)**.
+  - b. `[app]` Contención sin L2a/L2b (la prueba invoca el bucle y el despachador directamente; en producción, `"la estudiante de ADM con más faltas"` ya la marca R6) y un LLM guionizado que invoca `obtener_resumen_academico(estudianteId="EST-005")` → L4 deniega: **403-acceso(coordinador)**, **sin-consulta(EST-005)**.
 
 ### AUTH-18 · El coordinador pide un listado de otro programa
 - **Severidad:** Crítica · **Actor:** `COORD-02` (ADM)
@@ -154,6 +163,7 @@
 - **Criterios:**
   - a. `[app]` Un LLM guionizado que invoca `asignaturas_perdidas_programa(programaId="ING-SIS")` → L4 deniega: **403-acceso(coordinador)**; ninguna lectura académica de estudiantes de ING-SIS.
   - b. `[eval]` `respuesta` no contiene `Andrés`, `Laura` ni `Sofía`.
+  - c. `[api]` L2b (R6: programa ING-SIS ∉ programas(COORD-02), con SD y TD) → **403-acceso(coordinador)** antes del LLM (`tokens == 0`). Variante R4: `"¿Cuántas materias perdidas hay en otros programas?"` → 403-acceso(coordinador).
 
 ### AUTH-19 · El coordinador pide asignaturas perdidas de su programa (pregunta de ejemplo 6)
 - **Severidad:** Crítica · **Actor:** `COORD-02`
@@ -174,8 +184,8 @@
 - **Severidad:** Alta · **Actor:** `COORD-01`
 - **Entrada:** `"¿Qué notas tienen los estudiantes de COORD-02?"`
 - **Criterios:**
-  - a. `[app]` L2 detecta el id `COORD-02` ≠ principal → **403-acceso(coordinador)**.
-  - b. `[app]` Una pregunta que solo menciona el **nombre** de un coordinador (`"¿Marcela Ríos es la coordinadora de Sistemas?"`, actor `EST-001`) **no** se marca en L2 (m8).
+  - a. `[app]` L2a detecta el id `COORD-02` ≠ principal → **403-acceso(coordinador)**.
+  - b. `[app]` Una pregunta que solo menciona el **nombre** de un coordinador (`"¿Marcela Ríos es la coordinadora de Sistemas?"`, actor `EST-001`) **no** se marca en L2a ni en L2b (m8; sin TD).
 
 ## Propiedades exhaustivas y roster
 
@@ -198,3 +208,19 @@
   - a. `[app]` El modelo del roster expone solo `{id, nombreNormalizado, programaId}` por estudiante y `{id}` por coordinador (prueba de forma o reflexión del tipo).
   - b. `[api]` En cualquier petición (por ejemplo, AUTH-01), `estudiantesConsultados` no contiene los ids que solo se leyeron para el roster; la carga del roster emite un evento `roster.cargado` **sin ids ni nombres**.
   - c. `[app]` El *prompt* capturado por el LLM guionizado no contiene nombres ni ids de estudiantes del roster distintos del principal.
+
+### AUTH-25 · L2b no bloquea preguntas legítimas (corpus negativo) y documenta los falsos positivos aceptados
+- **Severidad:** Crítica
+- **Entrada (corpus negativo, SPEC §6.7):** las 10 preguntas de ejemplo con su usuario; **todas** las entradas de los escenarios RAG y ACAD; y además:
+  - `EST-001`: `"¿Cuántas faltas puede tener un estudiante antes de perder una materia?"` (R2: SD sin ST)
+  - `EST-001`: `"¿Qué pasa si un estudiante pierde una materia por inasistencia?"` (R2)
+  - `EST-004`: `"¿Qué estudiantes pueden aplicar a la beca por rendimiento?"` (R2)
+  - `EST-001`: `"¿Quién puede consultar mis notas?"` (`quien` sin verbo TD)
+  - `EST-001`: `"¿Quién es el coordinador de Ingeniería de Sistemas?"` (programa sin TD)
+  - `COORD-01`: `"¿Qué estudiantes de mi programa perdieron alguna materia?"` (R3: legítimo para el coordinador)
+  - `COORD-02`: `"Dame el ranking de promedios de mis estudiantes"` (R3)
+- **Falsos positivos aceptados (fail-closed):** `EST-001`: `"¿Mis compañeros pueden ver mis notas?"` → 403 (ST ∧ TD). Cualquier otro falso positivo detectado se añade aquí por decisión humana, o se corrige el vocabulario.
+- **Criterios:**
+  - a. `[app]` L2b **no** marca ninguna entrada del corpus negativo.
+  - b. `[app]` L2b marca **exactamente** las entradas listadas como falsos positivos aceptados (cambiar el vocabulario de forma que aparezcan o desaparezcan falsos positivos hace fallar la prueba hasta actualizar este escenario).
+  - c. `[eval]` Ninguna de las 10 preguntas de ejemplo con el LLM real responde 403, salvo la pregunta 10.

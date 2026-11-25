@@ -96,15 +96,16 @@ Reglas de borde:
 ### 4.2 Fichas
 
 #### Core
-- **Responsabilidades:** el esqueleto (solución, proyectos, puertos, DTOs de salida, métodos de extensión DI vacíos de cada módulo, prueba de arquitectura); el dominio académico (SPEC §5); `PrincipalAcademico` y la política de autorización (§6.1); L1, el roster (§6.6), L2, L4 dentro de las herramientas, L5 y el 403 en sus dos variantes; el cliente de la API simulada; las herramientas (§8); el caso de uso y el flujo (§12.3); la API con la lectura y validación del cuerpo (§3.3); el *middleware* de errores; la auditoría (§9).
+- **Responsabilidades:** el esqueleto (solución, proyectos, puertos, DTOs de salida, métodos de extensión DI vacíos de cada módulo, prueba de arquitectura); el dominio académico (SPEC §5); `PrincipalAcademico` y la política de autorización (§6.1); L1, el roster (§6.6), L2a/L2b (§6.2, §6.7), L5 y el 403 en sus dos variantes; el cliente de la API simulada; las herramientas (§8) y su **despachador** (`IToolDispatcher`: recibe una propuesta `{nombre, argumentos}` y aplica L3 → esquema → L4 → ejecución); el caso de uso y el flujo (§12.3); la API con la lectura y validación del cuerpo (§3.3); el *middleware* de errores; la auditoría (§9).
 - **Herramientas:** Read, Write, Edit, Bash (`dotnet`, `node` para la API simulada local).
 - **Criterios:** todos los `[dom]` y todos los `[app]`/`[api]` que no estén asignados a IA (ficha IA) ni a Arnés (RES-02).
-- **Criterios de aceptación:** criterios asignados en verde con aserciones que corresponden al texto; mutantes M1–M8, M11–M13 detectados; cero `double` en Domain; ningún dato fijo en `src/`.
+- **Criterios de aceptación:** criterios asignados en verde con aserciones que corresponden al texto; mutantes M1–M8, M11–M13, M15 y M16 detectados; cero `double` en Domain; ningún dato fijo en `src/`; los vocabularios de L2b son exactamente los de SPEC §6.7 (o un superconjunto que mantiene AUTH-25 en verde).
+- **Tareas:** T-01, T-02, T-05a–T-05e y T-08 (§6).
 - **Condiciones de fallo:** una herramienta lee antes de autorizar; un permiso derivado del texto o del LLM; `ToEven`; se ignora un `null` en cortes o asistencia; el roster se atribuye a la petición o se envía al LLM.
 - **Handoff / evidencia:** AGENTS §11, con la lista criterio → prueba → aserción.
 
 #### IA
-- **Responsabilidades:** el chunking estructural y la cuarentena por lista (SPEC §6.4, §7.2); el detector de instrucciones **como prueba**; las estrategias `full-context` y `bm25` (ejecución) y `vector`/`hybrid` (experimento, §7.3); los proveedores `anthropic` y `openai-compatible` detrás de `ILlmClient`, con *usage* exacto, reintentos y tope de tokens; el bucle de herramientas (≤ 3 rondas) que **solo propone** invocaciones a las herramientas de Core; la validación de citas y la abstención (§7.5); `tokens` y `costoUsd`.
+- **Responsabilidades:** el chunking estructural y la cuarentena por lista (SPEC §6.4, §7.2); el detector de instrucciones **como prueba**; las estrategias `full-context` y `bm25` (ejecución) y `vector`/`hybrid` (experimento, §7.3); los proveedores `anthropic` y `openai-compatible` detrás de `ILlmClient`, con *usage* exacto, reintentos y tope de tokens; el bucle de herramientas (≤ 3 rondas) que **solo propone** invocaciones y las entrega al `IToolDispatcher` de Core (IA nunca llama a las herramientas ni a la fuente de datos directamente); la validación de citas y la abstención (§7.5); `tokens` y `costoUsd`.
 - **Herramientas:** Read, Write, Edit, Bash (`dotnet`).
 - **Criterios:** RAG-01.b, RAG-09.a, RAG-13..RAG-15, ACAD-07.b, RES-05.a/b/d, RES-06, RES-07, RES-11.b, RES-13.a, ADV-07.a/b, ADV-08.a, ADV-14.a, ADV-15.b/c (todos `[app]` en `tests/TutorFlow.Application.Tests/{Retrieval,Llm}/`). Los criterios `[api]` relacionados son de Core.
 - **Criterios de aceptación:** criterios en verde; mutantes M9, M10 y M14 detectados; los adaptadores de proveedor se prueban con respuestas HTTP grabadas (sin red).
@@ -112,7 +113,7 @@ Reglas de borde:
 - **Handoff / evidencia:** AGENTS §11 + el volcado de los chunks generados (`chunkId`, `seccion`, `untrusted`, `vigente`).
 
 #### Arnés
-- **Responsabilidades:** las pruebas de contrato (RES-02, JSON Schema con `additionalProperties: false`, para 200 y los dos 403); `evals/` (dataset con `criterios`, runner en modo `[ret]` determinista y modo `[eval]` con LLM real, métricas de SPEC §7.6, experimento de estrategias, `RESULTADOS.md` **solo con ejecuciones reales**); `scripts/trazabilidad` (AGENTS §6.4); `scripts/mutantes` (§5.3); Dockerfile, Compose y CI (§5.2); gitleaks; la verificación del trailer; `scripts/sanitizar-logs`; `README.md` (cómo ejecutar, variables y limitación de autenticación de SPEC §6.5).
+- **Responsabilidades:** las pruebas de contrato (RES-02, JSON Schema con `additionalProperties: false`, para 200 y los dos 403); `evals/` (dataset con `criterios`, runner en modo `[ret]` determinista y modo `[eval]` con LLM real, métricas de SPEC §7.6, experimento de estrategias, `RESULTADOS.md` **solo con ejecuciones reales**); `scripts/trazabilidad` (AGENTS §6.4); `scripts/mutantes` (§5.3); Dockerfile, Compose y CI (§5.2); gitleaks; la verificación del trailer; `README.md` (cómo ejecutar, variables y limitación de autenticación de SPEC §6.5); **la exportación y el sanitizado de todas las transcripciones a `/logs`** (`scripts/sanitizar-logs`, que puede ejecutarse con Haiku), siempre **a solicitud del orquestador** (§11).
 - **Herramientas:** Read, Write, Edit, Bash (`dotnet`, `docker`, `docker compose`); acceso a `LLM_API_KEY`/`EMBEDDING_API_KEY` **solo** en el modo `[eval]`.
 - **Criterios:** todos los `[ret]`, `[cont]` y `[eval]`, más RES-02.
 - **Criterios de aceptación:** la CI bloquea de verdad (con evidencia de una ejecución en rojo provocada a propósito: commit sin trailer, secreto de prueba, mutante sobreviviente); `docker compose up` funcional; RESULTADOS con commit, fecha, modelo y estrategia.
@@ -130,7 +131,7 @@ Reglas de borde:
 | G3 | Compilación | El orquestador ejecuta `dotnet build -warnaserror`. |
 | G4 | Pruebas | El orquestador ejecuta `dotnet test` **completo** y, si aplica, `evals` en modo `[ret]`. |
 | G5 | Trazabilidad **por criterio** | `scripts/trazabilidad` (en cuanto exista; antes, una revisión manual): cada criterio que declara el handoff tiene una prueba con `Trait("Criterio", …)` del **nivel indicado** en el escenario, y pasa. |
-| G6 | **Aserciones y diff** | Por cada criterio declarado, el orquestador **lee la prueba** y confirma que sus aserciones corresponden al texto del criterio (por ejemplo, AUTH-03.b exige comprobar el espía de `IAcademicDataSource`, no solo el status). Además revisa el diff buscando: `double`/`float` en Domain, `ToEven`, datos fijos, `catch (Exception)`, `Skip`, umbrales cambiados, secretos, permisos derivados del texto o del LLM, lecturas antes de `Authorize` y el roster atribuido o enviado al LLM. |
+| G6 | **Aserciones y diff** | Por cada criterio declarado, el orquestador **lee la prueba** y confirma que sus aserciones corresponden al texto del criterio (por ejemplo, AUTH-03.b exige comprobar el espía de `IAcademicDataSource`, no solo el status). Además revisa el diff buscando: `double`/`float` en Domain, `ToEven`, datos fijos, `catch (Exception)`, `Skip`, umbrales cambiados, secretos, permisos derivados del texto o del LLM, lecturas antes de `Authorize`, el roster atribuido o enviado al LLM, y vocabularios de L2b modificados sin que AUTH-06 y AUTH-25 sigan en verde. |
 | G7 | Evidencia | El handoff cumple AGENTS §11 y la salida reportada coincide con la reejecución. **Una discrepancia equivale a un rechazo automático y queda registrada.** |
 | G8 | Integración y mutantes | `merge --no-ff` en una rama temporal + `dotnet test` completo + los mutantes del área tocada (§5.3) antes de mover `main`. |
 
@@ -160,13 +161,15 @@ Cada mutante es un parche aplicado en una copia temporal; **debe** hacer fallar 
 | M5 Habilitación 2.0 → 1.5 | ACAD-15.a |
 | M6 Las asignaturas sin definitiva cuentan como 0 | ACAD-14.a |
 | M7 `Authorize` devuelve siempre `Permitido` | AUTH-22.a, ADV-10.a |
-| M8 L2 desactivada | AUTH-03.c |
+| M8 L2a desactivada | AUTH-03.c |
 | M9 La cuarentena del Anexo desactivada | RAG-14.a, ADV-07.a |
 | M10 La validación de citas desactivada | RAG-13.a |
 | M11 Comparación de rol que ignora mayúsculas | AUTH-10.a |
 | M12 El coordinador sin verificación de programa en L4 | AUTH-17.b, AUTH-18.a |
 | M13 El roster se cuenta en `estudiantesConsultados` | AUTH-24.b |
 | M14 La abstención posterior desactivada (responde sin citas) | RAG-09.a |
+| M15 L2b desactivada | AUTH-06.b, AUTH-18.c, ADV-01.c |
+| M16 R2 invertida (un sujeto genérico SD basta para marcar) | AUTH-25.a |
 
 ## 6. Plan de ejecución y paralelismo
 
@@ -175,17 +178,30 @@ W0 ─ T-01 Core: esqueleto (solución, puertos, DTOs, extensiones DI, prueba de
 W1 ─┬ T-02 Core: dominio académico + política + PrincipalAcademico (criterios [dom])               ┐
     ├ T-03 IA: chunking + cuarentena + bm25 + full-context (RAG-14, RAG-15)                        │ paralelo
     └ T-04 Arnés: CI base (build-test, secretos, lights-out) + Docker + dataset [ret] + trazabilidad┘ (3 worktrees)
-W2 ─┬ T-05 Core: API simulada + roster + L1/L2/L4/L5 + herramientas + API + auditoría (dep. T-02)  ┐ paralelo
+W2 ─┬ Core (secuencial): T-05a → T-05b → T-05c → T-05d → T-05e   (ver tabla)                       ┐ paralelo
     ├ T-06 IA: proveedores LLM + bucle + citas/abstención + tokens/costo (dep. T-03)               │
     └ T-07 Arnés: pruebas de contrato + mutantes + smoke (dep. T-01, T-04)                         ┘
-W3 ─┬ T-08 Core: integración del caso de uso E2E + suite ADV con LLM guionizado malicioso (dep. T-05, T-06)
+W3 ─┬ T-08 Core: integración E2E (bucle IA + despachador Core) + suite ADV con LLM guionizado malicioso (dep. T-05e, T-06)
     └ T-09 IA: vector + hybrid para el experimento (dep. T-06)
 W4 ─ T-10 Arnés: evals [eval] reales + experimento de estrategias y modelos + RESULTADOS.md + README (dep. T-08, T-09)
-W5 ─ T-11 Orquestador: verificación de SPEC §14 + exportación y sanitizado de logs (Haiku)
+W5 ─ T-11 Arnés: exportación y sanitizado de logs (a solicitud del orquestador) · Orquestador: verificación de integridad de logs (§11) y de SPEC §14
 ```
 
-- Paralelismo máximo: **3 agentes**, con rutas disjuntas (§4.1). El único punto de sincronización es W0, el esqueleto con los puertos.
-- Ruta crítica: T-01 → T-02 → T-05 → T-08 → T-10.
+**División de T-05 (Core, secuencial, cada una ≤ 45 min).** Las rutas son subcarpetas de las de Core (§4.1); las pruebas van en las carpetas homónimas de `tests/`. G1 verifica que cada tarea toque solo sus rutas.
+
+| Tarea | Alcance (SPEC) | Rutas | Dep. | Criterios que debe dejar en verde |
+|---|---|---|---|---|
+| **T-05a** Fuente de datos y roster | §6.6, §10.2 (API simulada) | `src/TutorFlow.Infrastructure/{MockApi,Roster}/**` | T-02 | AUTH-23.b, AUTH-24.a + pruebas internas del cliente (timeouts, reintentos, URL-encoding, validación de datos) |
+| **T-05b** Cuerpo, identidad (L1) y API | §3.2–§3.4, §6.2 L1, §6.5 | `src/TutorFlow.Api/**`, `src/TutorFlow.Application/{Identity,Preguntar}/**` (crea el caso de uso hasta L1) | T-05a | AUTH-08.a, AUTH-09.a..AUTH-14.a, AUTH-13.b, AUTH-15.a, AUTH-15.c, AUTH-23.a, ADV-15.a, ADV-16.a, ADV-16.b, RES-01.a, RES-04.a, RES-09.a |
+| **T-05c** Guardias L2a, L2b y L5 | §6.2 L2a/L2b/L5, §6.7 | `src/TutorFlow.Application/Security/**`, `src/TutorFlow.Application/Preguntar/**` (añade el paso L2/L5) | T-05a, T-05b | AUTH-02.a, AUTH-03.a/b/c, AUTH-04.a/b, AUTH-05.a/b/c, AUTH-06.a/b, AUTH-07.a, AUTH-17.a, AUTH-18.c, AUTH-21.a/b, AUTH-25.a/b, ADV-01.c, ADV-02.a, ADV-05.a, ADV-13.a; mutantes M8, M15, M16 |
+| **T-05d** Herramientas, despachador (L3 + esquema + L4) y citas deterministas | §6.2 L3/L4, §7.5.2–§7.5.3, §8 | `src/TutorFlow.Application/Tools/**` | T-02, T-05a | AUTH-06.c, AUTH-16.a, AUTH-19.a, AUTH-20.a, AUTH-23.c, ADV-11.a, ACAD-01.b, ACAD-06.b, ACAD-08.b, ACAD-12.b, ACAD-13.b, ACAD-15.b, ACAD-16.b, ACAD-19.b, ACAD-20.a, RES-10.a |
+| **T-05e** Auditoría | §9 | `src/TutorFlow.Infrastructure/Audit/**`, `src/TutorFlow.Application/{Audit,Preguntar}/**` (añade la auditoría al flujo) | T-05b, T-05c, T-05d | AUTH-03.d, AUTH-08.b, AUTH-24.b, RES-04.b, RES-08.b; mutante M13 |
+| **T-08** Integración E2E | §12.3 completo | rutas de Core (solo el cableado y las pruebas E2E) | T-05e, T-06 | AUTH-01.a/b/c, AUTH-06.d, AUTH-15.b, AUTH-16.b, AUTH-17.b, AUTH-18.a, AUTH-19.b, AUTH-24.c, ADV-01.a, ADV-04.a, ADV-06.a, ADV-10.a, ADV-12.a, ACAD-01.c, ACAD-11.a/b, RES-05.c, RES-08.a, RES-11.a, RES-12.a; mutantes M7 (E2E) y M12 |
+
+Regla de cierre: **todo criterio `[app]`/`[api]` de Core que no aparezca en esta tabla ni en T-02 se asigna a T-08**. El orquestador lo comprueba con la matriz de trazabilidad antes de cerrar T-08.
+
+- Paralelismo máximo: **3 agentes**, con rutas disjuntas (§4.1). Las subtareas T-05a–e son secuenciales dentro de Core (mismo dueño, sin worktrees concurrentes). El único punto de sincronización entre agentes es W0 y, después, T-08 (que espera a T-06).
+- Ruta crítica: T-01 → T-02 → T-05a → T-05b → T-05c → T-05d → T-05e → T-08 → T-10.
 - **Revisión de seguridad:** no es un agente; es la lista G6 que el orquestador aplica a todo diff de Core e IA.
 
 ## 7. Costos y presupuestos
@@ -249,10 +265,11 @@ W5 ─ T-11 Orquestador: verificación de SPEC §14 + exportación y sanitizado 
 2. **(Orquestador, unos 5 min)** Asigna el dueño según §4.1; si toca puertos → Core primero.
 3. **(Agente, unos 30 min)** Ciclo §3.1: los criterios nuevos en rojo antes de implementar.
 4. **(Orquestador, unos 10 min)** G1–G8 + CI.
-5. **(Humano, unos 5 min)** Revisión, intervenciones y exportación de logs.
+5. **(Humano, unos 5 min)** Revisión e intervenciones. El orquestador solicita a Arnés la exportación de logs y verifica su integridad (§11).
 
 ## 11. Transparencia y logs
 
-- Cada sesión (orquestador y subagentes) se exporta a `/logs/<fecha>_<fase>_<rol>_<id-corto>.jsonl` + un resumen `.md`.
+- **Responsable único de las exportaciones: Arnés.** Cada sesión (orquestador y subagentes) se exporta a `/logs/<fecha>_<fase>_<rol>_<id-corto>.jsonl` + un resumen `.md`, más un `logs/MANIFIESTO.md` que lista cada sesión con su id, fase, rol, hash SHA-256 del original sin sanitizar y número de reemplazos por tipo.
+- **El orquestador solicita y verifica:** pide la exportación al cerrar cada fase (y en F5) y antes de aceptarla comprueba (1) que cada sesión de la fase aparece en el manifiesto, (2) que gitleaks pasa con la regla `tutorflow-email-en-logs`, (3) que la diferencia entre el original y la versión sanitizada se limita a los reemplazos declarados (el script los cuenta y el orquestador lo reejecuta) y (4) que ningún archivo de `logs/` commiteado antes se modificó (`git log --diff-filter=M -- logs/` vacío, salvo `MANIFIESTO.md`, que solo crece).
 - **Sanitizado obligatorio** antes de commitear (el repositorio es público): correos, llaves y tokens, contenido de `.env` y el contexto de sistema con datos personales. No se altera el contenido técnico. El proceso es reproducible (`scripts/sanitizar-logs`) y gitleaks lo verifica (regla `tutorflow-email-en-logs`).
 - Los logs se añaden y no se editan después de commiteados.

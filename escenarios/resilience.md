@@ -24,7 +24,7 @@
 - **Entrada:** `cp .env.example .env && docker compose up -d`
 - **Criterios:**
   - a. `[cont]` `tutorflow` (8080 publicado) y `mock-api` (solo red interna) quedan healthy; `q10/material/reglamento` se monta de solo lectura.
-  - b. `[cont]` Sin `LLM_API_KEY`, AUTH-03 contra el contenedor real → 403-acceso (L2, sin LLM).
+  - b. `[cont]` Sin `LLM_API_KEY`, AUTH-03 contra el contenedor real → 403-acceso (L2a, sin LLM).
 
 ### RES-04 · La API simulada no está disponible
 - **Severidad:** Alta · **Actor:** `EST-001`
@@ -56,7 +56,7 @@
 ### RES-08 · La auditoría se escribe en todos los caminos
 - **Severidad:** Alta
 - **Criterios:**
-  - a. `[api]` Una petición de cada tipo (200, 400, 403-identidad, 403-acceso por L2, 403-acceso por L4, 503) produce **exactamente un** evento `pregunta` en `stdout` con `requestId`, `usuario` (o `null` si no es legible), `pregunta`, `estudiantesConsultados` y `resultado`.
+  - a. `[api]` Una petición de cada tipo (200, 400, 403-identidad, 403-acceso por L2a, 403-acceso por L2b, 403-acceso por L4, 503) produce **exactamente un** evento `pregunta` en `stdout` con `requestId`, `usuario` (o `null` si no es legible), `pregunta`, `estudiantesConsultados` y `resultado`.
   - b. `[api]` Con un archivo de auditoría que falla al escribir (doble que lanza una excepción), la petición se responde igual (200) y se registra un error de operación (SPEC §9.3).
 
 ### RES-09 · Errores sin filtración interna

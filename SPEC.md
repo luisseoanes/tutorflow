@@ -3,7 +3,7 @@
 > Especificación funcional y técnica de TutorFlow. Es la **fuente de verdad** para los agentes de la fábrica.
 > Si un agente encuentra una contradicción entre este documento y el código, **gana este documento**; si la encuentra entre este documento y el enunciado original de Q10, **se detiene y escala** (`AGENTS.md` §12, `FABRICA.md` §8).
 >
-> Versión: 1.1 · Fase 1 · 2026-11-25 · Estado: revisión crítica aplicada (INT-004); pendiente de autorizar la fase 2.
+> Versión: 1.2 · Fase 1 · 2026-11-25 · Estado: ratificaciones y correcciones de INT-005 aplicadas; pendiente de autorizar la fase 2.
 
 ---
 
@@ -49,7 +49,8 @@ TutorFlow es un asistente académico HTTP para **estudiantes** y **coordinadores
 | Promedio ponderado | Promedio del periodo según §5.4. |
 | Identidad declarada | El par `usuario.rol` + `usuario.id` del cuerpo. **No es una identidad autenticada.** |
 | Principal | `PrincipalAcademico`: identidad declarada que **superó la validación de consistencia** (§6.2 L1) y su alcance autorizado. |
-| Roster | Índice mínimo de referencias (§6.6) que usa la guardia L2. **No** es una consulta académica. |
+| Roster | Índice mínimo de referencias (§6.6) que usan las guardias L2a/L2b. **No** es una consulta académica. |
+| Solicitud de datos de terceros | Pregunta que pide datos académicos de personas distintas del principal sin nombrarlas ("mis compañeros", "quiénes perdieron…"). La detecta L2b con patrones deterministas (§6.7). |
 | Consulta académica | Lectura de notas, asistencia, resumen, beca o listados de programa que hace una herramienta para responder una pregunta. Es lo que se audita como `estudiantesConsultados`. |
 | Chunk | Fragmento indexado de un documento, alineado a un artículo o sección. |
 | Herramienta (tool) | Función determinista en C# que el LLM puede *proponer* invocar. Toda herramienta autoriza antes de leer. |
@@ -112,7 +113,7 @@ El cuerpo de la petición se lee **sin deserializar a tipos fijos** (`JsonDocume
 | 4 | `usuario` ausente o no es un objeto (string, número, array, `null`) | 400 | ídem |
 | 5 | `rol` o `id` ausente, `null`, de un tipo distinto de string o con un valor inválido: `rol` ∉ {`estudiante`, `coordinador`} (comparación exacta); `id` vacío, fuera de `[A-Za-z0-9-]`, de más de 32 caracteres, inexistente o que no corresponde al rol | **403** | **403-identidad** (§3.4) |
 | 6 | La API simulada o el roster no responden al validar la identidad | 503 | `problem+json` |
-| 7 | Solicitud de datos fuera del alcance del principal, detectada por L2, L3, L4 o L5 (§6.2) | **403** | **403-acceso** (§3.4) |
+| 7 | Solicitud de datos fuera del alcance del principal, detectada por L2a, L2b, L3, L4 o L5 (§6.2) | **403** | **403-acceso** (§3.4) |
 | 8 | Una dependencia (API simulada, LLM) no está disponible tras los reintentos durante la respuesta (§10.2) | 503 | `problem+json` |
 | 9 | Error no controlado | 500 | `problem+json` sin *stack trace* |
 | 10 | Pregunta respondida, incluidas la abstención y la negativa en texto | 200 | Contrato §3.1 |
@@ -151,7 +152,7 @@ Ambas variantes tienen **la misma forma del contrato**, para que cualquier prueb
 ```
 
 - El cuerpo es idéntico para todos los motivos de la regla 5 (`rol` inválido, `id` inexistente o con un formato inválido, o un rol que no corresponde al id). El motivo concreto solo queda en la auditoría.
-- `tokens` y `costoUsd` reflejan lo consumido antes del rechazo: 0 en L1 y L2; puede ser mayor que 0 en L4 y L5.
+- `tokens` y `costoUsd` reflejan lo consumido antes del rechazo: 0 en L1, L2a y L2b; puede ser mayor que 0 en L4 y L5.
 
 ---
 
@@ -283,7 +284,8 @@ Asignaturas perdidas por programa: **ADM (COORD-02):** Valentina Castro, Microec
 | Capa | Mecanismo | Fallo → |
 |---|---|---|
 | L1 Consistencia de la identidad declarada (**no es autenticación**, §6.5) | `rol` en la lista blanca; `id` con un formato válido; existencia en la colección que corresponde al rol (`GET /estudiantes/{id}` o `GET /coordinadores/{id}`). Construye un `PrincipalAcademico` inmutable con su alcance: el id propio, o los programas del coordinador. | 403-identidad / 503 |
-| L2 Guardia de referencias | Antes del LLM, busca en la pregunta referencias a **estudiantes** del roster (id `EST-…` en variantes de mayúsculas o separadores, nombre completo, apellido o nombre de pila **únicos** en el roster; sin tildes ni mayúsculas) y a **ids de coordinadores** distintos del principal. Si alguna referencia queda fuera del alcance → 403 sin llamar al LLM. Los nombres de coordinadores **no** se detectan (m8). | 403-acceso |
+| L2a Referencias explícitas | Antes del LLM, busca en la pregunta referencias a **estudiantes** del roster (id `EST-…` en variantes de mayúsculas o separadores, nombre completo, apellido o nombre de pila **únicos** en el roster; sin tildes ni mayúsculas), y a **ids de coordinadores** distintos del principal. (Las referencias a **programas** se evalúan en L2b, reglas R5/R6 de §6.7.) Si alguna referencia queda fuera del alcance → 403 sin llamar al LLM. Los nombres de coordinadores **no** se detectan (m8). | 403-acceso |
+| L2b Solicitudes de terceros | Antes del LLM, aplica las reglas léxicas deterministas de §6.7 (sujeto de terceros ∧ dato académico personal). Sin LLM ni puntajes probabilísticos. | 403-acceso |
 | L3 Herramientas por rol | El LLM solo ve las herramientas de su rol (§8). Invocar una herramienta no expuesta o inexistente → 403. | 403-acceso |
 | L4 Autorización en cada herramienta | **Cada** herramienta valida sus argumentos con un esquema estricto (tipos, formato, sin propiedades extra) y llama a `IAuthorizationPolicy.Authorize(principal, recurso)` **antes** de cualquier lectura. Incluye el alcance del coordinador por programa, tanto para un estudiante concreto (`programa(X) ∈ programas(C)`) como para los listados (`P ∈ programas(C)`). Si se omite `estudianteId`, el estudiante usa su propio id. | 403-acceso (aborta la petición) |
 | L5 Guardia de salida | Antes de responder, verifica que `respuesta` no contenga nombres ni ids de estudiantes fuera del alcance. | 403-acceso |
@@ -301,10 +303,11 @@ Principios:
 | **Suplantación de una identidad válida** (enviar `{"rol":"coordinador","id":"COORD-01"}` sin serlo) | Ninguno posible dentro del contrato | **NO MITIGADO: limitación del contrato** (§6.5) | — |
 | **Enumeración de ids válidos vía `usuario.id`** (200 frente a 403-identidad) | Ninguno posible dentro del contrato | **NO MITIGADO: limitación del contrato** (§6.5) | — |
 | Identidad declarada inconsistente (`rol: coordinador` con un id `EST-…`, `rol: admin`, id inexistente) | L1 | Mitigado | AUTH-08..AUTH-14 |
-| IDOR (referencia a otro estudiante en la pregunta) | L2, L4 | Mitigado | AUTH-03..AUTH-07 |
-| Acceso entre programas (coordinador) | L2, L4 | Mitigado | AUTH-17, AUTH-18 |
+| IDOR (referencia a otro estudiante en la pregunta) | L2a, L4 | Mitigado | AUTH-03..AUTH-07 |
+| Solicitud agregada de terceros sin nombres ("mis compañeros", "quiénes perdieron") | L2b (403 determinista para el corpus de §6.7) + L3–L5 (sin fuga para el resto) | Mitigado; el código 403 solo está garantizado dentro de los patrones | AUTH-06, AUTH-25 |
+| Acceso entre programas (coordinador) | L2a, L2b (R4/R6), L4 | Mitigado | AUTH-17, AUTH-18 |
 | Manipulación de identificadores (mayúsculas, rutas, unicode) | L1 con validación exacta | Mitigado | AUTH-12..AUTH-14 |
-| Prompt injection directo | L2–L5; el texto nunca altera el principal | Contenido (sin fuga) | ADV-01, ADV-02, ADV-05, ADV-06 |
+| Prompt injection directo | L2a–L5; el texto nunca altera el principal | Contenido (sin fuga) | ADV-01, ADV-02, ADV-05, ADV-06 |
 | Inyección indirecta desde documentos (Anexo de becas) | Cuarentena (§6.4) + delimitación de datos + L3–L5 | Contenido | ADV-07, ADV-08, RAG-14 |
 | Manipulación de llamadas a herramientas | L3, L4, esquema estricto | Mitigado | ADV-10, ADV-11 |
 | Exposición de PII en logs y errores | Auditoría con minimización (§9), errores sin eco | Mitigado | ADV-12, RES-09 |
@@ -330,12 +333,47 @@ Principios:
 
 ### 6.6 Roster de referencias (`IRosterProvider`, D-13)
 
-- **Propósito único:** que L2 detecte referencias a estudiantes y resuelva `programa(X)` para L4.
-- **Datos mínimos:** por estudiante `{ id, nombreNormalizado, programaId }`; por coordinador `{ id }`. No guarda notas, asistencia, semestre ni ningún otro campo.
+- **Propósito único:** que L2a/L2b detecten referencias a estudiantes, coordinadores y programas, y resolver `programa(X)` para L4.
+- **Datos mínimos:** por estudiante `{ id, nombreNormalizado, programaId }`; por coordinador `{ id }`; por programa `{ id, nombreNormalizado }` (para L2a). No guarda notas, asistencia, semestre ni ningún otro campo.
 - **Carga:** al arrancar y en segundo plano cada `ROSTER_TTL_SECONDS` (por defecto 300), a través de `GET /programas` + `GET /programas/{id}/estudiantes`. Es una operación **de sistema**: **no** se atribuye a ninguna petición de usuario.
 - **Auditoría:** cada carga emite un evento de sistema `roster.cargado` con `{ ts, estudiantes: <cantidad>, programas: <cantidad>, resultado }`, **sin ids ni nombres**. Las peticiones de usuario **no** registran el roster en `estudiantesConsultados`.
 - **Aislamiento:** el roster nunca se envía al LLM ni aparece en respuestas o logs.
-- **Fail-closed:** si nunca se ha cargado con éxito, o su última carga correcta supera 2 × TTL → las preguntas responden 503 (sin L2 no se puede responder de forma segura). `GET /api/salud` no se ve afectado.
+- **Fail-closed:** si nunca se ha cargado con éxito, o su última carga correcta supera 2 × TTL → las preguntas responden 503 (sin L2a/L2b no se puede responder de forma segura). `GET /api/salud` no se ve afectado.
+
+### 6.7 Detección determinista de solicitudes de datos de terceros (L2b, D-03)
+
+**Objetivo:** responder 403 de forma determinista cuando la pregunta pide datos académicos de **otras personas** aunque no las nombre, **sin** usar el LLM y sin bloquear preguntas normativas sobre "los estudiantes" en general.
+
+**Normalización:** minúsculas, sin tildes, signos de puntuación como espacios y espacios colapsados. Las reglas se aplican por palabra completa.
+
+**Vocabularios** (cerrados y versionados en el código de Core; ampliarlos requiere actualizar los corpus de AUTH-06 y AUTH-25):
+
+| Clase | Contenido mínimo (forma normalizada) |
+|---|---|
+| **TD** dato académico personal | `nota`, `notas`, `promedio`, `promedios`, `definitiva`, `definitivas`, `calificacion`, `calificaciones`, `corte`, `cortes`, `falta`, `faltas`, `inasistencia`, `inasistencias`, `asistencia`, `perdio`, `perdieron`, `perdida`, `perdidas`, `aprobo`, `aprobaron`, `reprobo`, `reprobaron`, `habilitar`, `beca`, `prueba academica`, `situacion academica`, `materias perdidas` |
+| **ST** sujeto de terceros (fuerte) | `companero`, `companeros`, `companera`, `companeras`; `otro estudiante`, `otros estudiantes`, `otra estudiante`, `otras estudiantes`; `otra persona`, `alguien mas`, `mi amigo`, `mi amiga`; `todos los estudiantes`, `todas las estudiantes`; `estudiantes de mi (programa\|carrera\|curso\|grupo\|semestre\|clase\|salon)`; `lista( completa)? de( los)? estudiantes`, `listado( completo)? de( los)? estudiantes`, `nombres de los estudiantes`, `ranking`; `quien`/`quienes` seguido (a ≤ 3 palabras) de un verbo TD (`perdio`, `perdieron`, `reprobo`, `reprobaron`, `tiene`, `tienen`, `saco`, `sacaron`, `falto`, `faltaron`); `el estudiante con (mas\|menos\|mejor\|peor)`; `la estudiante con (mas\|menos\|mejor\|peor)` |
+| **SD** sujeto genérico (débil) | `estudiante`, `estudiantes`, `un estudiante`, `los estudiantes`, `el estudiante` sin los complementos de ST |
+
+**Reglas:**
+
+| Regla | Rol | Condición | Resultado |
+|---|---|---|---|
+| R1 | estudiante | ST ∧ TD | 403-acceso (`motivoDenegacion = "referencia"`) |
+| R2 | estudiante | SD ∧ TD **sin** ST | **No** marca (pregunta normativa: "¿Cuántas faltas puede tener un estudiante?") |
+| R3 | coordinador | ST ∧ TD | **No** marca: el coordinador puede pedir datos de terceros **dentro** de sus programas; el alcance lo garantizan L2a (programas fuera de alcance) y L4 |
+| R4 | coordinador | `otros programas`, `todos los programas`, `otra carrera`, `otras carreras` ∧ TD | 403-acceso |
+| R5 | estudiante | referencia a **cualquier** programa (id o nombre normalizado del roster) ∧ (SD ∨ ST) ∧ TD | 403-acceso (el estudiante no tiene acceso a datos de programa, ni siquiera del suyo) |
+| R6 | coordinador | referencia a un programa ∉ `programas(C)` ∧ (SD ∨ ST) ∧ TD | 403-acceso |
+
+Ninguna regla marca una referencia a un programa **sin** TD ("¿Quién es el coordinador de Ingeniería de Sistemas?").
+
+**Corpus de verificación (normativos):**
+
+- **Positivo** (debe marcar, R1/R4/R5/R6): las entradas de AUTH-06, la de AUTH-18 y las variantes (i)–(iii) de ADV-01.
+- **Negativo** (no debe marcar): las 10 preguntas de ejemplo + todas las entradas de los escenarios RAG y ACAD + las de AUTH-25.
+- **Falsos positivos aceptados** (*fail-closed*, documentados en AUTH-25): por ejemplo, "¿Mis compañeros pueden ver mis notas?" → 403. Se prefiere negar a filtrar.
+
+**Fuera de los patrones**, la contención sigue en L3–L5: sin fuga de datos, aunque el código pueda ser 200 con una negativa (§15).
 
 ---
 
@@ -468,7 +506,7 @@ Son las únicas que conoce el LLM. Cada una valida el esquema de sus argumentos,
 | Métrica | Objetivo |
 |---|---|
 | `GET /api/salud` | p95 < 50 ms |
-| 403 de L1/L2 (sin LLM) | p95 < 300 ms |
+| 403 de L1/L2a/L2b (sin LLM) | p95 < 300 ms |
 | Pregunta con LLM | p95 < 10 s, timeout total 30 s |
 | Arranque del contenedor hasta healthy | < 30 s |
 
@@ -477,7 +515,7 @@ Son las únicas que conoce el LLM. Cada una valida el esquema de sus argumentos,
 - API simulada: timeout de 3 s y 2 reintentos con *backoff* (solo GET). Caída durante L1 o sin roster válido → 503 (*fail-closed*).
 - LLM: timeout de 20 s y 2 reintentos ante 429/5xx respetando `retry-after`; un 401 o 403 del proveedor no se reintenta → 503 y un log de error de configuración **sin la llave**.
 - Una salida del LLM que no es JSON válido → 1 reintento con un mensaje de corrección y, si vuelve a fallar, abstención.
-- Sin `LLM_API_KEY`: la aplicación **arranca** y la salud responde 200; los 400 y los 403 de L1 y L2 funcionan; las peticiones que llegan al LLM → 503.
+- Sin `LLM_API_KEY`: la aplicación **arranca** y la salud responde 200; los 400 y los 403 de L1, L2a y L2b funcionan; las peticiones que llegan al LLM → 503.
 
 ### 10.3 Costo
 
@@ -538,7 +576,7 @@ tests/
 evals/                       Dataset etiquetado + runner + RESULTADOS.md
 ```
 
-Dependencias: `Api → Application → Domain`; `Infrastructure → Application, Domain`; `Api` compone por DI. Los puertos (en `Application`): `IAcademicDataSource`, `IRosterProvider`, `ILlmClient`, `IEmbeddingClient`, `IRetriever`, `IAuditLog`, `IClock`; `IAuthorizationPolicy` vive en `Domain`.
+Dependencias: `Api → Application → Domain`; `Infrastructure → Application, Domain`; `Api` compone por DI. Los puertos (en `Application`): `IAcademicDataSource`, `IRosterProvider`, `ILlmClient`, `IEmbeddingClient`, `IRetriever`, `IAuditLog`, `IClock`; `IAuthorizationPolicy` vive en `Domain`. Contrato interno: `IToolDispatcher` (Core) es la **única** vía por la que el bucle del LLM (IA) ejecuta herramientas; aplica L3 → esquema → L4 → ejecución.
 
 ### 12.2 Registro de decisiones (ADR resumidas)
 
@@ -555,13 +593,13 @@ Dependencias: `Api → Application → Domain`; `Infrastructure → Application,
 | A-09 | Pruebas con xUnit + `Microsoft.AspNetCore.Mvc.Testing` y dobles escritos a mano | Mínima superficie. | Algo más de código en los dobles. |
 | A-10 | Sin base de datos | Solo lectura; la auditoría va a `stdout` y a JSONL. | Auditoría no consultable con SQL. |
 | A-11 | LLM guionizado solo en pruebas (cada prueba fija sus respuestas) | Pruebas deterministas de las garantías del servidor sin crear un "mini-NLU" falso. | Las pruebas **no** miden la calidad del lenguaje: eso es de las evals `[eval]`. |
-| A-12 | Roster de sistema con caché | L2 necesita referencias sin hacer consultas académicas por petición (B1). | Datos de hasta TTL de antigüedad; fail-closed si caduca. |
+| A-12 | Roster de sistema con caché | L2a/L2b necesitan referencias sin hacer consultas académicas por petición (B1). | Datos de hasta TTL de antigüedad; fail-closed si caduca. |
 
 ### 12.3 Flujo de `POST /api/asistente/preguntar`
 
 ```
 Leer y validar el cuerpo (400) → L1 consistencia de identidad (403-identidad / 503) → roster vigente (503)
-→ L2 guardia de referencias (403-acceso) → Recuperación (1 pasada)
+→ L2a referencias + L2b solicitudes de terceros (403-acceso) → Recuperación (1 pasada)
 → LLM con las herramientas del rol [L3] ⇄ herramienta: esquema + Authorize [L4] → lectura (≤3 rondas, ≤ tope de tokens)
 → Validación de citas y abstención (§7.5) → L5 guardia de salida (403-acceso)
 → Respuesta (usoDatosEstudiante, tokens, costo) → Auditoría `pregunta` (en todos los caminos)
@@ -575,17 +613,17 @@ Leer y validar el cuerpo (400) → L1 consistencia de identidad (403-identidad /
 |---|---|---|---|
 | D-01 | Identidad en el cuerpo sin autenticación. | Se respeta el contrato. L1 valida la **consistencia**, no la autenticidad. Está documentado como **limitación no mitigada** (§6.5). | Suplantación de identidades válidas y enumeración de ids: **aceptados**, no mitigables sin cambiar el contrato. |
 | D-02 | Solo se define el 403. | §3.3 (orden de reglas): forma → 400; valores de identidad → 403-identidad; alcance → 403-acceso; dependencias → 503. | Una prueba oculta podría esperar 400 para un `rol` inválido. |
-| D-03 | La pregunta 10 acepta "403 o negativa". | 403-acceso **siempre** que la detección es determinista (L2–L5). Si no se detecta nada y el LLM se niega en texto → 200 con la negativa, sin datos. **El LLM nunca decide el código.** | Una petición ajena sin nombre ni id reconocible podría dar 200 con negativa en lugar de 403 (sin fuga). |
+| D-03 | La pregunta 10 acepta "403 o negativa". | 403-acceso **siempre** que la detección es determinista: referencias explícitas (L2a), **solicitudes de terceros por patrones léxicos (L2b, §6.7)**, herramienta no expuesta (L3), política (L4) o salida (L5). Si nada se detecta y el LLM se niega en texto → 200 con la negativa, sin datos. **El LLM nunca decide el código ni el permiso.** | Las formulaciones fuera de los patrones de §6.7 pueden dar 200 con negativa en lugar de 403 (sin fuga). Hay falsos positivos aceptados (*fail-closed*), listados en AUTH-25. |
 | D-04 | El formato de `citas` para datos no está definido. | `"Datos del estudiante"` / `"Datos del programa"`, siguiendo `preguntas_ejemplo.json`. | Una prueba oculta podría comparar solo documentos `.md`; las citas de datos son adicionales. |
 | D-05 | Inyección de instrucciones en `bienestar_y_becas.md`. | Cuarentena por lista explícita de la sección `Anexo`; el detector solo verifica (§6.4). | Una inyección nueva en otro documento requiere actualizar la lista (lo detecta RAG-14). |
 | D-06 | `inasistencias: null`. | Dato no disponible: se calcula la definitiva, no se asume pérdida, se advierte y se cita el Art. 12. | Interpretación distinta de Q10. |
 | D-07 | "Nota acumulada" ambigua. | Aporte acumulado (Σ peso × corte) + % evaluado; nunca "definitiva". | Q10 podría esperar el promedio de los cortes calificados (4.0). |
 | D-08 | El PDF dice repositorio "privado" y "público". | **Público** (INT-002). El PDF, marcado "Confidencial para el candidato", queda local en `q10/enunciado/` e ignorado por git (INT-003). | El material del candidato sí se publica: la aplicación lo necesita y su README dice que todo es ficticio. |
 | D-09 | `/logs` es para las transcripciones de agentes y para "los logs" de la aplicación. | `/logs` = sesiones de agentes. La auditoría va a `stdout` (+ un archivo opcional en `./audit/`). | Ninguno. |
-| D-10 | Proveedor y llave con los que Q10 ejecutará. | El proveedor se elige **solo** por `LLM_PROVIDER` (por defecto `anthropic`); no se deduce de la llave. El README indica las variables. Los 400 y los 403 de L1/L2 funcionan sin LLM. | Con una llave de otro proveedor sin cambiar `LLM_PROVIDER`, los 200 → 503. |
+| D-10 | Proveedor y llave con los que Q10 ejecutará. | El proveedor se elige **solo** por `LLM_PROVIDER` (por defecto `anthropic`); no se deduce de la llave. El README indica las variables. Los 400 y los 403 de L1/L2a/L2b funcionan sin LLM. | Con una llave de otro proveedor sin cambiar `LLM_PROVIDER`, los 200 → 503. |
 | D-11 | Un coordinador con varios programas. | Se soportan N programas. | Ninguno. |
 | D-12 | Límite de `pregunta`. | 1000 caracteres (→ 400). | Una prueba con preguntas muy largas recibiría 400. |
-| D-13 | L2 necesita referencias sin hacer consultas académicas. | `IRosterProvider` de sistema con datos mínimos, caché y auditoría propia (§6.6). | Datos de hasta TTL de antigüedad. |
+| D-13 | L2a/L2b necesitan referencias sin hacer consultas académicas. | `IRosterProvider` de sistema con datos mínimos, caché y auditoría propia (§6.6). | Datos de hasta TTL de antigüedad. |
 | D-14 | Una auditoría obligatoria que no puede tumbar el servicio. | `stdout` como destino principal; archivo opcional no fatal (§9.3). | Si `stdout` no se recolecta, la auditoría se pierde (responsabilidad del operador). |
 
 ---
@@ -603,7 +641,7 @@ Leer y validar el cuerpo (400) → L1 consistencia de identidad (403-identidad /
 ## 15. Limitaciones conocidas
 
 - **No hay autenticación (§6.5):** la suplantación de identidades válidas y la enumeración de ids **no están mitigadas**. TutorFlow **no es apto para producción** con este contrato.
-- La guardia L2 es léxica: una referencia indirecta ("mi compañero de al lado") no se detecta. La contienen L3–L5 (sin fuga), pero el código puede ser 200 con una negativa en lugar de 403 (D-03).
+- Las guardias L2a/L2b son léxicas: una referencia o solicitud formulada fuera de los patrones de §6.7 no se detecta antes del LLM. La contienen L3–L5 (sin fuga), pero el código puede ser 200 con una negativa en lugar de 403 (D-03). Los patrones producen falsos positivos aceptados (*fail-closed*, AUTH-25).
 - La cuarentena depende de una lista explícita; un documento nuevo con instrucciones requiere actualizarla (RAG-14 lo detecta en la CI).
 - El roster puede tener hasta `ROSTER_TTL_SECONDS` de antigüedad.
 - Sin memoria de conversación.

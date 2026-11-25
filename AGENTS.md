@@ -45,6 +45,7 @@ La propiedad de cada ruta está en **una sola tabla**: `FABRICA.md` §4.1. Si un
 - **DI sin propiedad cruzada:** cada módulo expone un único método de extensión de registro (`AddTutorFlowCore(...)`, `AddTutorFlowIa(...)`) en sus propios archivos; `Program.cs` solo llama a esos métodos. Nadie registra servicios de otro módulo.
 - **Autorización:** las decisiones de permisos salen **solo** de `PrincipalAcademico` + `IAuthorizationPolicy`. **Prohibido** usar el texto de la pregunta o cualquier salida del LLM para conceder **o denegar** permisos (SPEC §6.2). Toda herramienta llama a `Authorize` antes de leer datos.
 - **Prohibido** fijar en `src/` ids, nombres, notas o programas del conjunto de datos (RES-12).
+- **Herramientas:** el bucle del LLM (IA) solo ejecuta herramientas a través de `IToolDispatcher` (Core), nunca directamente ni contra la fuente de datos (SPEC §12.1).
 - **No existe un LLM falso en ejecución.** El doble guionizado vive solo en `tests/` (SPEC A-11).
 - Una dependencia nueva (NuGet o npm) requiere una justificación en el handoff y la aprobación del orquestador. Aprobadas de antemano: `xunit`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`, `Microsoft.AspNetCore.Mvc.Testing`, `coverlet.collector`.
 - Sin patrones sin uso real: nada de MediatR, AutoMapper, repositorios genéricos, CQRS ni microservicios.
@@ -54,7 +55,7 @@ La propiedad de cada ruta está en **una sola tabla**: `FABRICA.md` §4.1. Si un
 - .NET 8 (LTS), fijado en `global.json`. `Nullable` habilitado, `TreatWarningsAsErrors=true` e `ImplicitUsings` en `Directory.Build.props`.
 - **`decimal` obligatorio** para notas, promedios, porcentajes y dinero. Prohibidos `double` y `float` en `Domain`. Redondeo siempre con `Math.Round(x, n, MidpointRounding.AwayFromZero)`.
 - Formato numérico de salida: `CultureInfo.InvariantCulture`.
-- Identidades: comparación `StringComparison.Ordinal` (exacta). Nombres en la guardia L2: NFD sin diacríticos + `OrdinalIgnoreCase`.
+- Identidades: comparación `StringComparison.Ordinal` (exacta). Nombres en la guardia L2a: NFD sin diacríticos + `OrdinalIgnoreCase`.
 - El cuerpo de la petición se lee con `JsonDocument` y se valida según el **orden** de SPEC §3.3. Los DTO de **salida** son `record` con `[JsonPropertyName]` explícito.
 - Errores: excepciones tipadas (`AccesoDenegadoException`, `IdentidadInvalidaException`, `DatoAcademicoInvalidoException`, `DependenciaNoDisponibleException`) mapeadas por un *middleware* central. **Prohibido** un `catch (Exception)` que se trague errores.
 - Los logs son estructurados y **nunca** contienen notas, datos traídos de la API ni secretos.
