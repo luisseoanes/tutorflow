@@ -231,6 +231,101 @@ public class ProveedoresTests
         Assert.Equal("id-1", msgsO[3].GetProperty("tool_call_id").GetString());
     }
 
+    private const string Firma = "CiQBjz1rX+abc/DEF==\\u002b0123456789zz";
+
+    private static string GeminiHerramienta(bool conFirma, string id = "call_g1") =>
+        "{\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"tool_calls\":[{\"id\":\"" + id + "\",\"type\":\"function\","
+        + (conFirma ? "\"extra_content\":{\"google\":{\"thought_signature\":\"" + Firma + "\"}}," : string.Empty)
+        + "\"function\":{\"name\":\"obtener_notas\",\"arguments\":\"{\\\"estudianteId\\\":\\\"X-1\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5}}";
+
+    private static async Task<(string Cuerpo2, string Id)> DosTurnos(string respuesta1)
+    {
+        var h = new ManejadorGrabado(
+            ManejadorGrabado.Respuesta(HttpStatusCode.OK, respuesta1),
+            ManejadorGrabado.Respuesta(HttpStatusCode.OK, OpenAiTexto));
+        var c = Cliente(LlmProviders.OpenAiCompatible, h, new Registro());
+        var r1 = await c.CompletarAsync(Solicitud, CancellationToken.None);
+        var inv = Assert.Single(r1.Invocaciones);
+        var id = inv.Id ?? "call-1-1";
+        var turno2 = new LlmRequest(
+            "S",
+            [
+                new LlmMensaje(RolMensaje.Usuario, "q"),
+                new LlmMensaje(RolMensaje.Asistente, inv.Argumentos.GetRawText(), id, inv.Nombre),
+                new LlmMensaje(RolMensaje.Herramienta, """{"d":1}""", id, inv.Nombre),
+            ],
+            [],
+            100);
+        await c.CompletarAsync(turno2, CancellationToken.None);
+        return (h.Cuerpos[1], id);
+    }
+
+    [Fact]
+    [Trait("Criterio", "RES-07.c")]
+    public async Task La_thought_signature_de_Gemini_se_reenvia_byte_a_byte_en_el_tool_call()
+    {
+        var (cuerpo2, _) = await DosTurnos(GeminiHerramienta(true));
+
+        using var doc = JsonDocument.Parse(cuerpo2);
+        var asistente = doc.RootElement.GetProperty("messages")[2];
+        Assert.Equal(JsonValueKind.Null, asistente.GetProperty("content").ValueKind);
+        var call = asistente.GetProperty("tool_calls")[0];
+        Assert.Equal("call_g1", call.GetProperty("id").GetString());
+        Assert.Equal("{\"google\":{\"thought_signature\":\"" + Firma + "\"}}", call.GetProperty("extra_content").GetRawText());
+        Assert.Contains("\"extra_content\":{\"google\":{\"thought_signature\":\"" + Firma + "\"}}", cuerpo2, StringComparison.Ordinal);
+        var tool = doc.RootElement.GetProperty("messages")[3];
+        Assert.Equal("call_g1", tool.GetProperty("tool_call_id").GetString());
+        Assert.Equal("obtener_notas", tool.GetProperty("name").GetString());
+    }
+
+    [Fact]
+    [Trait("Criterio", "RES-07.c")]
+    public async Task Sin_extra_content_la_segunda_solicitud_no_cambia_respecto_al_formato_OpenAI()
+    {
+        var (cuerpo2, _) = await DosTurnos(GeminiHerramienta(false));
+
+        const string esperado = "{\"model\":\"modelo-x\",\"max_tokens\":100,\"temperature\":0,\"messages\":[{\"role\":\"system\",\"content\":\"S\"},"
+            + "{\"role\":\"user\",\"content\":\"q\"},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_g1\",\"type\":\"function\","
+            + "\"function\":{\"name\":\"obtener_notas\",\"arguments\":\"{\\u0022estudianteId\\u0022:\\u0022X-1\\u0022}\"}}]},"
+            + "{\"role\":\"tool\",\"tool_call_id\":\"call_g1\",\"content\":\"{\\u0022d\\u0022:1}\"}]}";
+        Assert.Equal(esperado, cuerpo2);
+    }
+
+    [Fact]
+    [Trait("Criterio", "RES-07.c")]
+    public async Task Un_tool_call_con_extra_content_y_sin_id_recibe_un_id_propio_y_se_reenvia()
+    {
+        var sinId = GeminiHerramienta(true, string.Empty);
+        var (cuerpo2, id) = await DosTurnos(sinId);
+
+        Assert.StartsWith("tf-", id, StringComparison.Ordinal);
+        Assert.Contains(Firma, cuerpo2, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Criterio", "RES-05.a")]
+    public async Task Un_400_registra_status_y_error_message_truncado_sin_llave_ni_cuerpo_de_la_peticion()
+    {
+        var largo = new string('x', 500);
+        var mensaje = "Falta thought_signature. key=AIzaSyFAKEFAKEFAKE123456 y sk-abcdefghijk1234 y " + LlaveCentinela + " " + largo;
+        var cuerpoError = JsonSerializer.Serialize(new { error = new { code = 400, message = mensaje, status = "INVALID_ARGUMENT" } });
+        var h = new ManejadorGrabado(ManejadorGrabado.Respuesta(HttpStatusCode.BadRequest, cuerpoError));
+        var reg = new Registro();
+
+        var ex = await Assert.ThrowsAsync<LlmNoDisponibleException>(() => Cliente(LlmProviders.OpenAiCompatible, h, reg).CompletarAsync(Solicitud, CancellationToken.None));
+
+        Assert.Equal(400, ex.StatusCode);
+        var log = string.Join("\n", reg.Logs);
+        Assert.Contains("HTTP 400", log, StringComparison.Ordinal);
+        Assert.Contains("Falta thought_signature", log, StringComparison.Ordinal);
+        Assert.DoesNotContain(LlaveCentinela, log, StringComparison.Ordinal);
+        Assert.DoesNotContain("AIzaSy", log, StringComparison.Ordinal);
+        Assert.DoesNotContain("sk-abc", log, StringComparison.Ordinal);
+        Assert.DoesNotContain("Hola", log, StringComparison.Ordinal);
+        Assert.True(log.Length < 450);
+        Assert.DoesNotContain(LlaveCentinela, ex.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     [Trait("Criterio", "RES-13.a")]
     public void El_proveedor_configurado_resuelve_su_adaptador_y_uno_desconocido_falla_con_error_claro()

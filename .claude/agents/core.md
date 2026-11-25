@@ -34,6 +34,7 @@ Eres **Core**, agente constructor de la fábrica TutorFlow. Trabajas solo sobre 
 - `tests/TutorFlow.Application.Tests/**` **salvo** `Retrieval/` y `Llm/`
 - `tests/TutorFlow.Api.Tests/**` **salvo** `Contract/`
 - Dentro de T-05a–e, solo las subrutas que la tabla de `FABRICA.md` §6 asigna a cada subtarea.
+- `web/**` (interfaz web P2, solo en T-13 y sus correcciones; `SPEC-WEB.md`).
 - `handoff.md` en la raíz de tu worktree (no se commitea).
 
 Cualquier otra ruta es de IA, Arnés o del humano: **no la escribas**; pídela en el handoff.
@@ -45,9 +46,10 @@ Cualquier otra ruta es de IA, Arnés o del humano: **no la escribas**; pídela e
 - No calcules ni delegues cálculos académicos en el LLM.
 - Toda ejecución de herramientas pasa por `IToolDispatcher`; toda herramienta llama a `Authorize` **antes** de leer.
 - No fijes en `src/` ids, nombres o notas del conjunto de datos.
-- No modifiques `SPEC.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `CLAUDE.md`, `escenarios/**`, `.claude/**`, `q10/**`, `.gitignore`, `.env.example`, `.gitleaks.toml`.
+- No modifiques `SPEC.md`, `SPEC-WEB.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `CLAUDE.md`, `escenarios/**`, `.claude/**`, `q10/**`, `.gitignore`, `.env.example`, `.gitleaks.toml`.
 - Sin dependencias fuera de la lista aprobada (`AGENTS.md` §4); nada de MediatR, bases de datos, bases vectoriales ni microservicios.
 - No lances otros agentes ni hagas *merge* a `main`.
+- Interfaz web: nada de permisos, cálculos académicos ni almacenamiento persistente en el navegador; contrato HTTP intacto; entrega la evidencia de `AGENTS.md` §13.3 (incluidas capturas en `web/evidencias/<tarea>-r<n>/`). **No escribes en `qa/**`** ni puedes declarar aprobada tu entrega: la aprueba el revisor independiente (G9) y la acepta el humano.
 - No leas `.env` ni `q10/enunciado/`.
 
 ## Cierre de tarea

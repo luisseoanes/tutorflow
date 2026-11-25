@@ -93,7 +93,8 @@ public abstract class HttpLlmClientBase : ILlmClient
 
                 if (status != 429 && status < 500)
                 {
-                    _log?.Invoke($"El proveedor '{Options.Provider}' rechazo la solicitud (HTTP {status}).");
+                    var detalle = DetalleError(texto);
+                    _log?.Invoke($"El proveedor '{Options.Provider}' rechazo la solicitud (HTTP {status}).{(detalle is null ? string.Empty : " error.message: " + detalle)}");
                     throw new LlmNoDisponibleException($"El proveedor '{Options.Provider}' rechazo la solicitud (HTTP {status}).", status);
                 }
 
@@ -125,6 +126,43 @@ public abstract class HttpLlmClientBase : ILlmClient
         throw new LlmNoDisponibleException(
             $"El proveedor '{Options.Provider}' no respondio tras {MaxReintentos + 1} intentos.",
             ultimoEstado);
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex PatronLlave = new(
+        @"(AIza[0-9A-Za-z_\-]{8,}|AQ\.[0-9A-Za-z_\-.]{8,}|sk-[0-9A-Za-z_\-]{8,}|(?<=key=)[^&\s""']+|(?<=Bearer\s)[0-9A-Za-z_\-.]{8,})",
+        System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>Extrae error.message del JSON del proveedor, enmascara llaves y trunca a 300 caracteres. Nunca el cuerpo de la peticion.</summary>
+    private string? DetalleError(string cuerpoRespuesta)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(cuerpoRespuesta);
+            var raiz = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
+                ? doc.RootElement[0]
+                : doc.RootElement;
+            if (raiz.ValueKind != JsonValueKind.Object
+                || !raiz.TryGetProperty("error", out var err)
+                || err.ValueKind != JsonValueKind.Object
+                || !err.TryGetProperty("message", out var msg)
+                || msg.ValueKind != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            var texto = PatronLlave.Replace(msg.GetString() ?? string.Empty, "***");
+            if (!string.IsNullOrEmpty(Options.ApiKey))
+            {
+                texto = texto.Replace(Options.ApiKey, "***", StringComparison.Ordinal);
+            }
+
+            texto = texto.ReplaceLineEndings(" ");
+            return texto.Length > 300 ? texto[..300] : texto;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static TimeSpan? LeerRetryAfter(HttpResponseHeaders headers)

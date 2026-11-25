@@ -7,12 +7,13 @@ TutorFlow se construye con una **fábrica de agentes** (orquestador + Core, IA y
 | Documento | Para qué |
 |---|---|
 | `SPEC.md` | **Fuente de verdad** funcional y técnica (contrato HTTP, reglas académicas, seguridad, decisiones D-01..D-14). |
+| `SPEC-WEB.md` | Interfaz web P2: producto, sistema de diseño y aceptación (subordinada a `SPEC.md`). |
 | `AGENTS.md` | Reglas comunes de ingeniería, niveles de verificación, trazabilidad, git y handoff. |
 | `FABRICA.md` | Roles, propiedad de rutas (§4.1), tareas y dependencias (§6), compuertas G1–G8, mutantes, costos y parada. |
 | `INTERVENCIONES.md` | Decisiones e intervenciones humanas (qué está ratificado). |
 | `escenarios/` | Criterios de aceptación, con id y nivel de verificación. |
 
-Perfiles de los agentes: `.claude/agents/{core,ia,arnes}.md`. Permisos: `.claude/settings.json`.
+Perfiles de los agentes: constructores `.claude/agents/{core,ia,arnes}.md` y revisor independiente `.claude/agents/qa.md`. Permisos: `.claude/settings.json`.
 
 ## Reglas que no se negocian
 
@@ -23,3 +24,4 @@ Perfiles de los agentes: `.claude/agents/{core,ia,arnes}.md`. Permisos: `.claude
 5. **Commits de agente:** el trailer `Generado-por: Claude Code` va en el bloque de trailers (`AGENTS.md` §9).
 6. **Secretos:** nunca leas `.env`, ni imprimas, registres o commitees llaves.
 7. **No leas `q10/enunciado/`** (documento confidencial; las transcripciones se publican).
+8. **Quien construye no se aprueba a sí mismo:** las entregas sujetas a revisión independiente (interfaz web, y otras a criterio del orquestador) necesitan un informe **APPROVED** del revisor QA sobre el commit exacto y, para la web, la aceptación humana (`AGENTS.md` §13, `FABRICA.md` §5.4).

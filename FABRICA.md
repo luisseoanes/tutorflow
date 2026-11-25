@@ -14,6 +14,7 @@
 5. **Determinismo antes que LLM.** Lo que puede ser código determinista lo es. El LLM solo interpreta y redacta, y nunca decide permisos.
 6. **Transparencia.** Sesiones exportadas a `/logs`, intervenciones en `INTERVENCIONES.md` y ninguna métrica inventada.
 7. **El costo es un requisito.** Menos agentes = menos contexto repetido. El modelo se asigna por rol y los reintentos tienen tope.
+8. **Quien construye no se aprueba a sí mismo.** Donde la verificación automática no basta (interfaz web) o el riesgo lo justifica, un **revisor independiente** (agente QA) evalúa la entrega con su propia ejecución y evidencia; puede rechazarla; el implementador corrige; el revisor re-verifica. La aceptación final la conserva el humano (§5.4, `AGENTS.md` §13).
 
 ## 2. Implementación concreta
 
@@ -22,6 +23,7 @@
 | Herramienta | Claude Code (CLI / extensión VS Code). |
 | Orquestador | La sesión principal de Claude Code: planifica, despacha, revisa e integra. No escribe código de producto. |
 | Constructores | 3 subagentes definidos en `.claude/agents/{core,ia,arnes}.md` (configuración de agentes **escrita por el humano** antes de la fase 2): *prompt* del rol, herramientas permitidas y modelo. |
+| Revisor independiente | Subagente `.claude/agents/qa.md` (INT-015): revisa entregas ajenas, escribe solo en `qa/**`, nunca implementa ni corrige lo que revisa (§5.4). |
 | Aislamiento | En paralelo, cada tarea corre en un **git worktree** propio sobre la rama `agent/<rol>/<tarea>`. |
 | Permisos | `.claude/settings.json` (humano): permite `dotnet`, `docker compose` y `git` sin operaciones destructivas; `deny` explícito para `push --force`, `rebase`, `reset --hard`, `filter-branch` y la lectura de `.env`. |
 | Integración | El orquestador ejecuta `git merge --no-ff` en `main` tras pasar las compuertas (§5.1). |
@@ -33,6 +35,7 @@
 |---|---|---|
 | Orquestador | `claude-opus-5-5` | Planificación y revisión crítica de diffs: un error de juicio aquí es lo más caro. |
 | Core, IA, Arnés | `claude-sonnet-5-5` | Implementación guiada por especificación y criterios: buena relación calidad/costo. |
+| QA (revisor) | `claude-sonnet-5-5` | Revisión con ejecución propia (navegador, axe, capturas); mismo nivel que el implementador para que la revisión sea creíble. |
 | Tareas mecánicas (sanitizar logs, matrices) | `claude-haiku-5-5` | Repetitivas y de bajo riesgo. |
 | LLM del **producto** | `claude-haiku-5-5` por defecto | Se valida en evals frente a `claude-sonnet-5-5`; se queda si cumple los umbrales de SPEC §7.6. |
 
@@ -84,8 +87,10 @@ Verificación exigida: (comandos exactos)  ·  Presupuesto: (ciclos, tiempo)
 | `tests/TutorFlow.Api.Tests/**` salvo `Contract/` | **Core** |
 | `tests/TutorFlow.Api.Tests/Contract/**` | **Arnés** |
 | `evals/**`, `scripts/**`, `Dockerfile`, `.dockerignore`, `docker-compose.yml`, `.github/**`, `README.md` | **Arnés** |
+| `web/**` (incluidos `web/Dockerfile` y la configuración del servidor estático de la web) | **Core** |
+| `qa/**` (informes, evidencias y verificaciones de la revisión independiente) | **QA** |
 | `logs/*.jsonl`, `logs/*.md` (salvo `logs/README.md`) | **Arnés** (solo añade exportaciones sanitizadas) |
-| `SPEC.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `logs/README.md`, `escenarios/**`, `.claude/**`, `.gitignore`, `.env.example`, `.gitleaks.toml`, `q10/**` | **Humano** (los agentes solo leen) |
+| `SPEC.md`, `SPEC-WEB.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `logs/README.md`, `escenarios/**`, `.claude/**`, `.gitignore`, `.env.example`, `.gitleaks.toml`, `q10/**` | **Humano** (los agentes solo leen) |
 
 Reglas de borde:
 
@@ -100,7 +105,8 @@ Reglas de borde:
 - **Herramientas:** Read, Write, Edit, Bash (`dotnet`, `node` para la API simulada local).
 - **Criterios:** todos los `[dom]` y todos los `[app]`/`[api]` que no estén asignados a IA (ficha IA) ni a Arnés (RES-02).
 - **Criterios de aceptación:** criterios asignados en verde con aserciones que corresponden al texto; mutantes M1–M8, M11–M13, M15 y M16 detectados; cero `double` en Domain; ningún dato fijo en `src/`; los vocabularios de L2b son exactamente los de SPEC §6.7 (o un superconjunto que mantiene AUTH-25 en verde).
-- **Tareas:** T-01, T-02, T-05a–T-05e y T-08 (§6).
+- **Tareas:** T-01, T-02, T-05a–T-05e y T-08 (§6); interfaz web T-13 y sus correcciones (§6.1).
+- **Interfaz web (P2, `SPEC-WEB.md`):** implementa `web/**` según los tokens, componentes, estados y restricciones de SPEC-WEB (sin permisos ni cálculos en el navegador, sin almacenamiento persistente, contrato intacto); entrega la evidencia de `AGENTS.md` §13.3; **no** escribe en `qa/**` ni puede aprobar su propia entrega.
 - **Condiciones de fallo:** una herramienta lee antes de autorizar; un permiso derivado del texto o del LLM; `ToEven`; se ignora un `null` en cortes o asistencia; el roster se atribuye a la petición o se envía al LLM.
 - **Handoff / evidencia:** AGENTS §11, con la lista criterio → prueba → aserción.
 
@@ -119,6 +125,16 @@ Reglas de borde:
 - **Criterios de aceptación:** la CI bloquea de verdad (con evidencia de una ejecución en rojo provocada a propósito: commit sin trailer, secreto de prueba, mutante sobreviviente); `docker compose up` funcional; RESULTADOS con commit, fecha, modelo y estrategia.
 - **Condiciones de fallo:** cifras no ejecutadas; umbrales relajados; valores golden calculados con el código del producto; el job `[eval]` como requisito de los PR; `continue-on-error` en las compuertas; una llave en una imagen o en los logs de la CI.
 - **Handoff / evidencia:** AGENTS §11 + enlaces a ejecuciones de CI en verde y en rojo + archivos crudos `evals/runs/<fecha>-<sha>.json`.
+- **Infraestructura web (T-12):** servicio `web` en `docker-compose.yml` (puerto 3000, proxy de `/api/*` a `tutorflow:8080`, cabeceras de SPEC-WEB §9; la imagen la define `web/Dockerfile` de Core), jobs de CI `web` y `web-e2e`, soporte de los niveles `[web]`, `[e2e]` y `[qa]` en `scripts/trazabilidad`, y el job `propiedad` (§5.2). No escribe en `web/src` ni en `qa/**`.
+
+#### QA (revisor independiente)
+- **Responsabilidades:** revisión independiente de entregas ajenas según `AGENTS.md` §13: obligatoria para la interfaz web (T-14 sobre cada entrega y corrección de T-13), opcional para componentes críticos (§5.4). Diseño y consistencia visual, UX, calidad funcional con la API, accesibilidad y calidad técnica (`SPEC-WEB.md`, `escenarios/web.md`).
+- **Herramientas:** Read, Write, Edit, Bash (`npm`, `npx playwright`, `docker compose` con el override sin llave). Nunca la llave del LLM.
+- **Rutas:** solo `qa/**` (y `handoff.md` sin commitear).
+- **Criterios:** todos los `[qa]` de `escenarios/web.md`.
+- **Criterios de aceptación de su trabajo:** informe completo en el formato de §13.4 sobre el commit candidato exacto, con salidas literales de sus propias ejecuciones y evidencias (capturas propias en 375×812, 768×1024, 1440×900) que respalden cada hallazgo y el resultado.
+- **Condiciones de fallo:** aprobar sin ejecutar nada propio; aprobar con hallazgos críticos o altos abiertos; modificar el trabajo revisado; modificar un informe ya commiteado; revisar una tarea que implementó; usar la llave del LLM.
+- **Handoff / evidencia:** el informe (`qa/revisiones/<tarea>-r<n>.md`) + evidencias (`qa/evidencias/<tarea>-r<n>/`), commiteados con `Revision: <tarea> r<n> <RESULTADO>`, `Agente: qa` y los trailers obligatorios.
 
 ## 5. Revisión y compuertas
 
@@ -134,6 +150,7 @@ Reglas de borde:
 | G6 | **Aserciones y diff** | Por cada criterio declarado, el orquestador **lee la prueba** y confirma que sus aserciones corresponden al texto del criterio (por ejemplo, AUTH-03.b exige comprobar el espía de `IAcademicDataSource`, no solo el status). Además revisa el diff buscando: `double`/`float` en Domain, `ToEven`, datos fijos, `catch (Exception)`, `Skip`, umbrales cambiados, secretos, permisos derivados del texto o del LLM, lecturas antes de `Authorize`, el roster atribuido o enviado al LLM, y vocabularios de L2b modificados sin que AUTH-06 y AUTH-25 sigan en verde. |
 | G7 | Evidencia | El handoff cumple AGENTS §11 y la salida reportada coincide con la reejecución. **Una discrepancia equivale a un rechazo automático y queda registrada.** |
 | G8 | Integración y mutantes | `merge --no-ff` en una rama temporal + `dotnet test` completo + los mutantes del área tocada (§5.3) antes de mover `main`. |
+| G9 | Revisión independiente (solo entregas sujetas a §5.4) | Existe `qa/revisiones/<tarea>-r<n>.md` con **APPROVED** sobre el **mismo commit** que se integra, sin hallazgos críticos ni altos abiertos; los medios están corregidos o aceptados por el humano; y, para la interfaz web, la **aceptación humana** está registrada en `INTERVENCIONES.md`. Sin esto no hay *merge*. |
 
 ### 5.2 CI (GitHub Actions): qué bloquea y qué no
 
@@ -147,6 +164,9 @@ Reglas de borde:
 | `lights-out` | AGENTS §9.4 | Sí |
 | `smoke` | `docker compose up` → criterios `[cont]` (RES-01, RES-03) | Sí |
 | `evals-llm` | Criterios `[eval]` con el LLM real | **No**: manual o en `main` si existe el secreto; publica las métricas como artefacto |
+| `web` | `npm ci`, `tsc --noEmit`, pruebas `[web]` (incluido axe en jsdom), `vite build` — solo si el PR toca `web/**`; siempre en `main` cuando `web/` exista | Sí (cuando corre) |
+| `web-e2e` | Playwright `[e2e]` contra el servicio `web` + API **sin llave** (override de T-07b) y rutas simuladas | Sí (cuando corre) |
+| `propiedad` | Cada commit de agente solo toca las rutas de su `Agente:` según la tabla §4.1 (en particular, ningún commit `Agente: core` toca `qa/**` y ningún `Agente: qa` toca algo fuera de `qa/**`) | Sí |
 
 ### 5.3 Catálogo de mutantes (prueba de eficacia del arnés)
 
@@ -170,6 +190,14 @@ Cada mutante es un parche aplicado en una copia temporal; **debe** hacer fallar 
 | M14 La abstención posterior desactivada (responde sin citas) | RAG-09.a |
 | M15 L2b desactivada | AUTH-06.b, AUTH-18.c, ADV-01.c |
 | M16 R2 invertida (un sujeto genérico SD basta para marcar) | AUTH-25.a |
+
+### 5.4 Revisión independiente
+
+- **Obligatoria** para la interfaz web (cada entrega y cada corrección de T-13). **Opcional**, a criterio del orquestador, para cambios en autorización/identidad (L1–L5, política, despachador), contrato HTTP o auditoría; en ese caso el brief al revisor usa la lista de verificación de seguridad y el mismo formato de informe. No se aplica a tareas triviales.
+- **Ciclo:** implementador entrega (evidencia §13.3) → orquestador aplica G1–G8 → despacha al revisor con el commit candidato exacto → informe → si `CHANGES_REQUESTED`, el orquestador devuelve los hallazgos tal cual al implementador → nuevo commit → **nueva ronda** del revisor (verifica cada hallazgo anterior) → … → `APPROVED` → G9 → aceptación humana (web) → `merge --no-ff`.
+- **Independencia:** el revisor trabaja en su propio worktree a partir del commit candidato, levanta la app por su cuenta y no reutiliza las pruebas del implementador como única evidencia. El implementador no edita `qa/**`; el revisor no edita el trabajo revisado; lo comprueban G1 y el job `propiedad`.
+- **Límite:** 3 rondas `CHANGES_REQUESTED`; después, escalado al humano (§8).
+- **Limitación conocida:** `.claude/settings.json` no puede asignar rutas por agente; la separación de rutas la garantizan G1, el job `propiedad` y la revisión del orquestador, no los permisos de la herramienta.
 
 ## 6. Plan de ejecución y paralelismo
 
@@ -202,6 +230,19 @@ Regla de cierre: **todo criterio `[app]`/`[api]` de Core que no aparezca en esta
 
 - Paralelismo máximo: **3 agentes**, con rutas disjuntas (§4.1). Las subtareas T-05a–e son secuenciales dentro de Core (mismo dueño, sin worktrees concurrentes). El único punto de sincronización entre agentes es W0 y, después, T-08 (que espera a T-06).
 - Ruta crítica: T-01 → T-02 → T-05a → T-05b → T-05c → T-05d → T-05e → T-08 → T-10.
+
+### 6.1 Interfaz web (P2, INT-015) — no bloquea P0/P1
+
+Empieza solo cuando T-10 y T-11 no dependan de los mismos agentes en ese momento; ninguna tarea web consume cuota del LLM (la API se usa sin llave o con rutas simuladas).
+
+| Tarea | Rol | Alcance | Dep. | Criterios |
+|---|---|---|---|---|
+| **T-12** Infra web | Arnés | Servicio `web` en compose (puerto 3000, proxy `/api`, cabeceras), jobs `web`, `web-e2e` y `propiedad`, niveles `[web]`/`[e2e]`/`[qa]` en trazabilidad | T-07b | WEB-16.a/b (con T-13), job `propiedad` con evidencia de rojo provocado |
+| **T-13** Interfaz web | Core | `web/**` según SPEC-WEB (tokens, componentes, estados, responsive, a11y), pruebas `[web]`/`[e2e]`, evidencia §13.3 | T-12 (para el servicio y los jobs; el código puede empezar antes) | Todos los `[web]` y `[e2e]` de `escenarios/web.md` |
+| **T-14** Revisión independiente | QA | Ronda por cada entrega de T-13 (`AGENTS.md` §13) | Cada entrega de T-13 aceptada en G1–G8 | Todos los `[qa]` de `escenarios/web.md` (WEB-17) |
+| **T-13.n** Correcciones | Core | Hallazgos de la ronda n | Informe `CHANGES_REQUESTED` | Los criterios afectados + verificación del revisor en la ronda n+1 |
+
+Integración: G1–G9 + aceptación humana registrada. La trazabilidad exige los criterios `[web]`/`[e2e]` cuando T-13 esté integrada y los `[qa]` mediante el informe APPROVED.
 - **Revisión de seguridad:** no es un agente; es la lista G6 que el orquestador aplica a todo diff de Core e IA.
 
 ## 7. Costos y presupuestos
@@ -214,6 +255,7 @@ Regla de cierre: **todo criterio `[app]`/`[api]` de Core que no aparezca en esta
 | Tiempo por tarea | 45 min de reloj | El orquestador la divide o la escala |
 | F2 + F3 | ≈ 4 h de reloj | El humano decide recortar alcance (se prioriza P0 de SPEC §0.1) |
 | Corridas `[eval]` con el LLM real | ≤ 3 completas por combinación estrategia × modelo | Cada corrida extra se justifica en `RESULTADOS.md` |
+| Rondas de revisión independiente | 3 `CHANGES_REQUESTED` por tarea | Escalado al humano |
 
 ### 7.2 Tácticas de eficiencia
 
@@ -243,6 +285,10 @@ Regla de cierre: **todo criterio `[app]`/`[api]` de Core que no aparezca en esta
 | Fallo de infraestructura | Error de herramienta | 1 reintento; si persiste, se pausa y se escala |
 | Conflicto de *merge* | G8 | Lo resuelve el dueño de la ruta en su rama (con §4.1 no debería ocurrir: si ocurre, se revisa la tabla) |
 | Secreto detectado | gitleaks / G6 | **Parada total** (§9); el humano rota la llave; no se reescribe la historia: se documenta |
+| Revisión `CHANGES_REQUESTED` | Informe del revisor | Los hallazgos se devuelven sin reinterpretar al implementador; nueva entrega; nueva ronda |
+| Revisión `BLOCKED` | Informe del revisor | El orquestador resuelve lo que falta (evidencia, entorno, dependencia) o escala; nunca se integra |
+| Desacuerdo implementador–revisor | Handoff con objeción | Decide el humano (intervención registrada); ni el implementador ni el orquestador anulan un hallazgo crítico o alto |
+| Más de 3 rondas | Contador de rondas | Escalado al humano |
 
 ## 9. Condiciones de parada
 

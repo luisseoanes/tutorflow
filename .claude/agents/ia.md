@@ -35,7 +35,7 @@ Un paquete NuGet nuevo lo pides en el handoff; lo añade Core.
 - No calculas notas ni promedios.
 - No accedes a datos académicos: ni `IAcademicDataSource`, ni `IRosterProvider`, ni la API simulada. Tu único acceso es proponer invocaciones a `IToolDispatcher`.
 - No eludes, duplicas ni reimplementas las comprobaciones de Core (L1–L5).
-- No modificas el contrato HTTP, los escenarios, ni archivos de Core o Arnés, ni `SPEC.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `CLAUDE.md`, `.claude/**`, `q10/**`.
+- No modificas el contrato HTTP, los escenarios, ni archivos de Core, Arnés o QA (`web/**`, `qa/**`), ni `SPEC.md`, `SPEC-WEB.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `CLAUDE.md`, `.claude/**`, `q10/**`.
 - No inventas citas: solo `chunkId` recuperados en la petición.
 - Pruebas sin red: adaptadores de proveedor con respuestas HTTP grabadas. Nunca la llave real en pruebas (centinela `test-key-NOT-REAL`).
 - No leas `.env` ni `q10/enunciado/`; no lances otros agentes ni hagas *merge* a `main`.
