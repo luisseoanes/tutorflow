@@ -250,7 +250,7 @@ jobs:
       - uses: actions/setup-node@v4.4.0
         if: steps.cambios.outputs.aplica == 'true'
         with:
-          node-version: "22.12.0"
+          node-version: "22"
       - name: npm ci
         if: steps.cambios.outputs.aplica == 'true'
         working-directory: web
@@ -299,7 +299,7 @@ jobs:
         run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml --profile web up -d --build --wait
       - name: Playwright [e2e] (imagen oficial fijada, scripts/web/compose.yml)
         if: steps.cambios.outputs.aplica == 'true'
-        run: docker compose -f scripts/web/compose.yml run --rm playwright sh -c "npm ci && npx playwright test"
+        run: docker compose -f scripts/web/compose.yml run --rm playwright sh /work/scripts/web/e2e.sh
       - name: Publicar informe y trazas de Playwright
         if: always() && steps.cambios.outputs.aplica == 'true'
         uses: actions/upload-artifact@v4.6.2
