@@ -191,8 +191,19 @@
         "AUTH-17.b",
         "AUTH-18.a"
       ],
-      "parches": [],
-      "nota": "Parche por definir al integrar T-08 (el despachador L4 llega en T-05d; la prueba E2E en T-08)."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Tools/ToolDispatcher.cs",
+          "buscar": "var decision = _politica.Authorize(principal, new RecursoAcademico(TipoRecurso.DatosEstudiante, objetivo, programa));",
+          "reemplazar": "var decision = DecisionAutorizacion.Permitir();"
+        },
+        {
+          "archivo": "src/TutorFlow.Application/Tools/ToolDispatcher.cs",
+          "buscar": "var decision = _politica.Authorize(principal, new RecursoAcademico(TipoRecurso.ProgramaEstudiantes, null, programa));",
+          "reemplazar": "var decision = DecisionAutorizacion.Permitir();"
+        }
+      ],
+      "nota": "L4 del despachador siempre permite (sin verificacion de programa del coordinador)."
     },
     {
       "id": "M13",
