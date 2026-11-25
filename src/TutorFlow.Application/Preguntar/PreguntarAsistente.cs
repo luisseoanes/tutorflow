@@ -1,3 +1,4 @@
+using TutorFlow.Application.Audit;
 using TutorFlow.Application.Errores;
 using TutorFlow.Application.Identity;
 using TutorFlow.Application.Ports;
@@ -30,19 +31,24 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
     private readonly IValidadorIdentidad _identidad;
     private readonly IRosterProvider _roster;
 
-    public PreguntarAsistente(IValidadorIdentidad identidad, IRosterProvider roster)
+    private readonly IContextoAuditoria? _auditoria;
+
+    public PreguntarAsistente(IValidadorIdentidad identidad, IRosterProvider roster, IContextoAuditoria? auditoria = null)
     {
         ArgumentNullException.ThrowIfNull(identidad);
         ArgumentNullException.ThrowIfNull(roster);
         _identidad = identidad;
         _roster = roster;
+        _auditoria = auditoria;
     }
 
     public async Task<PreguntarResultado> EjecutarAsync(PreguntarComando comando, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(comando);
 
+        _auditoria?.Iniciar(comando.Pregunta, comando.Rol, comando.Id);
         var principal = await _identidad.ValidarAsync(comando.Rol, comando.Id, ct);
+        _auditoria?.IdentidadValidada();
         var roster = await _roster.ObtenerAsync(ct);
         return await ContinuarTrasRosterAsync(comando, principal, roster, ct);
     }
@@ -52,7 +58,7 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
     /// consulta academica. Despues, PUNTO DE EXTENSION (T-05d..T-08): recuperacion, bucle LLM con IToolDispatcher,
     /// validacion de citas y L5. Mientras tanto responde 503 explicito; nunca un 200 inventado.
     /// </summary>
-    private static Task<PreguntarResultado> ContinuarTrasRosterAsync(
+    private Task<PreguntarResultado> ContinuarTrasRosterAsync(
         PreguntarComando comando,
         PrincipalAcademico principal,
         RosterSnapshot roster,
@@ -65,10 +71,12 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
         throw new PendienteDeIntegracionException("El flujo posterior a L2 (recuperacion, LLM, herramientas, L5) aun no esta integrado.");
     }
 
-    private static void DenegarSiMarcada(ResultadoGuardia resultado, PrincipalAcademico principal)
+    private void DenegarSiMarcada(ResultadoGuardia resultado, PrincipalAcademico principal)
     {
         if (resultado.Marcada)
         {
+            _auditoria?.ObjetivosDenegados(resultado.Objetivos);
+            _auditoria?.Denegar("referencia");
             throw new AccesoDenegadoException(principal.Rol, "referencia");
         }
     }

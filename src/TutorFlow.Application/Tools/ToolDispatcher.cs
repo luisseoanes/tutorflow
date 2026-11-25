@@ -1,3 +1,4 @@
+using TutorFlow.Application.Audit;
 using TutorFlow.Application.Errores;
 using TutorFlow.Application.Ports;
 using TutorFlow.Domain.Authorization;
@@ -19,7 +20,9 @@ public sealed class ToolDispatcher : IToolDispatcher
     private readonly IRosterProvider _roster;
     private readonly IAuthorizationPolicy _politica;
 
-    public ToolDispatcher(IAcademicDataSource fuente, IRosterProvider roster, IAuthorizationPolicy politica)
+    private readonly IContextoAuditoria? _auditoria;
+
+    public ToolDispatcher(IAcademicDataSource fuente, IRosterProvider roster, IAuthorizationPolicy politica, IContextoAuditoria? auditoria = null)
     {
         ArgumentNullException.ThrowIfNull(fuente);
         ArgumentNullException.ThrowIfNull(roster);
@@ -27,6 +30,7 @@ public sealed class ToolDispatcher : IToolDispatcher
         _fuente = fuente;
         _roster = roster;
         _politica = politica;
+        _auditoria = auditoria;
     }
 
     public IReadOnlyList<ToolDefinition> HerramientasExpuestas(PrincipalAcademico principal)
@@ -43,6 +47,33 @@ public sealed class ToolDispatcher : IToolDispatcher
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(invocacion);
 
+        // Gancho de auditoria (SPEC 9.2): objetivo intentado, decision y, solo en exito, la consulta ejecutada.
+        string? objetivoIntentado = null;
+        bool? esPrograma = null;
+        try
+        {
+            var resultado = await DespacharCoreAsync(principal, invocacion, o => (objetivoIntentado, esPrograma) = o, ct).ConfigureAwait(false);
+            if (resultado.Objetivo is not null)
+            {
+                _auditoria?.ConsultaExitosa(invocacion.Nombre, resultado.Objetivo, esPrograma ?? false);
+            }
+
+            return resultado;
+        }
+        catch (AccesoDenegadoException ex)
+        {
+            _auditoria?.HerramientaDenegada(invocacion.Nombre, objetivoIntentado);
+            _auditoria?.Denegar(ex.Motivo);
+            throw;
+        }
+    }
+
+    private async Task<ResultadoHerramienta> DespacharCoreAsync(
+        PrincipalAcademico principal,
+        InvocacionPropuesta invocacion,
+        Action<(string? Objetivo, bool? EsPrograma)> intento,
+        CancellationToken ct)
+    {
         // L3: inexistente o no expuesta a este rol.
         var spec = ToolCatalog.Buscar(invocacion.Nombre);
         if (spec is null || !ToolCatalog.Expuesta(spec, principal.Rol))
@@ -52,6 +83,9 @@ public sealed class ToolDispatcher : IToolDispatcher
 
         // Esquema estricto: no llega a la fuente ni a la politica.
         var args = ArgumentValidator.Validar(spec, invocacion.Argumentos) ?? throw Denegar(principal, MotivoHerramienta);
+        intento(spec.Individual
+            ? (args.EstudianteId ?? (principal.Rol == RolAcademico.Estudiante ? principal.Id : null), false)
+            : (args.ProgramaId ?? (principal.ProgramasCoordinados.Count > 0 ? string.Join(",", principal.ProgramasCoordinados) : null), true));
 
         return spec.Individual
             ? await EjecutarIndividualAsync(principal, spec, args, ct).ConfigureAwait(false)
