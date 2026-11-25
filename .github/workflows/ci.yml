@@ -1,0 +1,103 @@
+# CI de TutorFlow (FABRICA.md §5.2). Todos los jobs de este archivo son bloqueantes: no hay continue-on-error.
+# Llegan despues (no se crean vacios): retrieval, mutantes y smoke (T-07) y evals-llm (T-10, no bloqueante).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  build-test:
+    name: build-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-dotnet@v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Compilar (warnings como errores)
+        run: dotnet build TutorFlow.sln -warnaserror
+      - name: Pruebas [dom] [app] [api]
+        run: dotnet test TutorFlow.sln --no-build
+
+  trazabilidad:
+    name: trazabilidad
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "20"
+      - name: Matriz de trazabilidad (tareas integradas)
+        run: node scripts/trazabilidad/trazabilidad.js --json trazabilidad.json
+      - name: Publicar la matriz
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: trazabilidad
+          path: trazabilidad.json
+          if-no-files-found: ignore
+
+  secretos:
+    name: secretos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      # Version e imagen fijadas (tag + digest).
+      GITLEAKS_IMAGE: zricethezav/gitleaks:v8.24.3@sha256:e1b35e12a8c6fa8901f060459cfb6b2fc4c484d3afbe3b029733a3bbfab07055
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: gitleaks sobre la historia completa
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/repo" \
+            -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo \
+            "$GITLEAKS_IMAGE" git /repo --config /repo/.gitleaks.toml --redact --no-banner --verbose
+
+  lights-out:
+    name: lights-out
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      BASE_PR: ${{ github.event.pull_request.base.sha }}
+      HEAD_PR: ${{ github.event.pull_request.head.sha }}
+      BEFORE_PUSH: ${{ github.event.before }}
+      SHA_PUSH: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "20"
+      - name: Trailer Generado-por en commits que tocan codigo (AGENTS.md §9.4)
+        run: |
+          if [ -n "$BASE_PR" ]; then
+            RANGO="$BASE_PR..$HEAD_PR"
+          elif [ -z "$BEFORE_PUSH" ] || [ "$BEFORE_PUSH" = "0000000000000000000000000000000000000000" ]; then
+            RANGO="$SHA_PUSH"
+          else
+            RANGO="$BEFORE_PUSH..$SHA_PUSH"
+          fi
+          echo "Rango evaluado: $RANGO"
+          node scripts/lights-out/verificar.js --rango "$RANGO"
