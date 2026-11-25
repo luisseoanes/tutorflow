@@ -169,6 +169,18 @@
   - El adaptador `openai-compatible` nunca se probó contra Gemini (solo con respuestas grabadas).
   - El plan gratuito tiene límites de tasa: los 429 y reintentos pueden alargar las corridas.
 
+### INT-013 · 2026-11-25 · F2 · Decisión
+- **Qué pasó:** el orquestador consultó la página oficial de precios de la Gemini API (2026-11-25) y recomendó `gemini-3.5-flash-lite` como modelo por defecto y `gemini-3.8-flash` como comparación en T-10. Descartó la familia 2.5, marcada como obsoleta y con redirección el 2026-12-01.
+- **Qué hizo el humano:** aceptó la recomendación y configuró en `.env` (no leído por ningún agente):
+  - `LLM_PROVIDER=openai-compatible`, con el endpoint compatible con OpenAI de Gemini.
+  - `LLM_MODEL=gemini-3.5-flash-lite`.
+  - Tarifa de referencia: entrada $0.30 / salida $2.50 por millón de tokens.
+- **Impacto:** T-10 evaluará `gemini-3.5-flash-lite` frente a `gemini-3.8-flash`. `costoUsd` reportará el costo **equivalente a precio de pago** (el gasto real en el plan gratuito es 0). Cierra el pendiente de INT-012.
+- **Riesgos a verificar al inicio de T-10:**
+  - Los límites diarios del plan gratuito no están publicados en la página de límites.
+  - La llamada a herramientas por el endpoint compatible con OpenAI no está confirmada en la documentación de precios.
+- **Fuentes:** https://ai.google.dev/gemini-api/docs/pricing y https://ai.google.dev/gemini-api/docs/rate-limits (consultadas el 2026-11-25).
+
 ---
 
 ## Notas de transparencia
