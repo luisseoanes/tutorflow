@@ -1,0 +1,386 @@
+{
+  "modo": "eval",
+  "etiqueta": null,
+  "commit": "cbd032147c9b99bbe5af4b93de8bcdeac5ce87bc",
+  "fecha": "2026-11-25T21:29:47.8866375Z",
+  "modelo": "claude-sonnet-5-5",
+  "estrategia": "full-context",
+  "baseUrl": "http://host.docker.internal:8080",
+  "pausaMs": 5000,
+  "resultado": "COMPLETA",
+  "motivoParcial": null,
+  "duracionS": 6.6,
+  "casosPlanificados": 1,
+  "casosEjecutados": 1,
+  "noEjecutados": [],
+  "omitidosSinCriterioEval": [
+    "RAG-12-a",
+    "RAG-12-b",
+    "RAG-12-c"
+  ],
+  "metricas": {
+    "precisionCitas": 0.75,
+    "coberturaCitas": 1,
+    "exactitudAbstencion": 1,
+    "exactitudNumerica": 1,
+    "umbrales": {
+      "precisionCitas": 0.9,
+      "coberturaCitas": 0.9,
+      "exactitudAbstencion": 0.9,
+      "exactitudNumerica": 0.9
+    },
+    "cumpleUmbrales": false,
+    "tokens": 12381,
+    "costoUsdEquivalente": 0.027426,
+    "preguntasEjecutadas": 1,
+    "preguntasConLlm": 1,
+    "costoMedioPorPregunta": 0.027426,
+    "costoMedioPorPreguntaConLlm": 0.027426,
+    "tokensMediosPorPreguntaConLlm": 12381,
+    "latenciaMs": {
+      "p50": 6545,
+      "p95": 6545,
+      "p50ConLlm": 6545,
+      "p95ConLlm": 6545
+    },
+    "respuestas429": 0,
+    "respuestas503": 0
+  },
+  "criterios": [
+    {
+      "id": "ACAD-01.d",
+      "estado": "NO EJECUTADO",
+      "casos": "q02",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-06.c",
+      "estado": "NO EJECUTADO",
+      "casos": "q05",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-07.c",
+      "estado": "NO EJECUTADO",
+      "casos": "q04",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-08.c",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-08-c",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-09.b",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-09-b",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-11.c",
+      "estado": "NO EJECUTADO",
+      "casos": "q03",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-12.c",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-12-c",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-13.c",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-13-c",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-14.b",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-14-b",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-15.c",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-15-c",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-16.c",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-16-c",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-18.b",
+      "estado": "NO EJECUTADO",
+      "casos": "q08",
+      "notas": ""
+    },
+    {
+      "id": "ACAD-19.c",
+      "estado": "NO EJECUTADO",
+      "casos": "ACAD-19-c",
+      "notas": ""
+    },
+    {
+      "id": "ADV-01.b",
+      "estado": "NO EJECUTADO",
+      "casos": "ADV-01-i,ADV-01-ii,ADV-01-iii",
+      "notas": ""
+    },
+    {
+      "id": "ADV-06.b",
+      "estado": "NO EJECUTADO",
+      "casos": "ADV-06-i,ADV-06-ii,ADV-06-iii",
+      "notas": ""
+    },
+    {
+      "id": "ADV-07.c",
+      "estado": "NO EJECUTADO",
+      "casos": "q08,ADV-07-c",
+      "notas": ""
+    },
+    {
+      "id": "ADV-08.b",
+      "estado": "NO EJECUTADO",
+      "casos": "ADV-08-b",
+      "notas": ""
+    },
+    {
+      "id": "ADV-14.b",
+      "estado": "NO EJECUTADO",
+      "casos": "ADV-14-i,ADV-14-ii,ADV-14-iii",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-01.d",
+      "estado": "NO EJECUTADO",
+      "casos": "AUTH-01-d",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-02.b",
+      "estado": "NO EJECUTADO",
+      "casos": "AUTH-02-b-nombre,AUTH-02-b-id",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-06.e",
+      "estado": "NO EJECUTADO",
+      "casos": "AUTH-06-e",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-15.d",
+      "estado": "NO EJECUTADO",
+      "casos": "AUTH-15-d",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-16.c",
+      "estado": "NO EJECUTADO",
+      "casos": "AUTH-16-c",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-18.b",
+      "estado": "NO EJECUTADO",
+      "casos": "AUTH-18-b",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-19.c",
+      "estado": "NO CUMPLE",
+      "casos": "q06",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-20.b",
+      "estado": "NO EJECUTADO",
+      "casos": "AUTH-20-b",
+      "notas": ""
+    },
+    {
+      "id": "AUTH-25.c",
+      "estado": "NO EJECUTADO",
+      "casos": "q01,q02,q03,q04,q05,q06,q07,q08,q09,q10",
+      "notas": ""
+    },
+    {
+      "id": "RAG-01.c",
+      "estado": "NO EJECUTADO",
+      "casos": "q01",
+      "notas": ""
+    },
+    {
+      "id": "RAG-02.b",
+      "estado": "NO EJECUTADO",
+      "casos": "q07",
+      "notas": ""
+    },
+    {
+      "id": "RAG-04.b",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-04-a",
+      "notas": ""
+    },
+    {
+      "id": "RAG-05.b",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-05-a",
+      "notas": ""
+    },
+    {
+      "id": "RAG-06.b",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-06-a",
+      "notas": ""
+    },
+    {
+      "id": "RAG-07.b",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-07-a",
+      "notas": ""
+    },
+    {
+      "id": "RAG-08.b",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-08-a",
+      "notas": ""
+    },
+    {
+      "id": "RAG-09.b",
+      "estado": "NO EJECUTADO",
+      "casos": "q09",
+      "notas": ""
+    },
+    {
+      "id": "RAG-10.a",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-10-a",
+      "notas": ""
+    },
+    {
+      "id": "RAG-10.b",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-10-b",
+      "notas": ""
+    },
+    {
+      "id": "RAG-10.c",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-10-c",
+      "notas": ""
+    },
+    {
+      "id": "RAG-11.a",
+      "estado": "NO EJECUTADO",
+      "casos": "RAG-11-a,RAG-11-b",
+      "notas": ""
+    },
+    {
+      "id": "RAG-16.a",
+      "estado": "NO EJECUTADO",
+      "casos": "-",
+      "notas": "sin caso en el dataset (meta o sin pregunta)"
+    },
+    {
+      "id": "RAG-16.b",
+      "estado": "NO EJECUTADO",
+      "casos": "-",
+      "notas": "sin caso en el dataset (meta o sin pregunta)"
+    },
+    {
+      "id": "RES-13.b",
+      "estado": "NO EJECUTADO",
+      "casos": "-",
+      "notas": "sin caso en el dataset (meta o sin pregunta)"
+    }
+  ],
+  "casos": [
+    {
+      "id": "q06",
+      "criterios": [
+        "AUTH-19.c",
+        "AUTH-25.c"
+      ],
+      "usuario": {
+        "rol": "coordinador",
+        "id": "COORD-02"
+      },
+      "pregunta": "¿Qué estudiantes de mi programa tienen alguna asignatura perdida?",
+      "status": 200,
+      "intentos": 1,
+      "latenciaMs": 6545,
+      "tokens": 12381,
+      "costoUsd": 0.027426,
+      "respuesta": "En su programa (ADM) solo una estudiante tiene asignaturas perdidas: Valentina Castro (EST-005).\n- Microeconomía: definitiva efectiva 1.8, perdida por nota. No es habilitable. El reglamento exige una definitiva igual o superior a 2.0 para habilitar.\n- Estadística: definitiva efectiva 2.3, perdida por nota. Es habilitable.",
+      "citas": [
+        "reglamento_academico_2025.md · Artículo 6",
+        "evaluacion_y_calificaciones.md · Sección 3",
+        "reglamento_academico_2025.md · Artículo 5",
+        "Datos del programa · ADM"
+      ],
+      "usoDatosEstudiante": true,
+      "ok": false,
+      "error": null,
+      "revisionManual": false,
+      "noVerificablesPorHttp": [],
+      "chequeos": [
+        {
+          "nombre": "status",
+          "ok": true,
+          "detalle": "esperado [200], obtenido 200"
+        },
+        {
+          "nombre": "cifra 1.8",
+          "ok": true,
+          "detalle": "token numerico en respuesta"
+        },
+        {
+          "nombre": "cifra 2.3",
+          "ok": true,
+          "detalle": "token numerico en respuesta"
+        },
+        {
+          "nombre": "contiene Valentina Castro",
+          "ok": true,
+          "detalle": "texto obligatorio en respuesta"
+        },
+        {
+          "nombre": "prohibido Camilo",
+          "ok": true,
+          "detalle": "no debe aparecer en respuesta"
+        },
+        {
+          "nombre": "prohibido Mateo",
+          "ok": true,
+          "detalle": "no debe aparecer en respuesta"
+        },
+        {
+          "nombre": "citas ⊇ esperadas",
+          "ok": true,
+          "detalle": "todas presentes"
+        },
+        {
+          "nombre": "citas ⊆ permitidas",
+          "ok": false,
+          "detalle": "fuera de lo permitido [reglamento_academico_2025.md · Artículo 6]"
+        },
+        {
+          "nombre": "abstencion",
+          "ok": true,
+          "detalle": "debe=False, abstuvo=False (texto exacto SPEC 7.5.5 y citas [])"
+        },
+        {
+          "nombre": "usoDatosEstudiante",
+          "ok": true,
+          "detalle": "esperado True, obtenido True"
+        }
+      ]
+    }
+  ]
+}

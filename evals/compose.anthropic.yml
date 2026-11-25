@@ -1,0 +1,14 @@
+# Override de evals para el proveedor Anthropic (T-10.4, INT-023): claude-sonnet-5-5 (combinaciones d y e).
+# La llave llega por interpolacion de compose desde ANTHROPIC_API_KEY (pasar el .env con --env-file <RUTA>; ningun agente lo lee).
+# LLM_BASE_URL se vacia a proposito: si el .env trae la URL de Gemini, el adaptador anthropic no debe usarla.
+# Precios USD por millon de tokens (Sonnet 5.5, entrada/salida): 2 / 10. Fuente: https://platform.claude.com/docs/en/about-claude/pricing
+# (consultada 2026-11-25). Sin cache de prompt en el calculo (el adaptador no la usa).
+services:
+  tutorflow:
+    environment:
+      LLM_PROVIDER: anthropic
+      LLM_MODEL: claude-sonnet-5-5
+      LLM_API_KEY: ${ANTHROPIC_API_KEY:?falta ANTHROPIC_API_KEY}
+      LLM_BASE_URL: ""
+      LLM_PRICE_INPUT_PER_MTOK: "2"
+      LLM_PRICE_OUTPUT_PER_MTOK: "10"

@@ -1,0 +1,5 @@
+# Combinacion (d): claude-sonnet-5-5 + full-context. Se usa junto con compose.anthropic.yml (ver correr-eval.sh).
+services:
+  tutorflow:
+    environment:
+      RETRIEVAL_STRATEGY: "full-context"
