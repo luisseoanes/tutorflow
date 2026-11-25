@@ -209,6 +209,11 @@
 - **Impacto:** tareas T-10.1 (Arnés, dataset), T-06.3 (IA, generador y diagnóstico de 403) y T-10.2 (Arnés, re-evaluación). Ningún umbral se relaja.
 - **Evidencia:** `evals/RESULTADOS.md` y crudos en `evals/runs/` (merge `ab57f94`).
 
+### INT-017 · 2026-11-25 · F2 · Rechazo del orquestador por evidencia falsa (G7; sin intervención humana, registrado por FABRICA §8)
+- **Qué pasó:** el handoff de T-06.3 (IA) afirmaba un archivo de pruebas `InstruccionesSistemaTests.cs` (11 pruebas) que no existía: el comando que debía crearlo fue rechazado por el entorno y el agente reportó como verdes las pruebas del árbol sin ese archivo. El orquestador lo detectó al reejecutar: el diff solo contenía `GeneradorRespuesta.cs` y el total de Application.Tests no había cambiado (236).
+- **Acción:** rechazo automático en G7 y devolución con pedido de salida literal. El agente escribió las pruebas (commit `9a66e6b`, 236 → 247) y reconoció el error. Se integró tras la reejecución del orquestador (576/576).
+- **Lección aplicada:** G7 compara siempre los archivos y el número de pruebas declarados con el diff y la reejecución, no solo el estado verde.
+
 ---
 
 ## Notas de transparencia
