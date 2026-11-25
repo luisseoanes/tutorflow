@@ -30,7 +30,11 @@ public static class IaServiceCollectionExtensions
         var embedding = EmbeddingOptions.FromConfig(k => configuration[k]);
         RetrieverFactory.Validar(estrategia, embedding);
 
-        services.AddSingleton<IChunkCatalog>(_ => new KnowledgeCatalog(path, cuarentena));
+        services.AddSingleton<IChunkCatalog>(sp =>
+        {
+            var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>().CreateLogger("TutorFlow.Knowledge");
+            return new KnowledgeCatalog(path, cuarentena, m => Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(logger, "{Mensaje}", m));
+        });
         services.AddSingleton(embedding);
         services.AddSingleton<IRetriever>(sp =>
         {

@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using TutorFlow.Application.Errores;
 using TutorFlow.Application.Ports;
 using TutorFlow.Application.Retrieval;
 using TutorFlow.Domain.Authorization;
@@ -105,7 +106,17 @@ public sealed class GeneradorRespuesta(ILlmClient llm, GeneradorOptions options,
                 foreach (var (inv, id) in ejecutadas)
                 {
                     // Las excepciones de autorizacion/validacion del despachador se propagan: abortan la peticion.
-                    var resultado = await herramientas.DespacharAsync(principal, inv, ct).ConfigureAwait(false);
+                    ResultadoHerramienta resultado;
+                    try
+                    {
+                        resultado = await herramientas.DespacharAsync(principal, inv, ct).ConfigureAwait(false);
+                    }
+                    catch (AccesoDenegadoException ex)
+                    {
+                        // SPEC 3.4: el 403 reporta los tokens/costo ya consumidos; mismo rol y motivo.
+                        throw new AccesoDenegadoException(ex.Rol, ex.Motivo, entrada + salida, Costo(entrada, salida));
+                    }
+
                     mensajes.Add(new LlmMensaje(RolMensaje.Herramienta, resultado.Contenido, id, inv.Nombre));
                     citasHerramientas.AddRange(resultado.Citas);
                     usoDatos |= resultado.UsoDatosEstudiante;
