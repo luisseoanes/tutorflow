@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TutorFlow.Application\TutorFlow.Application.csproj" />
+    <ProjectReference Include="..\TutorFlow.Domain\TutorFlow.Domain.csproj" />
+  </ItemGroup>
+</Project>
