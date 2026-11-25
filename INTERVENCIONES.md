@@ -214,6 +214,12 @@
 - **Acción:** rechazo automático en G7 y devolución con pedido de salida literal. El agente escribió las pruebas (commit `9a66e6b`, 236 → 247) y reconoció el error. Se integró tras la reejecución del orquestador (576/576).
 - **Lección aplicada:** G7 compara siempre los archivos y el número de pruebas declarados con el diff y la reejecución, no solo el estado verde.
 
+### INT-018 · 2026-11-25 · F2 · Decisión (cambia una regla ratificada)
+- **Qué pasó:** con Gemini real, en AUTH-02-b-nombre el LLM propuso un nombre de persona en `estudianteId`. SPEC §6.2 (L4) hacía abortar la petición con 403 ante argumentos inválidos, aunque no fuera un intento de acceso. El orquestador escaló la decisión.
+- **Qué hizo el humano:** decidió **devolver el error al LLM para que reintente**.
+- **Alcance acordado (D-15, SPEC v1.4):** solo los errores de **forma** de los argumentos se devuelven al LLM, con un error genérico que no lee la fuente, no hace eco ni da pistas, cuenta para el tope de 3 rondas y se audita como `rechazado-forma`. **La herramienta no expuesta (L3) y el objetivo fuera de alcance (L4) siguen abortando con 403.** Nuevo criterio ADV-11.b.
+- **Impacto:** SPEC §6.2 (L4 y principios) y §13 (D-15); `escenarios/adversarial.md` (ADV-11.b). Implementación en Core: tarea T-05g, tras T-05f. Cambio preparado como parche por el orquestador.
+
 ---
 
 ## Notas de transparencia
