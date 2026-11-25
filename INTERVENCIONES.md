@@ -229,6 +229,19 @@
   - Una llave de Google bien formada **sigue detectándose**.
 - **Nota:** se descartaron mis primeros controles sintéticos porque ni la configuración original los detectaba; se reemplazaron por un control construido a partir de un hallazgo real.
 
+### INT-020 · 2026-11-25 · F2 · Decisión (fixtures de prueba y gitleaks) + verificación de logs
+- **Qué pasó:** al integrar T-11, el orquestador escaneó la historia completa como hace el job `secretos` y encontró 2 hallazgos: valores **sintéticos** (`valorsecret…`) en las pruebas del sanitizador (`scripts/sanitizar-logs/sanitizar.test.mjs`, commit `2b20245`). Estaban ya en la historia local, sin subir; corregir el archivo no los saca de la historia y reescribirla está prohibido. Se retuvieron los commits locales.
+- **Qué hizo el humano:** aprobó añadir a la allowlist global de `.gitleaks.toml` **solo** ese valor exacto (`valorsecret[0-9A-Za-z]{0,8}`), igual que el centinela `test-key-NOT-REAL`.
+- **Verificación del orquestador:**
+  - Historia completa: 2 → **0** hallazgos.
+  - Control: una asignación `LLM_API_KEY=<valor no sintético>` **sigue detectándose**.
+  - Las 4 comprobaciones de FABRICA §11 sobre `logs/`:
+    1. El manifiesto cubre las 24 sesiones.
+    2. gitleaks sobre los archivos rastreados da 0. Los 14 hallazgos de `logs/raw/` son originales ignorados por git y demuestran que las reglas sí detectan la llave en ellos.
+    3. La llave de prueba de INT-012 aparece 3 veces en el original y 0 en la salida, sin correos fuera de la lista permitida.
+    4. Ningún archivo ya publicado de `logs/` se modificó.
+- **Pendiente:** las fixtures futuras de los agentes deben usar `test-key-NOT-REAL`.
+
 ---
 
 ## Notas de transparencia

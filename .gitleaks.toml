@@ -26,7 +26,7 @@ keywords = ["@"]
 
 [allowlist]
 description = "Marcadores conocidos sin secreto"
-regexes = ['''test-key-NOT-REAL''']
+regexes = ['''test-key-NOT-REAL''', '''valorsecret[0-9A-Za-z]{0,8}''']
 
 # Excepción ACOTADA (INT-019): falsos positivos conocidos de la regla por defecto generic-api-key en las
 # transcripciones sanitizadas de logs/. Solo aplica si el hallazgo está en logs/ Y su línea contiene uno de estos
