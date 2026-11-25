@@ -1,0 +1,21 @@
+Diagnostico T-10 (2026-11-25): la bateria [eval] de la combinacion (a) se DETUVO en el segundo caso (q02).
+Corrida: evals/correr-eval.sh a (gemini-3.5-flash-lite + full-context), commit 1666da3, runner contra http://host.docker.internal:8080.
+Sin llave, sin cabeceras. Transcripcion del runner (salida estandar):
+
+[eval] 47 casos a ejecutar contra http://host.docker.internal:8080 (modelo=gemini-3.5-flash-lite, estrategia=full-context, pausa=5000 ms)
+[eval] omitidos (sin criterio [eval]; solo [ret]): RAG-12-a, RAG-12-b, RAG-12-c
+[eval] 1/47 q01: HTTP 200 tokens=2587 1543 ms intentos=1 -> OK
+[eval]   q02: sin respuesta util (HTTP 503); reintento 1/2 en 20 s
+[eval]   q02: sin respuesta util (HTTP 503); reintento 2/2 en 40 s
+(proceso interrumpido por el Arnes: el 503 no es de cuota sino determinista; ver abajo. No se genero crudo de la corrida.)
+
+Lineas relevantes de los logs del contenedor tutorflow en el intento de q02 (pregunta de datos: "¿Cuál es mi promedio ponderado del periodo?"):
+- Herramienta ejecutada con exito: obtener_resumen_academico (objetivo EST-001, decision "permitido"); GET /estudiantes/EST-001, /notas y /asistencia en la API simulada -> 200.
+- {"Category":"TutorFlow.Llm","Message":"El proveedor 'openai-compatible' rechazo la solicitud (HTTP 400)."}
+- {"Category":"TutorFlow.Api.Http.ErrorHandlingMiddleware","Message":"LLM no disponible (estado del proveedor: 400)."}
+- Auditoria: "resultado":503, "citas":[], "estrategia":"full-context", "modelo":"gemini-3.5-flash-lite", "tokens":0, "costoUsd":0, "latenciaMs":1033
+
+Lectura: la primera llamada al LLM (que pide la herramienta) funciona; el 400 llega en la SEGUNDA llamada (la que devuelve el resultado de la herramienta).
+Un 400 no es limite de tasa (429): no es cuota diaria. Reintentar no sirve. Hipotesis NO verificada (no se vio el cuerpo del 400, no se gasto mas cuota):
+los modelos Gemini 3 exigen reenviar la "thought signature" de la llamada a funcion en el turno siguiente (en el endpoint compatible con OpenAI viaja en
+extra_content.google.thought_signature del tool_call); src/TutorFlow.Infrastructure/Llm/OpenAiCompatibleLlmClient.cs no la conserva (reconstruye tool_calls con id/nombre/argumentos).
