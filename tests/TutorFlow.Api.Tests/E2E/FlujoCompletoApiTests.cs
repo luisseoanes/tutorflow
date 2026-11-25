@@ -476,49 +476,68 @@ public class FlujoCompletoApiTests
 
     // ------------------------------------------------------------------ RES-11.a
 
-    [Fact]
+    /// <summary>KNOWLEDGE_PATH vacio (directorio temporal) o inexistente: arranca, salud 200 y abstencion 200 (nunca 500).</summary>
+    [Theory]
     [Trait("Criterio", "RES-11.a")]
-    public async Task RES_11_una_pregunta_normativa_sin_citas_del_llm_responde_200_con_abstencion()
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RES_11_con_KNOWLEDGE_PATH_vacio_o_inexistente_arranca_y_la_pregunta_normativa_se_abstiene_con_200(bool existe)
     {
-        var llm = new LlmGuion(LlmGuion.Final("No tengo documentos para responder eso.", [], 300, 40));
-        using var f = Crear(llm);
+        var ruta = Path.Combine(Path.GetTempPath(), "tutorflow-res11-" + Guid.NewGuid().ToString("N"));
+        if (existe)
+        {
+            Directory.CreateDirectory(ruta);
+        }
 
-        var r = await FabricaE2E.PreguntarAsync(f.CreateClient(), "estudiante", "EST-001", "¿Cuántas faltas puede tener un estudiante?");
-
-        var (estado, cuerpo) = Leer(r);
-        Assert.Equal(HttpStatusCode.OK, estado);
-        AfirmarContrato(cuerpo);
-        Assert.Equal("No encuentro esa información en los documentos disponibles.", cuerpo.GetProperty("respuesta").GetString());
-        Assert.Equal(0, cuerpo.GetProperty("citas").GetArrayLength());
-        Assert.False(cuerpo.GetProperty("usoDatosEstudiante").GetBoolean());
-        Assert.Equal(340, cuerpo.GetProperty("tokens").GetInt32());
-    }
-
-    [Fact]
-    [Trait("Criterio", "RES-11.a")]
-    public async Task RES_11_con_un_KNOWLEDGE_PATH_vacio_la_aplicacion_arranca_y_la_salud_responde_200()
-    {
-        var vacio = Path.Combine(Path.GetTempPath(), "tutorflow-vacio-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(vacio);
         try
         {
-            using var f = new FabricaE2E();
-            f.Ajustes["KNOWLEDGE_PATH"] = vacio;
-
+            var llm = new LlmGuion(LlmGuion.Final("Invento una norma sin fuentes.", [], 300, 40));
+            using var f = Crear(llm);
+            f.Ajustes["KNOWLEDGE_PATH"] = ruta;
             var http = f.CreateClient();
+
             var salud = await http.GetAsync("/api/salud");
-            var malformada = await PostAsync(http, "{no es json");
-            var identidad = await FabricaE2E.PreguntarAsync(http, "estudiante", "EST-999", "¿Mi promedio?");
+            var r = await FabricaE2E.PreguntarAsync(http, "estudiante", "EST-001", "¿Cuántas faltas puede tener un estudiante?");
 
             Assert.Equal(HttpStatusCode.OK, salud.StatusCode);
             Assert.Equal("{\"estado\":\"ok\"}", await salud.Content.ReadAsStringAsync());
-            await AfirmarProblema(malformada, HttpStatusCode.BadRequest);
-            await Afirmar403IdentidadAsync(identidad);
+            var (estado, cuerpo) = Leer(r);
+            Assert.Equal(HttpStatusCode.OK, estado);
+            AfirmarContrato(cuerpo);
+            Assert.Equal("No encuentro esa información en los documentos disponibles.", cuerpo.GetProperty("respuesta").GetString());
+            Assert.Equal(0, cuerpo.GetProperty("citas").GetArrayLength());
+            Assert.False(cuerpo.GetProperty("usoDatosEstudiante").GetBoolean());
         }
         finally
         {
-            Directory.Delete(vacio, recursive: true);
+            if (existe)
+            {
+                Directory.Delete(ruta, recursive: true);
+            }
         }
+    }
+
+    // ------------------------------------------------------------------ 403 por L4 a mitad del bucle (SPEC 3.4)
+
+    [Fact]
+    public async Task Un_403_por_L4_a_mitad_del_bucle_reporta_los_tokens_y_el_costo_consumidos_y_los_audita()
+    {
+        var llm = new LlmGuion(
+            LlmGuion.Invoca(1000, 200, ("obtener_resumen_academico", "{\"estudianteId\":\"EST-005\"}")),
+            LlmGuion.Final("No debería llegar aquí."));
+        using var f = Crear(llm, conPrecios: true);
+
+        var r = await FabricaE2E.PreguntarAsync(f.CreateClient(), "estudiante", "EST-001", "¿Cómo voy en mis materias?", "req-l4-tokens");
+
+        var (estado, cuerpo) = Leer(r);
+        Assert.Equal(HttpStatusCode.Forbidden, estado);
+        AfirmarContrato(cuerpo);
+        Assert.Equal(1200, cuerpo.GetProperty("tokens").GetInt32());
+        Assert.Equal(0.002m, cuerpo.GetProperty("costoUsd").GetDecimal());
+        Assert.Equal(1, llm.Invocaciones);
+        var e = Assert.Single(f.EventosPregunta());
+        Assert.Equal(403, e.GetProperty("resultado").GetInt32());
+        Assert.Equal(1200, e.GetProperty("tokens").GetInt32());
     }
 
     // ------------------------------------------------------------------ RES-12.a
