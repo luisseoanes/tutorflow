@@ -168,8 +168,14 @@
       "criterios": [
         "AUTH-10.a"
       ],
-      "parches": [],
-      "nota": "Parche por definir al integrar T-05b."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Identity/ValidadorIdentidad.cs",
+          "buscar": "        var esEstudiante = string.Equals(rol, RolEstudiante, StringComparison.Ordinal);\n        var esCoordinador = string.Equals(rol, RolCoordinador, StringComparison.Ordinal);",
+          "reemplazar": "        var esEstudiante = string.Equals(rol, RolEstudiante, StringComparison.OrdinalIgnoreCase);\n        var esCoordinador = string.Equals(rol, RolCoordinador, StringComparison.OrdinalIgnoreCase);"
+        }
+      ],
+      "nota": "La lista blanca de rol acepta cualquier combinacion de mayusculas."
     },
     {
       "id": "M12",
