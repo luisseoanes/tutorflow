@@ -1,0 +1,27 @@
+
+Running 21 tests using 1 worker
+
+  ✓   1 [chromium] › e2e/api-real.spec.ts:14:3 › API real sin llave › el servicio web responde en el origen con CSP estricta, nosniff y no-referrer, y hace proxy de /api (26ms)
+  ✓   2 [chromium] › e2e/api-real.spec.ts:33:3 › API real sin llave › sin CORS: la respuesta de la API no declara cabeceras de CORS y la UI funciona en el mismo origen (237ms)
+  ✓   3 [chromium] › e2e/api-real.spec.ts:41:3 › API real sin llave › salud real: el indicador muestra Disponible (64ms)
+  ✓   4 [chromium] › e2e/api-real.spec.ts:49:3 › API real sin llave › AUTH-03 (nombre de otro estudiante) -> la UI muestra el 403-acceso del contrato (379ms)
+  ✓   5 [chromium] › e2e/api-real.spec.ts:62:3 › API real sin llave › rol válido con id inexistente -> la UI muestra el 403-identidad (sin cita del Art. 22) (187ms)
+  ✓   6 [chromium] › e2e/api-real.spec.ts:73:3 › API real sin llave › pregunta de 1001 caracteres forzada (saltando la UX) -> la UI muestra el 400 (400ms)
+  ✓   7 [chromium] › e2e/api-real.spec.ts:88:3 › API real sin llave › pregunta normativa sin llave del LLM -> la UI muestra el 503 con reintento (385ms)
+  ✓   8 [chromium] › e2e/simulado.spec.ts:19:3 › recorrido con respuestas simuladas › el foco pasa a la nueva respuesta y la región aria-live la contiene (191ms)
+  ✓   9 [chromium] › e2e/simulado.spec.ts:34:3 › recorrido con respuestas simuladas › el estado de carga se anuncia con role=status y el campo queda deshabilitado (1.4s)
+  ✓  10 [chromium] › e2e/simulado.spec.ts:44:3 › recorrido con respuestas simuladas › tras una conversación completa el almacenamiento del navegador está vacío (305ms)
+  ✓  11 [chromium] › e2e/simulado.spec.ts:67:3 › recorrido con respuestas simuladas › todas las peticiones salen a /api/* del mismo origen (188ms)
+  ✓  12 [chromium] › e2e/simulado.spec.ts:83:3 › recorrido con respuestas simuladas › la fuente Inter se sirve del mismo origen y no hay peticiones a dominios externos (61ms)
+  ✓  13 [chromium] › e2e/simulado.spec.ts:102:3 › recorrido con respuestas simuladas › ningún console.error/warn ni error de página en el recorrido completo de estados (700ms)
+  ✓  14 [chromium] › e2e/simulado.spec.ts:136:3 › accesibilidad en navegador real › axe sin violaciones serious/critical en cada estado de §4.3 (2.9s)
+  ✓  15 [chromium] › e2e/simulado.spec.ts:177:3 › accesibilidad en navegador real › axe en el estado de carga (319ms)
+  ✓  16 [chromium] › e2e/simulado.spec.ts:186:3 › accesibilidad en navegador real › recorrido solo con teclado: rol, id, pregunta, enviar y expandir una cita, con foco visible en cada paso (121ms)
+  ✓  17 [chromium] › e2e/simulado.spec.ts:246:3 › accesibilidad en navegador real › con prefers-reduced-motion: reduce no hay transiciones ni animaciones (103ms)
+  ✓  18 [chromium] › e2e/simulado.spec.ts:269:5 › responsive › sin desbordamiento horizontal en movil-375x812: inicial, 200 con varias citas, 403 y 503 (345ms)
+  ✓  19 [chromium] › e2e/simulado.spec.ts:269:5 › responsive › sin desbordamiento horizontal en tablet-768x1024: inicial, 200 con varias citas, 403 y 503 (350ms)
+  ✓  20 [chromium] › e2e/simulado.spec.ts:269:5 › responsive › sin desbordamiento horizontal en escritorio-1440x900: inicial, 200 con varias citas, 403 y 503 (332ms)
+  ✓  21 [chromium] › e2e/simulado.spec.ts:303:3 › responsive › en móvil (375 px) los controles interactivos miden al menos 44 x 44 px (190ms)
+
+  21 passed (9.7s)
+exit=0
