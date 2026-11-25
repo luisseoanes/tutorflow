@@ -2,6 +2,7 @@
 # Corre UNA combinacion de la bateria [eval] contra la API real (T-10). Gasta cuota del proveedor.
 # Uso:   evals/correr-eval.sh <a|b|c> [argumentos del runner, p. ej. --solo q01 --pausa-ms 6000]
 #   a = gemini-3.5-flash-lite + full-context (defecto)   b = gemini-3.5-flash-lite + bm25   c = gemini-3.8-flash + full-context
+#   d = claude-sonnet-5-5 + full-context   e = claude-sonnet-5-5 + bm25   (anthropic: requiere ANTHROPIC_API_KEY en el .env de TUTORFLOW_ENV_FILE)
 # Entorno:
 #   TUTORFLOW_ENV_FILE  ruta de un .env (solo la RUTA; este script no lo lee). Por defecto ./.env junto al compose.
 #   EVAL_CI=1           la llave viene del entorno del proceso (secreto de Actions): agrega evals/compose.llave-entorno.yml.
@@ -13,19 +14,28 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$RAIZ"
 
 COMBO="${1:-}"
-[ -n "$COMBO" ] || { echo "Uso: $0 <a|b|c> [argumentos del runner]" >&2; exit 2; }
+[ -n "$COMBO" ] || { echo "Uso: $0 <a|b|c|d|e> [argumentos del runner]" >&2; exit 2; }
 shift
 case "$COMBO" in
   a) OVERRIDE=evals/compose.a-flash-lite-full-context.yml; MODELO=gemini-3.5-flash-lite; ESTRATEGIA=full-context ;;
   b) OVERRIDE=evals/compose.b-flash-lite-bm25.yml;          MODELO=gemini-3.5-flash-lite; ESTRATEGIA=bm25 ;;
   c) OVERRIDE=evals/compose.c-flash-full-context.yml;       MODELO=gemini-3.8-flash;      ESTRATEGIA=full-context ;;
-  *) echo "Combinacion desconocida: $COMBO (a, b o c)" >&2; exit 2 ;;
+  d) OVERRIDE=evals/compose.d-sonnet-full-context.yml;     MODELO=claude-sonnet-5-5;     ESTRATEGIA=full-context ;;
+  e) OVERRIDE=evals/compose.e-sonnet-bm25.yml;              MODELO=claude-sonnet-5-5;     ESTRATEGIA=bm25 ;;
+  *) echo "Combinacion desconocida: $COMBO (a, b, c, d o e)" >&2; exit 2 ;;
 esac
 
 PROYECTO="${EVAL_PROYECTO:-tutorflow-evals}"
 ARCHIVOS=(-f docker-compose.yml -f "$OVERRIDE")
 [ "${EVAL_CI:-0}" = "1" ] && ARCHIVOS+=(-f evals/compose.llave-entorno.yml)
-dc() { docker compose -p "$PROYECTO" "${ARCHIVOS[@]}" "$@"; }
+# d/e: el override de Anthropic interpola ANTHROPIC_API_KEY; el .env se pasa solo por RUTA (--env-file), sin leerlo aqui.
+ENVF=()
+case "$COMBO" in
+  d|e)
+    ARCHIVOS+=(-f evals/compose.anthropic.yml)
+    [ -n "${TUTORFLOW_ENV_FILE:-}" ] && ENVF=(--env-file "$TUTORFLOW_ENV_FILE") ;;
+esac
+dc() { docker compose -p "$PROYECTO" ${ENVF[@]+"${ENVF[@]}"} "${ARCHIVOS[@]}" "$@"; }
 
 limpiar() { dc down -v --remove-orphans >/dev/null 2>&1 || true; }
 trap limpiar EXIT

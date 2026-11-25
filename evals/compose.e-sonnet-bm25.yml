@@ -1,0 +1,5 @@
+# Combinacion (e): claude-sonnet-5-5 + bm25. Se usa junto con compose.anthropic.yml (ver correr-eval.sh).
+services:
+  tutorflow:
+    environment:
+      RETRIEVAL_STRATEGY: "bm25"
