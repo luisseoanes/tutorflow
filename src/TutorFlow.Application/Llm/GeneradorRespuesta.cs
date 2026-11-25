@@ -22,7 +22,7 @@ public sealed class GeneradorRespuesta(ILlmClient llm, GeneradorOptions options,
     public const string TextoAbstencion = "No encuentro esa información en los documentos disponibles.";
     public const int MaxRondasHerramientas = 3;
     public const int MaxInvocacionesPorRonda = 4;
-    private const int MaxTokensSalidaPorLlamada = 1500;
+    private const int MaxTokensSalidaPorLlamada = 4000;
 
     private const string Sistema =
         "Eres el asistente academico de TutorFlow. Responde en español, de forma breve y solo con informacion " +

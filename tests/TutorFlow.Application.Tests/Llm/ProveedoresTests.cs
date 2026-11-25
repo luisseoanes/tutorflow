@@ -339,7 +339,7 @@ public class ProveedoresTests
         Assert.IsType<OpenAiCompatibleLlmClient>(openai);
         Assert.Equal("anthropic", porDefecto.Provider);
         Assert.Equal("claude-haiku-5-5", porDefecto.Model);
-        Assert.Equal(8000, porDefecto.MaxTokensPerRequest);
+        Assert.Equal(20000, porDefecto.MaxTokensPerRequest);
 
         var ex = Assert.Throws<LlmConfiguracionException>(() => LlmOptions.FromConfig(Cfg(("LLM_PROVIDER", "gemini"))));
         Assert.Contains("LLM_PROVIDER", ex.Message, StringComparison.Ordinal);

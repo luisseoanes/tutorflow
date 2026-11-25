@@ -12,7 +12,7 @@ public static class LlmProviders
 public sealed record LlmOptions
 {
     public const string DefaultModel = "claude-haiku-5-5";
-    public const int DefaultMaxTokensPerRequest = 8000;
+    public const int DefaultMaxTokensPerRequest = 20000;
     public const string DefaultAnthropicBaseUrl = "https://api.anthropic.com";
     public const string DefaultOpenAiBaseUrl = "https://api.openai.com/v1";
 

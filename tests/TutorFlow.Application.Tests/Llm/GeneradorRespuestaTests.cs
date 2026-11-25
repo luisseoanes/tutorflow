@@ -220,6 +220,24 @@ public class GeneradorRespuestaTests
     }
 
     [Fact]
+    [Trait("Criterio", "ADV-15.c")]
+    public async Task Con_el_tope_por_defecto_dos_llamadas_de_5500_de_entrada_no_se_abstienen_y_la_salida_deja_margen()
+    {
+        var llm = new LlmGuionizado(
+            Invoca("obtener_notas", "{}", entrada: 5500, salida: 600),
+            Texto(Salida("ok", Art5), entrada: 5700, salida: 1800));
+        var despachador = new DespachadorGuionizado();
+
+        var r = await Ejecutar(llm, "¿Cuál es mi promedio?", despachador, new GeneradorOptions());
+
+        Assert.False(r.Abstuvo);
+        Assert.Equal("ok", r.Respuesta);
+        Assert.Equal(13600, r.Tokens);
+        Assert.Equal(2, llm.Solicitudes.Count);
+        Assert.True(llm.Solicitudes[1].MaxTokens >= 4000);
+    }
+
+    [Fact]
     [Trait("Criterio", "ADV-07.a")]
     public async Task El_prompt_nunca_contiene_el_anexo_en_ninguna_estrategia()
     {

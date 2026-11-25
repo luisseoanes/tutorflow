@@ -30,7 +30,10 @@ public class AnthropicModelosActualesTests
     {
         var h = new ManejadorGrabado(ManejadorGrabado.Respuesta(HttpStatusCode.OK, RespuestaTexto));
         await Cliente(h).CompletarAsync(Base, CancellationToken.None);
-        foreach (var campo in new[] { "temperature", "top_p", "top_k", "tool_choice" })
+        using var doc = JsonDocument.Parse(h.Cuerpos[0]);
+        Assert.Equal("low", doc.RootElement.GetProperty("output_config").GetProperty("effort").GetString());
+        Assert.False(doc.RootElement.TryGetProperty("thinking", out _));
+        foreach (var campo in new[] { "temperature", "top_p", "top_k", "tool_choice", "budget_tokens" })
         {
             Assert.DoesNotContain("\"" + campo + "\"", h.Cuerpos[0], StringComparison.Ordinal);
         }
