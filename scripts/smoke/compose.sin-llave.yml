@@ -1,0 +1,8 @@
+# Override del smoke (RES-03.b, INT-014): el servicio NO tiene llave del proveedor, exista o no un .env local.
+# 'environment' tiene precedencia sobre 'env_file'; '--env-file /dev/null' NO lo evita. Asi el smoke nunca hace
+# una llamada real al LLM ni a embeddings. Uso: docker compose -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml ...
+services:
+  tutorflow:
+    environment:
+      LLM_API_KEY: ""
+      EMBEDDING_API_KEY: ""
