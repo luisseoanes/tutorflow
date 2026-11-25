@@ -4,7 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TutorFlow.Application.Identity;
 using TutorFlow.Application.Ports;
+using TutorFlow.Application.Preguntar;
+using TutorFlow.Infrastructure.Audit;
 using TutorFlow.Infrastructure.MockApi;
 using TutorFlow.Infrastructure.Roster;
 
@@ -17,7 +20,7 @@ public static class CoreServiceCollectionExtensions
 
     /// <summary>
     /// Registro de los servicios de Core. T-05a: fuente de datos (MOCK_API_BASE_URL) y roster (ROSTER_TTL_SECONDS).
-    /// Requiere que otro modulo de Core registre IAuditLog (T-05e) antes de arrancar el host.
+    /// T-05b: auditoria minima a stdout, L1 y caso de uso Preguntar (hasta el roster).
     /// </summary>
     public static IServiceCollection AddTutorFlowCore(this IServiceCollection services, IConfiguration configuration)
     {
@@ -35,6 +38,7 @@ public static class CoreServiceCollectionExtensions
         var ttl = TimeSpan.FromSeconds(ttlSeconds);
 
         services.TryAddSingleton<IClock, SystemClock>();
+        services.TryAddSingleton<IAuditLog, JsonLineAuditLog>();
         services.AddHttpClient(MockApiClientName, http =>
         {
             http.BaseAddress = new Uri(options.BaseUrl + "/", UriKind.Absolute);
@@ -51,6 +55,9 @@ public static class CoreServiceCollectionExtensions
             sp.GetService<ILogger<RosterProvider>>()));
         services.AddSingleton<IRosterProvider>(sp => sp.GetRequiredService<RosterProvider>());
         services.AddSingleton<IHostedService>(sp => new RosterRefreshService(sp.GetRequiredService<RosterProvider>(), ttl));
+
+        services.AddSingleton<IValidadorIdentidad, ValidadorIdentidad>();
+        services.AddSingleton<IPreguntarAsistente, PreguntarAsistente>();
         return services;
     }
 }
