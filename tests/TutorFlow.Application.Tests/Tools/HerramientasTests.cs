@@ -65,12 +65,9 @@ public class HerramientasTests
 
     [Theory]
     [InlineData("obtener_notas", """{"estudianteId":"EST-005"}""", "politica")]
-    [InlineData("obtener_notas", """{"estudianteId":"EST-002","extra":"admin"}""", "herramienta")]
-    [InlineData("obtener_notas", """{"estudianteId":["EST-002","EST-005"]}""", "herramienta")]
     [InlineData("herramienta_inexistente", "{}", "herramienta")]
-    [InlineData("obtener_notas", """{"estudianteId":"../programas/ADM/estudiantes"}""", "herramienta")]
     [Trait("Criterio", "ADV-11.a")]
-    public async Task Las_invocaciones_manipuladas_se_rechazan_sin_llegar_a_la_fuente(string nombre, string args, string motivo)
+    public async Task Las_invocaciones_manipuladas_de_L3_y_L4_se_rechazan_sin_llegar_a_la_fuente(string nombre, string args, string motivo)
     {
         var (d, f) = Crear();
 
@@ -81,9 +78,38 @@ public class HerramientasTests
         Assert.Empty(f.Lecturas);
     }
 
+    // D-15: la forma invalida ya no aborta con 403; se devuelve al LLM como error generico, sin llegar a la fuente.
+    [Theory]
+    [InlineData("obtener_notas", """{"estudianteId":"EST-002","extra":"admin"}""")]
+    [InlineData("obtener_notas", """{"estudianteId":["EST-002","EST-005"]}""")]
+    [InlineData("obtener_notas", """{"estudianteId":"../programas/ADM/estudiantes"}""")]
+    [InlineData("obtener_notas", """{"estudianteId":"Laura Gómez"}""")]
+    [InlineData("obtener_notas", """{"estudianteId":"EST-002","estudianteId":"EST-005"}""")]
+    [InlineData("listar_estudiantes_programa", """{"programaId":"ADM","x":1}""")]
+    [Trait("Criterio", "ADV-11.a")]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task Las_invocaciones_de_forma_invalida_se_devuelven_como_error_generico_sin_leer_ni_eco(string nombre, string args)
+    {
+        var (d, f) = Crear();
+
+        var r = await d.DespacharAsync(Coord1(), Inv(nombre, args), default);
+
+        Assert.Empty(f.Lecturas);
+        Assert.False(r.UsoDatosEstudiante);
+        Assert.Null(r.Objetivo);
+        Assert.Empty(r.Citas);
+        using var doc = JsonDocument.Parse(r.Contenido);
+        var error = doc.RootElement.GetProperty("error").GetString()!;
+        Assert.Equal($"Argumentos no válidos para {nombre}: usa ids con letras, dígitos y guiones, u omite estudianteId para consultar tus propios datos.", error);
+        foreach (var eco in new[] { "EST-002", "EST-005", "Laura", "Gómez", "admin", "extra", "programas", "ADM" })
+        {
+            Assert.DoesNotContain(eco, error.Replace(nombre, string.Empty, StringComparison.Ordinal), StringComparison.Ordinal);
+        }
+    }
+
     [Fact]
     [Trait("Criterio", "ADV-11.a")]
-    public async Task Programa_ajeno_y_argumentos_invalidos_de_programa_no_llegan_a_la_fuente()
+    public async Task Programa_ajeno_y_coordinador_sin_estudianteId_siguen_denegados_sin_leer()
     {
         var (d, f) = Crear();
 
@@ -91,15 +117,7 @@ public class HerramientasTests
             () => d.DespacharAsync(Coord2(), Inv("asignaturas_perdidas_programa", """{"programaId":"ING-SIS"}"""), default));
         Assert.Equal("politica", ajeno.Motivo);
 
-        var invalido = await Assert.ThrowsAsync<AccesoDenegadoException>(
-            () => d.DespacharAsync(Coord2(), Inv("listar_estudiantes_programa", """{"programaId":"ADM","x":1}"""), default));
-        Assert.Equal("herramienta", invalido.Motivo);
-
-        var duplicado = await Assert.ThrowsAsync<AccesoDenegadoException>(
-            () => d.DespacharAsync(Coord1(), Inv("obtener_notas", """{"estudianteId":"EST-002","estudianteId":"EST-005"}"""), default));
-        Assert.Equal("herramienta", duplicado.Motivo);
-
-        // El coordinador debe indicar el estudiante.
+        // El coordinador debe indicar el estudiante (argumento ausente, no de forma invalida: sin cambios).
         var sinId = await Assert.ThrowsAsync<AccesoDenegadoException>(
             () => d.DespacharAsync(Coord1(), Inv("obtener_notas"), default));
         Assert.Equal("herramienta", sinId.Motivo);
