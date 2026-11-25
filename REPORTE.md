@@ -1,6 +1,6 @@
 # REPORTE — TutorFlow Lights-Out (F2)
 
-> Fecha: 2026-11-25 · Rama: `main` · Último commit verificado: `95b54d9` (+ commits de cierre).
+> Fecha: 2026-11-25 · Rama: `main` · Último commit verificado: `0c512e4` (+ commits de cierre).
 > Convención de estado: **Implementado** (código en `main`) · **Probado** (prueba automática en CI) · **Evaluado** (corrida con LLM real) · **Revisado** (revisión independiente QA o del orquestador) · **Pendiente** · **No verificado**.
 > Todo dato de este reporte sale de una ejecución registrada (CI, `evals/runs/`, `qa/revisiones/`, git). Lo que no se ejecutó se marca como tal.
 
@@ -10,11 +10,11 @@ TutorFlow es un asistente académico (.NET 8, Minimal API, puerto 8080) que resp
 
 | Aspecto | Estado |
 |---|---|
-| Contrato HTTP, dominio académico, autorización L1–L5, auditoría | Implementado · Probado (635 pruebas) · mutantes 16/16 detectados |
+| Contrato HTTP, dominio académico, autorización L1–L5, auditoría | Implementado · Probado (636 pruebas) · mutantes 16/16 detectados |
 | CI (11 jobs: 10 bloqueantes + evals-llm manual) | Verde en `ceae2a0`; las 3 corridas rojas de `main` fueron bloqueos reales de trazabilidad (§13) |
 | Interfaz web (P2) | Implementado · Probado · Revisado (QA r4 APPROVED) · aceptada por el humano (INT-024) |
-| Calidad RAG con LLM real | Evaluado con Gemini flash-lite (T-10.2) y Claude Sonnet 5.5 (T-10.4): **ninguna combinación cumple todos los umbrales** (§9). La más cercana: Gemini flash-lite + bm25 (solo falla cobertura de citas, 0.889) |
-| Proveedor Anthropic (default de `.env.example`) | Dos defectos reales hallados solo con llamadas reales: (1) HTTP 400 por `temperature`, corregido en T-06.5; (2) **abstenciones en preguntas de datos aun con la herramienta permitida** (13 y 10 casos), causa **sin diagnosticar** (§9, §17). Para ejecutar TutorFlow hoy se recomienda `openai-compatible` + Gemini flash-lite + `bm25` |
+| Calidad RAG con LLM real | Evaluado con Gemini flash-lite (T-10.2) y Claude Sonnet 5.5 (T-10.4, T-10.5): **ninguna combinación cumple los cuatro umbrales** (§9). La mejor: **Sonnet 5.5 + bm25 (T-10.5): 41/47 casos, cobertura de citas 1.00, exactitud numérica 1.00, abstención 0.91; solo falla precisión de citas 0.881 < 0.90** |
+| Proveedor Anthropic (default de `.env.example`) | Dos defectos reales hallados solo con llamadas reales y corregidos: (1) HTTP 400 por `temperature` (T-06.5); (2) abstenciones en preguntas de datos por el tope de 8000 tokens, insuficiente para Claude 5 (D-16: tope 20000 + `effort: low`, T-06.6). Tras la corrección, 0 abstenciones anómalas (T-10.5) |
 
 **TutorFlow no se declara completo**: el criterio `[eval]` RAG-10.b (la estrategia por defecto cumple los umbrales de SPEC §7.6) no está satisfecho.
 
@@ -31,8 +31,8 @@ TutorFlow es un asistente académico (.NET 8, Minimal API, puerto 8080) que resp
 | Agente | Tareas integradas |
 |---|---|
 | Core | T-01, T-02, T-05a–T-05h, T-08, T-08.1, T-13, T-13.1–T-13.3 |
-| IA | T-03, T-06, T-06.1–T-06.5, T-09 |
-| Arnés | T-00, T-04, T-07a (+.1–.3), T-07b, T-10, T-10.1–T-10.4, T-11, T-12, T-12.1/T-12.2 |
+| IA | T-03, T-06, T-06.1–T-06.6, T-09 |
+| Arnés | T-00, T-04, T-07a (+.1–.3), T-07b, T-10, T-10.1–T-10.5, T-11, T-12, T-12.1/T-12.2 |
 | QA (independiente) | T-14 r1–r4 sobre T-13 |
 | Orquestador | Briefs, compuertas G1–G9, verificación independiente, merges `--no-ff`, INTERVENCIONES |
 
@@ -40,7 +40,7 @@ Devoluciones relevantes por compuerta: T-05d (cálculo fuera de Domain), T-06 (E
 
 ## 4. Commits generados
 
-150 commits en `main` (55 merges `--no-ff`). Por trailer `Agente:` — orquestador 61, arnes 41, core 26, ia 12, qa 8; 2 commits humanos sin trailer (`.gitignore`, autorizado). Sin *squash*, *rebase* ni *force push*; el job `lights-out` verifica el trailer `Generado-por: Claude Code` y `propiedad` verifica que cada agente solo tocó sus rutas (148 commits evaluados, 0 incumplimientos).
+167 commits en `main` (59 merges `--no-ff`). Por trailer `Agente:` — orquestador 68, arnes 50, core 26, ia 13, qa 8; 2 commits humanos sin trailer (`.gitignore`, autorizado). Sin *squash*, *rebase* ni *force push*; el job `lights-out` verifica el trailer `Generado-por: Claude Code` y `propiedad` verifica que cada agente solo tocó sus rutas (167 commits evaluados, 0 incumplimientos).
 
 ## 5. Criterios de aceptación cumplidos y pendientes
 
@@ -48,7 +48,7 @@ Devoluciones relevantes por compuerta: T-05d (cálculo fuera de Domain), T-06 (E
 
 - **Probados automáticamente (dom/app/api/cont/ret/web/e2e):** 182 con prueba localizada y en verde en CI.
 - **`[qa]`:** 9/9 cumplen (QA r4).
-- **`[eval]`:** "OK" en trazabilidad significa que el caso existe en el dataset, **no** que pasa. Resultado real (T-10.2, Gemini flash-lite): 36/42 CUMPLE en full-context y 36/42 en bm25.
+- **`[eval]`:** "OK" en trazabilidad significa que el caso existe en el dataset, **no** que pasa. Resultado real: Gemini flash-lite (T-10.2) 36/42 CUMPLE en full-context y en bm25; Sonnet 5.5 (T-10.5) 41/47 casos OK con bm25 y 38/47 con full-context.
 - **Pendientes / no satisfechos:** RAG-10.b (estrategia por defecto cumple umbrales) — **no satisfecho**; RAG-16.a/b y RES-13.b — **no ejecutados** (requieren embeddings / corrida específica).
 
 ## 6. Escenarios ejecutados, aprobados y fallidos
@@ -57,15 +57,15 @@ Devoluciones relevantes por compuerta: T-05d (cálculo fuera de Domain), T-06 (E
 
 ## 7. Resultados de tests
 
-Suite completa en el SDK .NET 8 en Docker sobre `95b54d9`: **Domain 167 · Architecture 8 · Application 306 · Api 154 = 635/635**. Web: 78 pruebas Vitest, `tsc --noEmit` estricto, `vite build`, 21 e2e Playwright (45/45 corridas estables en la revisión QA r4).
+Suite completa en el SDK .NET 8 en Docker sobre `9ba43ef` (T-06.6, integrado en `b5309d8`): **Domain 167 · Architecture 8 · Application 307 · Api 154 = 636/636**. Web: 78 pruebas Vitest, `tsc --noEmit` estricto, `vite build`, 21 e2e Playwright (45/45 corridas estables en la revisión QA r4).
 
 ## 8. Resultados de mutantes
 
-Catálogo de 16 mutantes (`scripts/mutantes/catalogo.json`): redondeo `AwayFromZero`→`ToEven`, `decimal`→`double`, umbral de inasistencia 15→20 y `>`→`>=`, habilitación 2.0→1.5, promedio con asignaturas sin definitiva, `Authorize` siempre permitido, L2a/L2b desactivadas, cuarentena desactivada, validación de citas y abstención desactivadas, rol sin distinguir mayúsculas, coordinador sin verificación de programa, roster contado como consulta, regla R2 invertida. `--completo` sobre `95b54d9`: **MUERTO 16 · SOBREVIVE 0 · PENDIENTE 0**. El job `mutantes` bloquea la CI.
+Catálogo de 16 mutantes (`scripts/mutantes/catalogo.json`): redondeo `AwayFromZero`→`ToEven`, `decimal`→`double`, umbral de inasistencia 15→20 y `>`→`>=`, habilitación 2.0→1.5, promedio con asignaturas sin definitiva, `Authorize` siempre permitido, L2a/L2b desactivadas, cuarentena desactivada, validación de citas y abstención desactivadas, rol sin distinguir mayúsculas, coordinador sin verificación de programa, roster contado como consulta, regla R2 invertida. `--completo` sobre `9ba43ef`: **MUERTO 16 · SOBREVIVE 0 · PENDIENTE 0**. El job `mutantes` bloquea la CI.
 
 ## 9. Resultados de evaluaciones RAG
 
-Umbrales SPEC §7.6 (v1.6): precisión y cobertura de citas ≥ 0.90; abstención y exactitud numérica **≥ 0.90 (eran 1.00; relajados por decisión humana después de ver T-10.2, INT-022)**; Recall@4 ≥ 0.95; MRR ≥ 0.85.
+Umbrales SPEC §7.6 (v1.7): precisión y cobertura de citas ≥ 0.90; abstención y exactitud numérica **≥ 0.90 (eran 1.00; relajados por decisión humana después de ver T-10.2, INT-022)**; Recall@4 ≥ 0.95; MRR ≥ 0.85.
 
 | Corrida | Commit | Estrategia | Prec. citas | Cob. citas | Abst. | Numérica | Cumple |
 |---|---|---|---|---|---|---|---|
@@ -75,6 +75,8 @@ Umbrales SPEC §7.6 (v1.6): precisión y cobertura de citas ≥ 0.90; abstenció
 | T-10.2 (dataset v2) | cd31f51 | bm25 | 0.911 | **0.889** | 1.00 | 0.95 | No |
 | T-10.4 Sonnet 5.5 | cbd0321 | full-context | 0.692 | 0.556 | 0.727 | 0.65 | No |
 | T-10.4 Sonnet 5.5 | cbd0321 | bm25 | 0.846 | 0.593 | 0.636 | 0.65 | No |
+| **T-10.5 Sonnet 5.5 (D-16)** | 641279f/929374a | full-context | 0.738 | 1.00 | 0.909 | 1.00 | No |
+| **T-10.5 Sonnet 5.5 (D-16)** | 641279f | **bm25** | **0.881** | **1.00** | **0.909** | **1.00** | **No (solo precisión)** |
 
 `[ret]` (determinista, bm25): Recall@4 1.00, MRR 0.917 — cumple. `vector`/`hybrid`: implementados y probados offline, **no evaluados** con LLM (no hay llave de embeddings).
 
@@ -82,8 +84,13 @@ Umbrales SPEC §7.6 (v1.6): precisión y cobertura de citas ≥ 0.90; abstenció
 
 **T-10.4 (Sonnet 5.5) — lo que muestra y lo que no:**
 - Sonnet resolvió 4 casos que flash-lite fallaba (q04, RAG-06-a, RAG-07-a, RAG-10-c): **indicio** de límite del modelo en esos casos, no prueba, porque las corridas difieren también en código (T-05h, T-06.4, T-06.5; INT-025).
-- Pero Sonnet empeoró en total (32 y 31 casos OK de 47, frente a 41 con flash-lite). **13 de 15 fallos (full-context) y 10 de 16 (bm25) son la frase de abstención en preguntas de datos**, con la herramienta invocada y permitida (p. ej. q02 "¿Cuál es mi promedio?", 200 con `citas: []`), mientras preguntas similares (q03) salen bien. Con flash-lite no hubo ningún fallo de ese tipo. Una abstención sin ninguna cita implica que se descartó toda la generación, incluidas las citas deterministas de herramienta: apunta a un **defecto de integración del adaptador Anthropic** (p. ej. salida final que el validador no reconoce como JSON), no a calidad del modelo. **No está diagnosticado.**
-- Conclusión honesta: **no se puede afirmar que el incumplimiento de umbrales se deba a la calidad del modelo.** Con flash-lite, los fallos restantes son mayoritariamente de modelo/dataset tras corregir el prompt; con Sonnet, los números están dominados por el defecto de integración.
+- Pero Sonnet empeoró en total (32 y 31 casos OK de 47, frente a 41 con flash-lite). **13 de 15 fallos (full-context) y 10 de 16 (bm25) son la frase de abstención en preguntas de datos**, con la herramienta invocada y permitida (p. ej. q02 "¿Cuál es mi promedio?", 200 con `citas: []`), mientras preguntas similares (q03) salen bien. Con flash-lite no hubo ningún fallo de ese tipo. Una abstención sin ninguna cita implica que se descartó toda la generación, incluidas las citas deterministas de herramienta: apuntaba a un **defecto de integración**, no a calidad del modelo.
+
+**Diagnóstico y corrección (INT-026, D-16):** todas las abstenciones anómalas superaban 8000 tokens (11.2k–12.9k). El generador se abstiene al alcanzar `LLM_MAX_TOKENS_PER_REQUEST` (SPEC §7.4), y la 2.ª llamada recibía solo ~1.5k de salida, que el pensamiento adaptativo agotaba. El tope se había calibrado con Gemini (~6k por pregunta). T-06.6 sube el tope a 20000 y la salida por llamada a 4000, y envía `effort: low` a Anthropic.
+
+**T-10.5 (Sonnet tras D-16, mismo dataset):** abstenciones anómalas 0 (antes 10–13); `usoDatosEstudiante` faltante 0 (antes 10–13); cobertura de citas 1.00 y exactitud numérica 1.00 (antes 0.56–0.65). Con bm25, 41/47 casos OK. Fallos restantes: sobre todo `citas ⊆ permitidas` (cita artículos del reglamento que el caso no admite: más citas de las necesarias), RAG-10-a (responde con cita donde el dataset espera abstención) y RAG-10-b.
+
+**Conclusión (con evidencia, una corrida por combinación):** con el defecto corregido, el modelo más capaz alcanza **exactitud numérica y cobertura de citas perfectas** donde flash-lite quedaba en 0.85–0.95 y 0.89–0.96. Es un indicio fuerte de que esos incumplimientos de flash-lite son **límite del modelo**. El único umbral que no se alcanza con Sonnet (precisión de citas, 0.881) se debe a **sobre-citación**, que es un rasgo de producto/prompt (regla 12) o una lectura estricta del dataset (`citas_permitidas`), no de capacidad. Sigue siendo una corrida por combinación y Gemini se midió sobre un commit anterior (INT-025).
 
 ## 10. Métricas de tokens y costos reales
 
@@ -97,8 +104,10 @@ Umbrales SPEC §7.6 (v1.6): precisión y cobertura de citas ≥ 0.90; abstenció
 | T-10.2 (b) bm25 | 107 993 | US$ 0.041 | **US$ 0.87** |
 | T-10.4 (d) Sonnet 5.5 + full-context (2/10 USD por M, gasto real) | 361 610 | US$ 0.80 | US$ 19.03 |
 | T-10.4 (e) Sonnet 5.5 + bm25 | 277 029 | US$ 0.64 | US$ 15.31 |
+| T-10.5 (e) Sonnet 5.5 + bm25, D-16 | 277 578 | US$ 0.63 | **US$ 13.50** |
+| T-10.5 (d) Sonnet 5.5 + full-context, D-16 | 446 555 | US$ 0.98 | US$ 20.78 |
 
-Por 1.000 preguntas se calcula como costo medio por pregunta que usa el LLM × 1.000 (5 de 47 preguntas se resuelven sin LLM: 400/403). Con la configuración recomendada (Gemini flash-lite + bm25): **≈ US$ 0.87–0.98 por 1.000 preguntas** a precio de pago.
+Por 1.000 preguntas se calcula como costo medio por pregunta que usa el LLM × 1.000 (5 de 47 preguntas se resuelven sin LLM: 400/403). **Costo estimado por 1.000 preguntas:** Gemini flash-lite + bm25 **≈ US$ 0.87–0.98** (precio de pago; US$ 0 en capa gratuita) · Sonnet 5.5 + bm25 **≈ US$ 13.50**. Gasto real en evals con Anthropic: ≈ US$ 3.1 (baterías de T-10.4 y T-10.5 más validaciones).
 
 **Fábrica (agentes de Claude Code), medido desde las transcripciones locales de la sesión (34 archivos):**
 
@@ -117,7 +126,7 @@ Por 1.000 preguntas se calcula como costo medio por pregunta que usa el LLM × 1
 
 - Variables: `LLM_PROVIDER` (`anthropic` | `openai-compatible`), `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_PRICE_INPUT_PER_MTOK`, `LLM_PRICE_OUTPUT_PER_MTOK`, `LLM_MAX_TOKENS_PER_REQUEST`, `RETRIEVAL_STRATEGY` (por defecto `full-context`). Ver `.env.example` y `README.md`.
 - Evaluado: `openai-compatible` + `gemini-3.5-flash-lite` (endpoint compatible con OpenAI de Gemini, reenviando `extra_content` de forma opaca).
-- `anthropic`: defecto con modelos Claude 5 (`temperature` rechazado con HTTP 400; thinking no preservado) hallado en la primera llamada real y corregido en T-06.5 con pruebas grabadas. Validado con `claude-sonnet-5-5` en T-10.4: sin errores HTTP (0×400, 0×429, 0×503 en 94 preguntas), pero con abstenciones anómalas en preguntas de datos (§9). **Configuración recomendada para ejecutar:** `LLM_PROVIDER=openai-compatible`, `LLM_MODEL=gemini-3.5-flash-lite`, `RETRIEVAL_STRATEGY=bm25`.
+- `anthropic`: defecto con modelos Claude 5 (`temperature` rechazado con HTTP 400; thinking no preservado) hallado en la primera llamada real y corregido en T-06.5 con pruebas grabadas. Validado con `claude-sonnet-5-5` en T-10.4 y, tras D-16 (tope 20000, `effort: low`), en T-10.5: 0 errores HTTP y 0 abstenciones anómalas en 94 preguntas. **Configuración recomendada:** calidad → `LLM_PROVIDER=anthropic`, `LLM_MODEL=claude-sonnet-5-5`, `RETRIEVAL_STRATEGY=bm25` (p95 5.4 s); costo mínimo → `openai-compatible` + `gemini-3.5-flash-lite` + `bm25`. Con un `.env` antiguo, comprobar `LLM_MAX_TOKENS_PER_REQUEST=20000`.
 
 ## 12. Resultado de Docker Compose
 
@@ -139,8 +148,8 @@ Jobs bloqueantes: `build-test`, `trazabilidad`, `secretos` (gitleaks v8.24.3 sob
 ## 15. Limitaciones conocidas
 
 1. Sin autenticación real (la identidad llega en el cuerpo).
-2. Umbrales de calidad RAG no cumplidos con ningún modelo evaluado (Gemini flash-lite, Claude Sonnet 5.5); relajación de dos umbrales decidida después de ver resultados (INT-022).
-3. Latencia p95 de full-context 12.9 s (> 10 s objetivo de SPEC §10.1); bm25 7.6 s.
+2. Umbrales de calidad RAG no cumplidos con ningún modelo evaluado (el mejor, Sonnet 5.5 + bm25, falla solo la precisión de citas por sobre-citación); relajación de dos umbrales decidida después de ver resultados (INT-022).
+3. Latencia p95 con Gemini + full-context 12.9 s (> 10 s objetivo de SPEC §10.1); Gemini + bm25 7.6 s; Sonnet + bm25 5.4 s.
 4. Estado en memoria del adaptador LLM para `extra_content`/thinking (un reinicio entre rondas de una misma petición lo perdería; no ocurre en una petición normal).
 5. L2a de entrada rechaza preguntas con un código de asignatura con forma de id.
 6. Riesgo de sobreajuste de `bm25` (equivalencias académicas, INT-011).
@@ -149,13 +158,14 @@ Jobs bloqueantes: `build-test`, `trazabilidad`, `secretos` (gitleaks v8.24.3 sob
 
 ## 16. Intervenciones humanas
 
-25 entradas en `INTERVENCIONES.md` (INT-001..INT-025) más notas de transparencia NT-01/NT-02. Tipos: ratificación de decisiones de especificación (D-01..D-15), autorizaciones de tareas, cambios de configuración que los agentes no pueden hacer (p. ej. `.gitignore`, parches de `SPEC.md` aplicados por el humano), decisiones de producto (perfil web, D-15 ampliado, umbrales INT-022, experimento Sonnet INT-023) y la aceptación de la web (INT-024). El humano no escribió código ni pruebas.
+26 entradas en `INTERVENCIONES.md` (INT-001..INT-026) más notas de transparencia NT-01/NT-02. Tipos: ratificación de decisiones de especificación (D-01..D-16), autorizaciones de tareas, cambios de configuración que los agentes no pueden hacer (p. ej. `.gitignore`, parches de `SPEC.md` aplicados por el humano), decisiones de producto (perfil web, D-15 ampliado, umbrales INT-022, experimento Sonnet INT-023, alcance INT-025, tope de tokens D-16/INT-026) y la aceptación de la web (INT-024). El humano no escribió código ni pruebas.
 
 ## 17. Riesgos residuales
 
-- Pruebas ocultas que comparen texto generado (cifras/citas) pueden fallar en 1–2 de cada 20 casos con flash-lite.
+- Pruebas ocultas que comparen texto generado (cifras/citas) pueden fallar en 1–3 de cada 20 casos con flash-lite; con Sonnet las cifras salieron exactas en todos los casos (T-10.5).
 - El formato de citas de datos (D-04: `"Datos del estudiante"`/`"Datos del programa"`) es una interpretación documentada; otra lectura del evaluador fallaría.
-- **El proveedor `anthropic` (valor de `.env.example`) produce abstenciones en preguntas de datos con modelos Claude 5 (T-10.4), causa sin diagnosticar.** Si el evaluador ejecuta con una llave de Anthropic, las pruebas ocultas que pidan datos del estudiante pueden fallar. Siguiente paso: capturar la salida cruda del proveedor en un caso (q02) y corregir el adaptador o el validador con una prueba grabada.
+- Un `.env` creado antes de D-16 con `LLM_MAX_TOKENS_PER_REQUEST=8000` reproduce las abstenciones de Claude 5: usar 20000 (`.env.example` ya lo trae).
+- Sobre-citación del modelo (precisión de citas 0.74–0.88 con Sonnet): una prueba oculta que exija exactamente las citas esperadas podría fallar.
 - Variabilidad del LLM: 47 casos y una corrida por combinación no permiten conclusiones estadísticas fuertes.
 
 ## 18. Instrucciones reproducibles desde cero

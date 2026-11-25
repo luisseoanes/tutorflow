@@ -280,7 +280,7 @@
 - **Consecuencia (declarada en RESULTADOS y REPORTE):** la comparación mezcla modelo y código (T-05h, T-06.4 y T-06.5 entre ambas corridas), así que la atribución "límite del modelo" queda como indicio, no como prueba.
 
 ### INT-026 · 2026-11-25 · F2 · Decisión (D-16: tope de tokens y effort en Anthropic)
-- **Diagnóstico del orquestador (crudos de T-10.4):** las abstenciones anómalas de Sonnet 5.5 en preguntas de datos están todas por encima de 8000 tokens (11.2k–12.9k). El generador se abstiene al alcanzar `LLM_MAX_TOKENS_PER_REQUEST=8000`, como manda SPEC §7.4, y la 2.ª llamada recibe solo ~2.5k de salida, que el pensamiento adaptativo agota. Gemini flash-lite usa ~6k, por eso no lo sufría.
+- **Diagnóstico del orquestador (crudos de T-10.4):** las abstenciones anómalas de Sonnet 5.5 en preguntas de datos están todas por encima de 8000 tokens (11.2k–12.9k). El generador se abstiene al alcanzar `LLM_MAX_TOKENS_PER_REQUEST=8000`, como manda SPEC §7.4, y la 2.ª llamada recibe como máximo 1.5k de salida (límite por llamada de 1500 tokens, que T-06.6 sube a 4000), que el pensamiento adaptativo agota. Gemini flash-lite usa ~6k, por eso no lo sufría.
 - **Instrucción del candidato:** "corrige el adaptador". Elegida la opción "Tope 20000 + effort low".
 - **Decisión (SPEC v1.7, D-16):** tope por defecto 20000 (también en `.env.example`) y `output_config.effort: "low"` en el adaptador `anthropic`. El candidato aplica el parche de `SPEC.md` y `.env.example` (archivos protegidos); IA implementa T-06.6; Arnés repite la validación real con Sonnet.
 
