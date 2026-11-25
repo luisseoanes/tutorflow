@@ -153,6 +153,22 @@
 - **Impacto:** ningún umbral se relaja. Se corrige la aplicación del umbral para que coincida con SPEC.
 - **Evidencia:** handoffs de T-06 y T-07a; transcripción de la sesión.
 
+### INT-012 · 2026-11-25 · F2 · Decisión + Prueba de control
+- **Qué pasó:** para T-10 (evals con el LLM real) hacía falta una credencial.
+- **Qué hizo el humano:**
+  1. **Pegó en el chat, de forma deliberada, una llave de Gemini (plan gratuito)** para comprobar que el manejo de secretos y el sanitizado de transcripciones (T-11) la detectan antes de publicar `/logs`. Después la **rotó**. El agente no la usó, no la guardó ni la repitió.
+  2. **Guardó la llave vigente en `.env`** (ignorado por git; los agentes tienen denegada su lectura).
+  3. **Proveedor del producto: Gemini** por su endpoint compatible con OpenAI (`LLM_PROVIDER=openai-compatible`), en lugar de Anthropic/Haiku. Esto sustituye el modelo candidato ratificado en INT-005, que sigue sujeto a evals y umbrales (SPEC §7.6).
+- **Acción del orquestador:**
+  - Las evals `[eval]` de T-10 se ejecutarán contra la API en contenedor. `docker compose` carga `.env` y el runner solo habla HTTP con `localhost:8080`, así que ningún agente lee la llave.
+  - T-11 deberá enmascarar credenciales de Google por patrón (formatos `AQ.` y `AIza`) y demostrar que la llave de prueba no aparece en ningún archivo de `logs/`.
+- **Pendiente del candidato:**
+  - Fijar en `.env` `LLM_PROVIDER`, `LLM_BASE_URL` y `LLM_MODEL`.
+  - Indicar el modelo y la tarifa de referencia (fuente y fecha) para estimar el costo por 1.000 preguntas. Con el plan gratuito, el gasto real es 0; se reportará el costo equivalente a precio de pago.
+- **Riesgos:**
+  - El adaptador `openai-compatible` nunca se probó contra Gemini (solo con respuestas grabadas).
+  - El plan gratuito tiene límites de tasa: los 429 y reintentos pueden alargar las corridas.
+
 ---
 
 ## Notas de transparencia
