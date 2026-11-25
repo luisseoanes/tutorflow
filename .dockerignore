@@ -26,5 +26,7 @@ tests
 evals
 scripts
 escenarios
+web
+qa
 *.md
 *.sln

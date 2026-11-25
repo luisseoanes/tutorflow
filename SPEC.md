@@ -3,7 +3,7 @@
 > Especificación funcional y técnica de TutorFlow. Es la **fuente de verdad** para los agentes de la fábrica.
 > Si un agente encuentra una contradicción entre este documento y el código, **gana este documento**; si la encuentra entre este documento y el enunciado original de Q10, **se detiene y escala** (`AGENTS.md` §12, `FABRICA.md` §8).
 >
-> Versión: 1.3 · 2026-11-25 · Estado: v1.2 (INT-005) + incorporación de la interfaz web P2 y la revisión independiente (INT-015).
+> Versión: 1.5 · 2026-11-25 · Estado: v1.4 (INT-018) + D-15 ampliado al coordinador sin `estudianteId` (INT-021).
 
 ---
 
@@ -287,12 +287,12 @@ Asignaturas perdidas por programa: **ADM (COORD-02):** Valentina Castro, Microec
 | L2a Referencias explícitas | Antes del LLM, busca en la pregunta referencias a **estudiantes** del roster (id `EST-…` en variantes de mayúsculas o separadores, nombre completo, apellido o nombre de pila **únicos** en el roster; sin tildes ni mayúsculas), y a **ids de coordinadores** distintos del principal. (Las referencias a **programas** se evalúan en L2b, reglas R5/R6 de §6.7.) Si alguna referencia queda fuera del alcance → 403 sin llamar al LLM. Los nombres de coordinadores **no** se detectan (m8). | 403-acceso |
 | L2b Solicitudes de terceros | Antes del LLM, aplica las reglas léxicas deterministas de §6.7 (sujeto de terceros ∧ dato académico personal). Sin LLM ni puntajes probabilísticos. | 403-acceso |
 | L3 Herramientas por rol | El LLM solo ve las herramientas de su rol (§8). Invocar una herramienta no expuesta o inexistente → 403. | 403-acceso |
-| L4 Autorización en cada herramienta | **Cada** herramienta valida sus argumentos con un esquema estricto (tipos, formato, sin propiedades extra) y llama a `IAuthorizationPolicy.Authorize(principal, recurso)` **antes** de cualquier lectura. Incluye el alcance del coordinador por programa, tanto para un estudiante concreto (`programa(X) ∈ programas(C)`) como para los listados (`P ∈ programas(C)`). Si se omite `estudianteId`, el estudiante usa su propio id. | 403-acceso (aborta la petición) |
+| L4 Autorización en cada herramienta | **Cada** herramienta valida sus argumentos con un esquema estricto (tipos, formato, sin propiedades extra) y llama a `IAuthorizationPolicy.Authorize(principal, recurso)` **antes** de cualquier lectura. Incluye el alcance del coordinador por programa, tanto para un estudiante concreto (`programa(X) ∈ programas(C)`) como para los listados (`P ∈ programas(C)`). Si se omite `estudianteId`, el estudiante usa su propio id. | 403-acceso (aborta la petición) ante herramienta no expuesta (L3) o política (L4). **Argumentos con forma inválida** (tipos, propiedades extra, id con formato no válido): **error de herramienta devuelto al LLM**, sin leer datos, y la petición continúa dentro del tope de rondas (D-15). |
 | L5 Guardia de salida | Antes de responder, verifica que `respuesta` no contenga nombres ni ids de estudiantes fuera del alcance. | 403-acceso |
 
 Principios:
 
-- Una denegación en cualquier capa **aborta toda la petición**: nunca hay una respuesta parcial.
+- Una denegación en cualquier capa **aborta toda la petición**: nunca hay una respuesta parcial. Excepción acotada (D-15): un error de **forma** de los argumentos —incluido el argumento obligatorio ausente, p. ej. un coordinador que no indica `estudianteId` en una herramienta individual (INT-021)— no es una denegación de permiso; se devuelve al LLM como resultado de herramienta con un mensaje genérico (sin eco de datos ni pistas de alcance), no llega a la fuente de datos, cuenta para el tope de 3 rondas y se audita como herramienta `rechazado-forma`. Si el LLM vuelve a proponer un objetivo válido fuera de alcance, se aplica L4 (403).
 - Si el LLM se niega en texto sin que ninguna capa haya detectado nada, la respuesta es 200 con esa negativa y sin datos (el ejemplo 10 admite "403 o negativa"). La garantía de seguridad es que **no hay fuga de datos**; el código 403 se garantiza cuando la detección es determinista (D-03).
 - La API simulada solo se llama con ids validados y con *URL-encoding*.
 
@@ -627,6 +627,7 @@ Leer y validar el cuerpo (400) → L1 consistencia de identidad (403-identidad /
 | D-12 | Límite de `pregunta`. | 1000 caracteres (→ 400). | Una prueba con preguntas muy largas recibiría 400. |
 | D-13 | L2a/L2b necesitan referencias sin hacer consultas académicas. | `IRosterProvider` de sistema con datos mínimos, caché y auditoría propia (§6.6). | Datos de hasta TTL de antigüedad. |
 | D-14 | Una auditoría obligatoria que no puede tumbar el servicio. | `stdout` como destino principal; archivo opcional no fatal (§9.3). | Si `stdout` no se recolecta, la auditoría se pierde (responsabilidad del operador). |
+| D-15 | Argumentos de herramienta con forma inválida (p. ej. un nombre en `estudianteId`) abortaban con 403, aunque no son un intento de acceso. | Se devuelven al LLM como error de herramienta para que reintente (INT-018). Ampliado en INT-021 al argumento obligatorio ausente (coordinador sin `estudianteId`): mismo error genérico, sin lectura, nunca 403. L3 (herramienta no expuesta) y L4 (política) siguen abortando con 403. | Un LLM que insista en argumentos inválidos agota las rondas y termina en abstención; aumenta algo el consumo de tokens. |
 
 ---
 

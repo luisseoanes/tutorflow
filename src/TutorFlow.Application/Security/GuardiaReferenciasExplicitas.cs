@@ -26,7 +26,8 @@ public static class GuardiaReferenciasExplicitas
         PrincipalAcademico principal,
         RosterSnapshot roster,
         bool incluirCoordinadores,
-        string regla)
+        string regla,
+        IReadOnlyCollection<string>? codigosAsignatura = null)
     {
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(roster);
@@ -56,6 +57,9 @@ public static class GuardiaReferenciasExplicitas
         }
 
         var propio = Compacto(principal.Id);
+        var ignorados = new HashSet<string>(
+            (codigosAsignatura ?? []).Select(Compacto).Where(c => c.Length > 0),
+            StringComparer.Ordinal);
         var prefijosEstudiante = Prefijos(roster.Estudiantes.Select(e => e.Id));
         var prefijosCoordinador = Prefijos(roster.Coordinadores.Select(c => c.Id));
         AnadirPrefijo(principal.Rol == RolAcademico.Estudiante ? prefijosEstudiante : prefijosCoordinador, propio);
@@ -76,7 +80,7 @@ public static class GuardiaReferenciasExplicitas
                         fuera.Add(est.Id);
                     }
                 }
-                else
+                else if (!ignorados.Contains(candidato))
                 {
                     // Id con forma de estudiante ausente del roster: denegado (SPEC 6.1).
                     fuera.Add(candidato.ToUpperInvariant());

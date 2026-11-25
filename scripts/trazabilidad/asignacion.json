@@ -4,7 +4,10 @@
   "tareas": {
     "T-01": {
       "descripcion": "Core: esqueleto (FABRICA §6 y brief T-01)",
-      "criterios": ["ACAD-05.b", "RES-12.b"]
+      "criterios": [
+        "ACAD-05.b",
+        "RES-12.b"
+      ]
     },
     "T-02": {
       "descripcion": "Core: dominio academico y politica. Todos los [dom] de ACAD (salvo ACAD-05.b, que es de T-01) y AUTH-22.a; se resuelve por la regla 'dom' del final.",
@@ -13,66 +16,127 @@
     "T-03": {
       "descripcion": "IA: chunking, cuarentena, bm25, full-context",
       "criterios": [
-        "RAG-14.a", "RAG-14.b", "RAG-14.c",
-        "RAG-15.a", "RAG-15.b", "RAG-15.c", "RAG-15.d",
+        "RAG-14.a",
+        "RAG-14.b",
+        "RAG-14.c",
+        "RAG-15.a",
+        "RAG-15.b",
+        "RAG-15.c",
+        "RAG-15.d",
         "RES-11.b"
       ]
     },
     "T-05a": {
       "descripcion": "Core: fuente de datos y roster",
-      "criterios": ["AUTH-23.b", "AUTH-24.a"]
+      "criterios": [
+        "AUTH-23.b",
+        "AUTH-24.a"
+      ]
     },
     "T-05b": {
       "descripcion": "Core: cuerpo, identidad (L1) y API",
       "criterios": [
         "AUTH-08.a",
-        "AUTH-09.a", "AUTH-10.a", "AUTH-10.b", "AUTH-11.a", "AUTH-12.a", "AUTH-13.a", "AUTH-14.a",
+        "AUTH-09.a",
+        "AUTH-10.a",
+        "AUTH-10.b",
+        "AUTH-11.a",
+        "AUTH-12.a",
+        "AUTH-13.a",
+        "AUTH-14.a",
         "AUTH-13.b",
-        "AUTH-15.a", "AUTH-15.c",
+        "AUTH-15.a",
+        "AUTH-15.c",
         "AUTH-23.a",
-        "ADV-15.a", "ADV-16.a", "ADV-16.b",
-        "RES-01.a", "RES-04.a", "RES-09.a"
+        "ADV-15.a",
+        "ADV-16.a",
+        "ADV-16.b",
+        "RES-01.a",
+        "RES-04.a",
+        "RES-09.a"
       ]
     },
     "T-05c": {
       "descripcion": "Core: guardias L2a, L2b y L5",
       "criterios": [
         "AUTH-02.a",
-        "AUTH-03.a", "AUTH-03.b", "AUTH-03.c",
-        "AUTH-04.a", "AUTH-04.b",
-        "AUTH-05.a", "AUTH-05.b", "AUTH-05.c",
-        "AUTH-06.a", "AUTH-06.b",
+        "AUTH-03.a",
+        "AUTH-03.b",
+        "AUTH-03.c",
+        "AUTH-04.a",
+        "AUTH-04.b",
+        "AUTH-05.a",
+        "AUTH-05.b",
+        "AUTH-05.c",
+        "AUTH-06.a",
+        "AUTH-06.b",
         "AUTH-07.a",
         "AUTH-17.a",
         "AUTH-18.c",
-        "AUTH-21.a", "AUTH-21.b",
-        "AUTH-25.a", "AUTH-25.b",
-        "ADV-01.c", "ADV-02.a", "ADV-05.a", "ADV-13.a"
+        "AUTH-21.a",
+        "AUTH-21.b",
+        "AUTH-25.a",
+        "AUTH-25.b",
+        "ADV-01.c",
+        "ADV-02.a",
+        "ADV-05.a",
+        "ADV-13.a"
       ]
     },
     "T-05d": {
       "descripcion": "Core: herramientas, despachador (L3 + esquema + L4) y citas deterministas",
       "criterios": [
-        "AUTH-06.c", "AUTH-16.a", "AUTH-19.a", "AUTH-20.a", "AUTH-23.c",
+        "AUTH-06.c",
+        "AUTH-16.a",
+        "AUTH-19.a",
+        "AUTH-20.a",
+        "AUTH-23.c",
         "ADV-11.a",
-        "ACAD-01.b", "ACAD-06.b", "ACAD-08.b", "ACAD-12.b", "ACAD-13.b", "ACAD-15.b", "ACAD-16.b", "ACAD-19.b", "ACAD-20.a",
+        "ACAD-01.b",
+        "ACAD-06.b",
+        "ACAD-08.b",
+        "ACAD-12.b",
+        "ACAD-13.b",
+        "ACAD-15.b",
+        "ACAD-16.b",
+        "ACAD-19.b",
+        "ACAD-20.a",
         "RES-10.a"
       ]
     },
     "T-05e": {
       "descripcion": "Core: auditoria",
-      "criterios": ["AUTH-03.d", "AUTH-08.b", "AUTH-24.b", "RES-04.b", "RES-08.b"]
+      "criterios": [
+        "AUTH-03.d",
+        "AUTH-08.b",
+        "AUTH-24.b",
+        "RES-04.b",
+        "RES-08.b"
+      ]
     },
     "T-06": {
       "descripcion": "IA: proveedores LLM, bucle, citas/abstencion, tokens/costo (criterios de la ficha IA que no son de T-03)",
       "criterios": [
-        "RAG-01.b", "RAG-09.a", "RAG-13.a", "RAG-13.b",
+        "RAG-01.b",
+        "RAG-09.a",
+        "RAG-13.a",
+        "RAG-13.b",
         "ACAD-07.b",
-        "RES-05.a", "RES-05.b", "RES-05.d",
-        "RES-06.a", "RES-06.b",
-        "RES-07.a", "RES-07.b", "RES-07.c",
+        "RES-05.a",
+        "RES-05.b",
+        "RES-05.d",
+        "RES-06.a",
+        "RES-06.b",
+        "RES-07.a",
+        "RES-07.b",
+        "RES-07.c",
         "RES-13.a",
-        "ADV-07.a", "ADV-07.b", "ADV-08.a", "ADV-14.a", "ADV-15.b", "ADV-15.c"
+        "ADV-07.a",
+        "ADV-07.b",
+        "ADV-08.a",
+        "ADV-14.a",
+        "ADV-15.b",
+        "ADV-15.c"
       ]
     },
     "T-07a": {
@@ -81,49 +145,206 @@
     },
     "T-07b": {
       "descripcion": "Arnes: pruebas de contrato RES-02, smoke en contenedor y exigencia completa de mutantes (INT-010). RES-02 mas los [cont] (por regla).",
-      "criterios": ["RES-02.a", "RES-02.b", "RES-02.c"]
+      "criterios": [
+        "RES-02.a",
+        "RES-02.b",
+        "RES-02.c"
+      ]
     },
     "T-08": {
       "descripcion": "Core: integracion E2E. Lista explicita; ademas, por la regla de cierre de FABRICA §6, todo [app]/[api] de Core no listado en otra tarea.",
       "criterios": [
-        "AUTH-01.a", "AUTH-01.b", "AUTH-01.c",
-        "AUTH-06.d", "AUTH-15.b", "AUTH-16.b", "AUTH-17.b", "AUTH-18.a", "AUTH-19.b", "AUTH-24.c",
-        "ADV-01.a", "ADV-04.a", "ADV-06.a", "ADV-10.a", "ADV-12.a",
-        "ACAD-01.c", "ACAD-11.a", "ACAD-11.b",
-        "RES-05.c", "RES-08.a", "RES-11.a", "RES-12.a"
+        "AUTH-01.a",
+        "AUTH-01.b",
+        "AUTH-01.c",
+        "AUTH-06.d",
+        "AUTH-15.b",
+        "AUTH-16.b",
+        "AUTH-17.b",
+        "AUTH-18.a",
+        "AUTH-19.b",
+        "AUTH-24.c",
+        "ADV-01.a",
+        "ADV-04.a",
+        "ADV-06.a",
+        "ADV-10.a",
+        "ADV-12.a",
+        "ACAD-01.c",
+        "ACAD-11.a",
+        "ACAD-11.b",
+        "RES-05.c",
+        "RES-08.a",
+        "RES-11.a",
+        "RES-12.a"
       ]
     },
     "T-10": {
       "descripcion": "Arnes: evals [eval] reales (todos los [eval], por regla)",
       "criterios": []
+    },
+    "T-12": {
+      "descripcion": "Arnes: infraestructura web (compose, jobs web/web-e2e/propiedad, trazabilidad web). Sin criterios propios: WEB-16.a/b (FABRICA §6.1 'con T-13') se prueban en web/e2e, que escribe Core, y se asignan a T-13.",
+      "criterios": []
+    },
+    "T-13": {
+      "descripcion": "Core: interfaz web. Todos los [web] y [e2e] de escenarios/web.md (por regla). Solo se exige cuando T-13 esta integrada (la web es P2), tambien en --completo.",
+      "criterios": [],
+      "solo_si_integrada": true
+    },
+    "T-14": {
+      "descripcion": "QA: revision independiente. Todos los [qa] de escenarios/web.md, satisfechos por un informe qa/revisiones/T-13-r<n>.md APPROVED que los lista. Solo se exige cuando T-14 esta integrada.",
+      "criterios": [],
+      "solo_si_integrada": true
     }
   },
   "reglas": [
-    { "si_nivel": "dom", "tarea": "T-02", "nota": "T-02 = los [dom] de ACAD y AUTH-22.a (FABRICA §6); T-01 los suyos explicitos." },
-    { "si_nivel": "ret", "tarea": "T-07a", "nota": "Criterios [ret] -> T-07a, que crea el runner determinista (INT-010; brief T-04)." },
-    { "si_nivel": "cont", "tarea": "T-07b", "nota": "Criterios [cont] -> smoke (T-07b, INT-010)." },
-    { "si_nivel": "eval", "tarea": "T-10", "nota": "Criterios [eval] -> evals reales (T-10)." },
-    { "si_nivel": ["app", "api"], "tarea": "T-08", "nota": "Regla de cierre de FABRICA §6: todo [app]/[api] no listado ni de IA ni de Arnes -> T-08." }
+    {
+      "si_nivel": [
+        "web",
+        "e2e"
+      ],
+      "tarea": "T-13",
+      "nota": "INT-015: los [web]/[e2e] los escribe Core en T-13 (marcador '// Criterio: WEB-nn.x' en web/**)."
+    },
+    {
+      "si_nivel": "qa",
+      "tarea": "T-14",
+      "nota": "INT-015: los [qa] los satisface el informe APPROVED de la revision independiente (T-14)."
+    },
+    {
+      "si_nivel": "dom",
+      "tarea": "T-02",
+      "nota": "T-02 = los [dom] de ACAD y AUTH-22.a (FABRICA §6); T-01 los suyos explicitos."
+    },
+    {
+      "si_nivel": "ret",
+      "tarea": "T-07a",
+      "nota": "Criterios [ret] -> T-07a, que crea el runner determinista (INT-010; brief T-04)."
+    },
+    {
+      "si_nivel": "cont",
+      "tarea": "T-07b",
+      "nota": "Criterios [cont] -> smoke (T-07b, INT-010)."
+    },
+    {
+      "si_nivel": "eval",
+      "tarea": "T-10",
+      "nota": "Criterios [eval] -> evals reales (T-10)."
+    },
+    {
+      "si_nivel": [
+        "app",
+        "api"
+      ],
+      "tarea": "T-08",
+      "nota": "Regla de cierre de FABRICA §6: todo [app]/[api] no listado ni de IA ni de Arnes -> T-08."
+    }
   ],
   "inferidas": [
-    { "criterio": "AUTH-10.b", "tarea": "T-05b", "motivo": "FABRICA §6 lista 'AUTH-09.a..AUTH-14.a'. Se interpreta el rango como todos los criterios de AUTH-09..AUTH-14 salvo AUTH-13.b (listado aparte). AUTH-10.b es el unico criterio b dentro del rango que no se lista; por la regla de cierre caeria en T-08." },
-    { "criterio": "RES-11.b", "tarea": "T-03", "motivo": "La ficha IA lo asigna a IA pero no a una tarea; indexar un documento adicional es indexacion (T-03)." },
-    { "criterio": "RES-13.a", "tarea": "T-06", "motivo": "La ficha IA lo asigna a IA; la resolucion de adaptadores de proveedor llega con T-06." },
-    { "criterio": "ADV-07.a", "tarea": "T-06", "motivo": "Exige el prompt capturado por el LLM guionizado en toda estrategia: requiere el constructor de prompt (T-06), no solo T-03." },
-    { "criterio": "ADV-07.b", "tarea": "T-06", "motivo": "Exige la validacion de citas del flujo con LLM guionizado (T-06)." },
-    { "criterio": "ADV-08.a", "tarea": "T-06", "motivo": "Prompt capturado (T-06)." },
-    { "criterio": "ADV-14.a", "tarea": "T-06", "motivo": "Prompt capturado (T-06)." },
-    { "criterio": "ADV-15.b", "tarea": "T-06", "motivo": "Bucle de herramientas (T-06)." },
-    { "criterio": "ADV-15.c", "tarea": "T-06", "motivo": "Tope de tokens del bucle (T-06)." },
-    { "criterio": "RAG-01.b", "tarea": "T-06", "motivo": "Validacion de citas (T-06)." },
-    { "criterio": "RAG-09.a", "tarea": "T-06", "motivo": "Abstencion posterior (T-06)." },
-    { "criterio": "RAG-13.a", "tarea": "T-06", "motivo": "Validacion de citas (T-06)." },
-    { "criterio": "RAG-13.b", "tarea": "T-06", "motivo": "Abstencion posterior (T-06)." },
-    { "criterio": "ACAD-07.b", "tarea": "T-06", "motivo": "Citas del flujo con LLM guionizado (T-06)." },
-    { "criterio": "RES-05.a/b/d, RES-06.a/b, RES-07.a/b/c", "tarea": "T-06", "motivo": "Proveedores, reintentos, salida invalida y tokens/costo son el alcance de T-06 (FABRICA §6 W2)." },
-    { "criterio": "RES-02.a/b/c", "tarea": "T-07b", "motivo": "La ficha Arnes lo asigna; T-07b es la tarea de pruebas de contrato (INT-010)." },
-    { "criterio": "[ret] y [cont] (regla)", "tarea": "T-07a/T-07b", "motivo": "Brief de T-04 y INT-010: [ret] -> T-07a (runner), [cont] -> T-07b (smoke)." },
-    { "criterio": "[eval] (regla)", "tarea": "T-10", "motivo": "Indicado en el brief de T-04." },
-    { "criterio": "T-02 = [dom] de ACAD y AUTH-22.a", "tarea": "T-02", "motivo": "Texto de FABRICA §6 en la regla de cierre; se aplica como regla por nivel dom (ACAD-05.b y RES-12.b explicitos en T-01)." }
+    {
+      "criterio": "AUTH-10.b",
+      "tarea": "T-05b",
+      "motivo": "FABRICA §6 lista 'AUTH-09.a..AUTH-14.a'. Se interpreta el rango como todos los criterios de AUTH-09..AUTH-14 salvo AUTH-13.b (listado aparte). AUTH-10.b es el unico criterio b dentro del rango que no se lista; por la regla de cierre caeria en T-08."
+    },
+    {
+      "criterio": "RES-11.b",
+      "tarea": "T-03",
+      "motivo": "La ficha IA lo asigna a IA pero no a una tarea; indexar un documento adicional es indexacion (T-03)."
+    },
+    {
+      "criterio": "RES-13.a",
+      "tarea": "T-06",
+      "motivo": "La ficha IA lo asigna a IA; la resolucion de adaptadores de proveedor llega con T-06."
+    },
+    {
+      "criterio": "ADV-07.a",
+      "tarea": "T-06",
+      "motivo": "Exige el prompt capturado por el LLM guionizado en toda estrategia: requiere el constructor de prompt (T-06), no solo T-03."
+    },
+    {
+      "criterio": "ADV-07.b",
+      "tarea": "T-06",
+      "motivo": "Exige la validacion de citas del flujo con LLM guionizado (T-06)."
+    },
+    {
+      "criterio": "ADV-08.a",
+      "tarea": "T-06",
+      "motivo": "Prompt capturado (T-06)."
+    },
+    {
+      "criterio": "ADV-14.a",
+      "tarea": "T-06",
+      "motivo": "Prompt capturado (T-06)."
+    },
+    {
+      "criterio": "ADV-15.b",
+      "tarea": "T-06",
+      "motivo": "Bucle de herramientas (T-06)."
+    },
+    {
+      "criterio": "ADV-15.c",
+      "tarea": "T-06",
+      "motivo": "Tope de tokens del bucle (T-06)."
+    },
+    {
+      "criterio": "RAG-01.b",
+      "tarea": "T-06",
+      "motivo": "Validacion de citas (T-06)."
+    },
+    {
+      "criterio": "RAG-09.a",
+      "tarea": "T-06",
+      "motivo": "Abstencion posterior (T-06)."
+    },
+    {
+      "criterio": "RAG-13.a",
+      "tarea": "T-06",
+      "motivo": "Validacion de citas (T-06)."
+    },
+    {
+      "criterio": "RAG-13.b",
+      "tarea": "T-06",
+      "motivo": "Abstencion posterior (T-06)."
+    },
+    {
+      "criterio": "ACAD-07.b",
+      "tarea": "T-06",
+      "motivo": "Citas del flujo con LLM guionizado (T-06)."
+    },
+    {
+      "criterio": "RES-05.a/b/d, RES-06.a/b, RES-07.a/b/c",
+      "tarea": "T-06",
+      "motivo": "Proveedores, reintentos, salida invalida y tokens/costo son el alcance de T-06 (FABRICA §6 W2)."
+    },
+    {
+      "criterio": "RES-02.a/b/c",
+      "tarea": "T-07b",
+      "motivo": "La ficha Arnes lo asigna; T-07b es la tarea de pruebas de contrato (INT-010)."
+    },
+    {
+      "criterio": "[ret] y [cont] (regla)",
+      "tarea": "T-07a/T-07b",
+      "motivo": "Brief de T-04 y INT-010: [ret] -> T-07a (runner), [cont] -> T-07b (smoke)."
+    },
+    {
+      "criterio": "[eval] (regla)",
+      "tarea": "T-10",
+      "motivo": "Indicado en el brief de T-04."
+    },
+    {
+      "criterio": "T-02 = [dom] de ACAD y AUTH-22.a",
+      "tarea": "T-02",
+      "motivo": "Texto de FABRICA §6 en la regla de cierre; se aplica como regla por nivel dom (ACAD-05.b y RES-12.b explicitos en T-01)."
+    },
+    {
+      "criterio": "WEB-16.a, WEB-16.b",
+      "tarea": "T-13",
+      "motivo": "FABRICA §6.1 los lista en T-12 'con T-13', pero la prueba e2e vive en web/e2e (Core). Asignarlos a T-12 haria fallar la trazabilidad al integrar T-12 sin web/. T-12 aporta el servicio; la evidencia llega con T-13."
+    },
+    {
+      "criterio": "[web]/[e2e]/[qa] en --completo",
+      "tarea": "T-13/T-14",
+      "motivo": "Los WEB solo se exigen cuando T-13/T-14 estan integradas (campo solo_si_integrada); --completo no los exige antes porque la web es P2 y no bloquea P0/P1 (FABRICA §6.1)."
+    }
   ]
 }

@@ -82,7 +82,14 @@ public sealed class ToolDispatcher : IToolDispatcher
         }
 
         // Esquema estricto: no llega a la fuente ni a la politica.
-        var args = ArgumentValidator.Validar(spec, invocacion.Argumentos) ?? throw Denegar(principal, MotivoHerramienta);
+        // D-15: la forma invalida NO es un intento de acceso; se devuelve al LLM como error generico, sin leer ni citar.
+        var args = ArgumentValidator.Validar(spec, invocacion.Argumentos);
+        if (args is null)
+        {
+            _auditoria?.HerramientaRechazadaForma(invocacion.Nombre);
+            return ErrorDeForma(spec.Nombre);
+        }
+
         intento(spec.Individual
             ? (args.EstudianteId ?? (principal.Rol == RolAcademico.Estudiante ? principal.Id : null), false)
             : (args.ProgramaId ?? (principal.ProgramasCoordinados.Count > 0 ? string.Join(",", principal.ProgramasCoordinados) : null), true));
@@ -279,6 +286,23 @@ public sealed class ToolDispatcher : IToolDispatcher
     /// <summary>La herramienta de asistencia solo lee asistencia; el nombre de la asignatura viene en esa misma fila.</summary>
     private static IReadOnlyList<NotaFuente> Notas(IReadOnlyList<AsistenciaFuente> asistencia) =>
         asistencia.Select(a => new NotaFuente(a.EstudianteId, a.Codigo, a.Asignatura, 1, null, null, null)).ToList();
+
+    /// <summary>
+    /// D-15: <see cref="ResultadoHerramienta"/> no tiene marca de error; el error viaja como contenido JSON
+    /// <c>{"error": "..."}</c>. Mensaje fijo: no repite los argumentos recibidos ni da pistas de alcance.
+    /// </summary>
+    private static ResultadoHerramienta ErrorDeForma(string herramienta)
+    {
+        var contenido = PeriodoAcademico.Json(w =>
+        {
+            w.WriteStartObject();
+            w.WriteString(
+                "error",
+                $"Argumentos no válidos para {herramienta}: usa ids con letras, dígitos y guiones, u omite estudianteId para consultar tus propios datos.");
+            w.WriteEndObject();
+        });
+        return new ResultadoHerramienta(contenido, [], UsoDatosEstudiante: false, Objetivo: null);
+    }
 
     private static AccesoDenegadoException Denegar(PrincipalAcademico principal, string motivo) => new(principal.Rol, motivo);
 }
