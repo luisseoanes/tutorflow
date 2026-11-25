@@ -125,8 +125,14 @@
       "criterios": [
         "AUTH-03.c"
       ],
-      "parches": [],
-      "nota": "Parche por definir cuando se integre T-05c (guardia L2a). Mientras la tarea no este integrada es PENDIENTE; si lo esta y no hay parche, FALLA (catalogo desactualizado)."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Preguntar/PreguntarAsistente.cs",
+          "buscar": "        DenegarSiMarcada(GuardiaReferenciasExplicitas.Evaluar(comando.Pregunta, principal, roster), principal);\n",
+          "reemplazar": ""
+        }
+      ],
+      "nota": "Elimina la llamada a la guardia L2a."
     },
     {
       "id": "M9",
@@ -223,8 +229,14 @@
         "AUTH-18.c",
         "ADV-01.c"
       ],
-      "parches": [],
-      "nota": "Parche por definir al integrar T-05c."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Preguntar/PreguntarAsistente.cs",
+          "buscar": "        DenegarSiMarcada(GuardiaSolicitudesTerceros.Evaluar(comando.Pregunta, principal, roster), principal);\n",
+          "reemplazar": ""
+        }
+      ],
+      "nota": "Elimina la llamada a la guardia L2b."
     },
     {
       "id": "M16",
@@ -233,8 +245,14 @@
       "criterios": [
         "AUTH-25.a"
       ],
-      "parches": [],
-      "nota": "Parche por definir al integrar T-05c."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Security/GuardiaSolicitudesTerceros.cs",
+          "buscar": "if (st && td)",
+          "reemplazar": "if ((st || sd) && td)"
+        }
+      ],
+      "nota": "R2 invertida: un sujeto generico (sd) basta para marcar."
     }
   ]
 }
