@@ -13,7 +13,7 @@ secrets/
 q10/enunciado/*.pdf
 
 # --- Datos de ejecución de la aplicación ---
-audit/
+/audit/
 *.jsonl.tmp
 .embeddings-cache/
 
