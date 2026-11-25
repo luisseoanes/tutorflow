@@ -14,6 +14,15 @@ public sealed class OpenAiCompatibleLlmClient(
     Action<string>? log = null,
     Func<TimeSpan, CancellationToken, Task>? delay = null) : HttpLlmClientBase(http, options, log, delay)
 {
+    // Campos desconocidos de cada tool_call recibido (p. ej. extra_content.google.thought_signature de Gemini),
+    // conservados de forma opaca por id de invocacion para reenviarlos intactos en el turno siguiente.
+    // El puerto ILlmClient no transporta datos opacos; el adaptador (singleton) los recuerda con tope de tamano.
+    private const int MaxExtrasRecordados = 512;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ExtrasInvocacion> _extras = new(StringComparer.Ordinal);
+    private long _secuencia;
+
+    private sealed record ExtrasInvocacion(long Orden, IReadOnlyList<(string Nombre, string Json)> Llamada, IReadOnlyList<(string Nombre, string Json)> Funcion);
+
     protected override string Endpoint =>
         (Options.BaseUrl ?? LlmOptions.DefaultOpenAiBaseUrl).TrimEnd('/') + "/chat/completions";
 
@@ -52,7 +61,26 @@ public sealed class OpenAiCompatibleLlmClient(
                         w.WriteStartObject("function");
                         w.WriteString("name", msgs[i].NombreHerramienta);
                         w.WriteString("arguments", ArgumentosComoJson(msgs[i].Contenido).GetRawText());
+                        _extras.TryGetValue(msgs[i].InvocacionId!, out var extras);
+                        if (extras is not null)
+                        {
+                            foreach (var (nombre, json) in extras.Funcion)
+                            {
+                                w.WritePropertyName(nombre);
+                                w.WriteRawValue(json, skipInputValidation: true);
+                            }
+                        }
+
                         w.WriteEndObject();
+                        if (extras is not null)
+                        {
+                            foreach (var (nombre, json) in extras.Llamada)
+                            {
+                                w.WritePropertyName(nombre);
+                                w.WriteRawValue(json, skipInputValidation: true);
+                            }
+                        }
+
                         w.WriteEndObject();
                         i++;
                     }
@@ -67,6 +95,11 @@ public sealed class OpenAiCompatibleLlmClient(
                 {
                     w.WriteString("role", "tool");
                     w.WriteString("tool_call_id", m.InvocacionId);
+                    if (m.NombreHerramienta is not null && m.InvocacionId is not null && _extras.ContainsKey(m.InvocacionId))
+                    {
+                        // Proveedores que exigen reenviar extras (Gemini) mapean la respuesta por nombre de funcion.
+                        w.WriteString("name", m.NombreHerramienta);
+                    }
                 }
                 else
                 {
@@ -132,8 +165,21 @@ public sealed class OpenAiCompatibleLlmClient(
                     argumentos = d.RootElement.Clone();
                 }
 
+                var idProveedor = call.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String ? id.GetString() : null;
+                var extraLlamada = Desconocidos(call, "id", "type", "function");
+                var extraFuncion = Desconocidos(fn, "name", "arguments");
+                if (extraLlamada.Count > 0 || extraFuncion.Count > 0)
+                {
+                    if (string.IsNullOrEmpty(idProveedor))
+                    {
+                        idProveedor = "tf-" + Guid.NewGuid().ToString("N");
+                    }
+
+                    Recordar(idProveedor, new ExtrasInvocacion(Interlocked.Increment(ref _secuencia), extraLlamada, extraFuncion));
+                }
+
                 invocaciones.Add(new InvocacionPropuesta(
-                    call.TryGetProperty("id", out var id) ? id.GetString() : null,
+                    string.IsNullOrEmpty(idProveedor) ? null : idProveedor,
                     fn.GetProperty("name").GetString() ?? string.Empty,
                     argumentos));
             }
@@ -141,6 +187,32 @@ public sealed class OpenAiCompatibleLlmClient(
 
         var usage = root.GetProperty("usage");
         return new LlmResponse(texto, invocaciones, new UsoTokens(Int(usage, "prompt_tokens"), Int(usage, "completion_tokens")));
+    }
+
+    private static List<(string, string)> Desconocidos(JsonElement e, params string[] conocidos)
+    {
+        var lista = new List<(string, string)>();
+        foreach (var p in e.EnumerateObject())
+        {
+            if (!conocidos.Contains(p.Name, StringComparer.Ordinal))
+            {
+                lista.Add((p.Name, p.Value.GetRawText()));
+            }
+        }
+
+        return lista;
+    }
+
+    private void Recordar(string id, ExtrasInvocacion extras)
+    {
+        _extras[id] = extras;
+        if (_extras.Count > MaxExtrasRecordados)
+        {
+            foreach (var viejo in _extras.OrderBy(kv => kv.Value.Orden).Take(_extras.Count - MaxExtrasRecordados / 2).Select(kv => kv.Key))
+            {
+                _extras.TryRemove(viejo, out _);
+            }
+        }
     }
 
     private static int Int(JsonElement e, string name) =>
