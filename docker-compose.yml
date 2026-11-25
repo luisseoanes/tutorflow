@@ -46,10 +46,8 @@ services:
   # Interfaz web (SPEC-WEB §9, T-12). El Dockerfile y la configuracion del servidor estatico son de Core (web/**, T-13):
   # build con Node -> servidor estatico que sirve el bundle, hace proxy de /api/* a tutorflow:8080 (mismo origen, sin CORS) y fija
   # CSP estricta, X-Content-Type-Options: nosniff y Referrer-Policy: no-referrer. El contenedor escucha en 3000. Sin secretos.
-  # Perfil 'web': mientras web/ no exista (T-13 sin integrar) 'docker compose up' sin perfil no lo toca y no falla.
-  # Uso: docker compose --profile web up -d   (o COMPOSE_PROFILES=web). Al integrar T-13 se valorara quitar el perfil.
+  # Sin perfil (INT-021): 'docker compose up -d' levanta tambien la interfaz en :3000.
   web:
-    profiles: ["web"]
     build: ./web
     ports:
       - "3000:3000"
