@@ -72,7 +72,18 @@ export function vigilarConsola(page: Page): { mensajes: string[] } {
   return { mensajes };
 }
 
+/** Espera a que terminen las animaciones y transiciones de la página: axe debe medir el estado estable; las infinitas (spinner, skeleton) no se esperan (p. ej. el fundido de una cita recién expandida). */
+export async function esperarAnimaciones(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    await Promise.all(document
+        .getAnimations()
+        .filter((a) => Number.isFinite(a.effect?.getComputedTiming().endTime ?? Number.POSITIVE_INFINITY))
+        .map((a) => a.finished.catch(() => undefined)));
+  });
+}
+
 export async function axeGrave(page: Page): Promise<string[]> {
+  await esperarAnimaciones(page);
   const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   return r.violations
     .filter((v) => v.impact === "serious" || v.impact === "critical")
