@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "fuente": "Transcrita de FABRICA.md §4.1 (propiedad de rutas). Un commit con trailer 'Agente: X' solo puede tocar rutas de X. 'permitidas' y 'excluidas' son globs sobre rutas relativas a la raiz con '/': '*' = un segmento (sin '/'), '**' = cualquier profundidad. 'excluidas' gana sobre 'permitidas'.",
+  "agentes": {
+    "core": {
+      "descripcion": "Core: solucion, dominio, aplicacion e infraestructura (salvo Retrieval/Llm), API, pruebas de Core y web/**",
+      "permitidas": [
+        "TutorFlow.sln", "global.json", "Directory.Build.props", "src/*/*.csproj", "tests/*/*.csproj",
+        "src/TutorFlow.Domain/**",
+        "src/TutorFlow.Application/**",
+        "src/TutorFlow.Infrastructure/**",
+        "src/TutorFlow.Api/**",
+        "tests/TutorFlow.Domain.Tests/**",
+        "tests/TutorFlow.Architecture.Tests/**",
+        "tests/TutorFlow.Application.Tests/**",
+        "tests/TutorFlow.Api.Tests/**",
+        "web/**"
+      ],
+      "excluidas": [
+        "src/TutorFlow.Application/Retrieval/**", "src/TutorFlow.Application/Llm/**",
+        "src/TutorFlow.Infrastructure/Retrieval/**", "src/TutorFlow.Infrastructure/Llm/**",
+        "tests/TutorFlow.Application.Tests/Retrieval/**", "tests/TutorFlow.Application.Tests/Llm/**",
+        "tests/TutorFlow.Api.Tests/Contract/**"
+      ]
+    },
+    "ia": {
+      "descripcion": "IA: recuperacion y LLM (codigo y sus pruebas)",
+      "permitidas": [
+        "src/TutorFlow.Application/Retrieval/**", "src/TutorFlow.Application/Llm/**",
+        "src/TutorFlow.Infrastructure/Retrieval/**", "src/TutorFlow.Infrastructure/Llm/**",
+        "tests/TutorFlow.Application.Tests/Retrieval/**", "tests/TutorFlow.Application.Tests/Llm/**"
+      ],
+      "excluidas": []
+    },
+    "arnes": {
+      "descripcion": "Arnes: evals, scripts, Docker, CI, README, pruebas de contrato y exportaciones de logs",
+      "permitidas": [
+        "tests/TutorFlow.Api.Tests/Contract/**",
+        "evals/**", "scripts/**",
+        "Dockerfile", ".dockerignore", "docker-compose.yml",
+        ".github/**", "README.md",
+        "logs/*.jsonl", "logs/*.md"
+      ],
+      "excluidas": ["logs/README.md"]
+    },
+    "qa": {
+      "descripcion": "QA: informes, evidencias y verificaciones de la revision independiente",
+      "permitidas": ["qa/**"],
+      "excluidas": []
+    },
+    "orquestador": {
+      "descripcion": "Orquestador: solo documentos (los que FABRICA §4.1 asigna al humano, que el orquestador registra o transcribe) y merges (un merge limpio no tiene cambios propios). Nunca codigo, pruebas, scripts, CI ni web/qa.",
+      "permitidas": [
+        "SPEC.md", "SPEC-WEB.md", "AGENTS.md", "FABRICA.md", "INTERVENCIONES.md", "REPORTE.md", "CLAUDE.md",
+        "logs/README.md", "escenarios/**", ".claude/**", ".gitignore", ".env.example", ".gitleaks.toml", "q10/**"
+      ],
+      "excluidas": []
+    }
+  }
+}

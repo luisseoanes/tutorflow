@@ -71,7 +71,19 @@ evals/correr-eval.sh a                                                  # evals 
 
 Las evals `[eval]` hablan solo HTTP con la API en ejecución; la llave llega al contenedor por `env_file` y el runner nunca la recibe. Detalles y combinaciones (modelo x estrategia): [`evals/README.md`](evals/README.md). Los resultados reales y la recomendación de estrategia/modelo están en [`evals/RESULTADOS.md`](evals/RESULTADOS.md).
 
-La CI (`.github/workflows/ci.yml`) tiene jobs bloqueantes (build-test, retrieval, mutantes, trazabilidad, secretos con gitleaks, lights-out y smoke) y uno **no bloqueante**, `evals-llm`, que se lanza a mano (`workflow_dispatch`) y se omite si no existe el secreto `LLM_API_KEY`.
+### Interfaz web (P2, `SPEC-WEB.md`)
+
+El servicio `web` (puerto **3000**, proxy de `/api/*` hacia `tutorflow:8080`) está en `docker-compose.yml` bajo el perfil `web`; su `Dockerfile` vive en `web/` (T-13). Hasta que `web/` exista, `docker compose up` no lo toca:
+
+```bash
+docker compose --profile web up -d --build     # TutorFlow en :8080 y la web en :3000
+docker compose -f scripts/web/compose.yml run --rm node npm ci          # herramientas web sin instalar nada en el host
+docker compose -f scripts/web/compose.yml run --rm playwright npx playwright test
+```
+
+Detalles (versiones fijadas, cómo la imagen de Playwright alcanza la app): [`scripts/web/README.md`](scripts/web/README.md). Los marcadores `// Criterio: WEB-nn.x` de las pruebas web y los informes de revisión que cuentan para la trazabilidad: [`scripts/trazabilidad/README.md`](scripts/trazabilidad/README.md).
+
+La CI (`.github/workflows/ci.yml`) tiene jobs bloqueantes (build-test, retrieval, mutantes, trazabilidad, secretos con gitleaks, lights-out, smoke y `propiedad`, que verifica que cada commit con `Agente: X` toca solo las rutas de X según `scripts/propiedad/rutas.json`; `web` y `web-e2e` corren solo si existe `web/` y se omiten diciéndolo) y uno **no bloqueante**, `evals-llm`, que se lanza a mano (`workflow_dispatch`) y se omite si no existe el secreto `LLM_API_KEY`.
 
 ## Limitación conocida: no hay autenticación (SPEC §6.5)
 
