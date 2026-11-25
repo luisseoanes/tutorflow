@@ -309,6 +309,110 @@ Salida literal de `reevaluar` (47 casos; 41 OK y 6 con falla en ambas, igual que
 - (b) incumple solo cobertura de citas (0.8889, a 0.0111 del umbral). La exactitud numérica (0.95) pasa por el cambio de umbral, no por una mejora.
 - (b) es la más cercana a cumplir, pero con 47 casos, una corrida y variabilidad del LLM (ver T-10.2) eso no basta para recomendarla. Queda abierta una corrida más por combinación (FABRICA §7.1) si el humano la autoriza.
 
+## T-10.4 · Comparación de modelos sobre cbd0321
+
+> **Qué es y qué NO es.** Dos corridas reales nuevas con `claude-sonnet-5-5` (proveedor Anthropic) sobre el commit **`cbd0321`** (main `95b54d9` con T-05h, T-06.4 y T-06.5, más las infraestructuras de evals de esta rama), dataset v2, umbrales vigentes de INT-022. Fecha 2026-11-25. Se omiten las baterías de Gemini: por decisión humana **no se gastó la 3.ª corrida** de `gemini-3.5-flash-lite`. Por eso la comparación con Gemini es contra **T-10.2 sobre `cd31f51`**, es decir **código distinto**: la diferencia entre columnas mezcla el modelo con los cambios de T-05h, T-06.4 y T-06.5. Lo que se lee como "límite del modelo" es un **indicio, no una prueba**.
+>
+> Precio de Sonnet 5.5: **2 USD entrada / 10 USD salida por millón de tokens**. Fuente: https://platform.claude.com/docs/en/about-claude/pricing (consultada 2026-11-25), sin descuento de caché (el adaptador no la usa). Gemini: 0.30 / 2.50 USD (T-10.2). Costos equivalentes a precio de pago.
+
+### Antes de la batería: validaciones del adaptador
+
+| Prueba | Resultado | Crudo |
+|---|---|---|
+| q02 con Sonnet sobre fa2dd69 (antes de T-06.5) | 503 en 3 intentos; el proveedor respondió HTTP 400: `` `temperature` is deprecated for this model `` | `evals/runs/validacion-t104-sonnet-q02.json` |
+| q02 con Sonnet sobre cbd0321 (T-06.5) | 200; 11 408 tokens; **la API aceptó la solicitud** (sin 400); la respuesta fue una abstención (ver el análisis) | `evals/runs/validacion-t104b-sonnet-q02.json` |
+| q06 (coordinador; varias herramientas) con Sonnet sobre cbd0321 | 200; 12 381 tokens; 6.5 s; sin 400 con varias rondas de herramientas | `evals/runs/validacion-t104b-sonnet-q06.json` |
+
+El 400 por `temperature` es el defecto que corrigió T-06.5. Con el código corregido no se observó ningún 400 en las 94 preguntas de las dos baterías (0 respuestas 429 y 0 respuestas 503).
+
+### Métricas SPEC §7.6 (umbral vigente INT-022; entre paréntesis el original)
+
+| Métrica | Umbral vigente (original) | (a) flash-lite + full-context (T-10.2, `cd31f51`) | (b) flash-lite + bm25 (T-10.2, `cd31f51`) | (d) Sonnet + full-context (`cbd0321`) | (e) Sonnet + bm25 (`cbd0321`) |
+|---|---|---|---|---|---|
+| Precisión de citas | >= 0.90 (0.90) | 0.8871 NO CUMPLE | 0.9107 CUMPLE | 0.6923 **NO CUMPLE** | 0.8462 **NO CUMPLE** |
+| Cobertura de citas | >= 0.90 (0.90) | 0.9630 CUMPLE | 0.8889 NO CUMPLE | 0.5556 **NO CUMPLE** | 0.5926 **NO CUMPLE** |
+| Exactitud de abstención | >= 0.90 (1.00) | 1.0000 CUMPLE | 1.0000 CUMPLE | 0.7273 **NO CUMPLE** | 0.6364 **NO CUMPLE** |
+| Exactitud numérica | >= 0.90 (1.00) | 0.8500 NO CUMPLE | 0.9500 CUMPLE | 0.6500 **NO CUMPLE** | 0.6500 **NO CUMPLE** |
+| `cumpleUmbrales` | | NO | NO | **NO** | **NO** |
+| Casos OK / 47 | | 41 | 41 | 32 | 31 |
+| Criterios `[eval]`: CUMPLE / NO CUMPLE / NO EJECUTADO | | (ver T-10.2) | (ver T-10.2) | 24 / 15 / 3 | 24 / 15 / 3 |
+| Tokens totales (47 casos) | | 193 108 | 107 993 | 361 610 | 277 029 |
+| Tokens medios por pregunta con LLM (42) | | 4 598 | 2 571 | 8 610 | 6 596 |
+| Costo equivalente total | | 0.065950 USD | 0.041024 USD | 0.799436 USD | 0.642850 USD |
+| Costo por 1 000 preguntas (medio por pregunta con LLM x 1 000) | | 1.57 USD | 0.98 USD | **19.03 USD** | **15.31 USD** |
+| Latencia p50 / p95 (todas) | | 1 522 / 12 930 ms | 1 367 / 7 625 ms | 1 888 / 5 171 ms | 2 274 / 5 593 ms |
+| Latencia p50 / p95 (solo con LLM) | | 1 793 / 12 930 ms | 1 563 / 7 625 ms | 2 267 / 5 171 ms | 2 515 / 5 593 ms |
+| 429 / 503 | | 0 / 0 | 0 / 1 | 0 / 0 | 0 / 0 |
+| Duración de la batería | | 362 s | 357 s | 335 s | 350 s |
+| Recall@4 / MRR (`[ret]`) | >= 0.95 / >= 0.85 | no aplica | 1.0000 / 0.9167 | no aplica | no medido en esta corrida (la recuperación `bm25` no depende del modelo) |
+
+Crudos: `evals/runs/eval-20261125T214216Z-cbd0321-claude-sonnet-5-5-full-context.json` (d) y `evals/runs/eval-20261125T214823Z-cbd0321-claude-sonnet-5-5-bm25.json` (e), ambos COMPLETA 47/47. Los crudos de (a) y (b) son los de T-10.2.
+
+El costo por 1 000 preguntas de (a)/(b) se recalcula aquí con el costo medio por pregunta con LLM de los crudos (T-10.2 usó el medio de las 47). Sonnet cuesta unas 12 a 17 veces más por pregunta. Su p95 es menor que el de Gemini, pero con una sola corrida por combinación y plan gratuito en Gemini la diferencia de latencia no es concluyente.
+
+### Comparación por caso (solo casos en que alguna combinación falló)
+
+OK = pasaron todos los chequeos deterministas. "respuesta = abstención" significa que el texto devuelto es la frase de abstención (`No encuentro esa información en los documentos disponibles.`), con `citas` vacías, en un caso en que no se esperaba abstención.
+
+| Caso | (a) flash-lite+full, cd31f51 | (b) flash-lite+bm25, cd31f51 | (d) Sonnet+full, cbd0321 | (e) Sonnet+bm25, cbd0321 |
+|---|---|---|---|---|
+| q02 | OK | OK | F: falta 4.39, faltan citas, abstención indebida, usoDatos [respuesta = abstención] | F: falta 4.39, faltan citas, abstención indebida, usoDatos [respuesta = abstención] |
+| q03 | OK | OK | OK | F: falta 2, falta 48, faltan citas, abstención indebida [respuesta = abstención] |
+| q04 | F: falta 30, falta 40, faltan citas | F: falta 30, falta 40, faltan citas | OK | OK |
+| q05 | OK | OK | OK | F: falta 3.9, faltan citas, abstención indebida, usoDatos [respuesta = abstención] |
+| q06 | OK | OK | F: falta 1.8, falta 2.3, falta "Valentina Castro", faltan citas [respuesta = abstención] | F: cita de más |
+| RAG-06-a | F: falta "derogado", usoDatos | F: usoDatos | OK | OK |
+| RAG-07-a | F: falta 30%, falta "re:estratos?\s*1\s*(y|,|e" | OK | OK | OK |
+| RAG-10-a | OK | OK | F: cita donde debía abstenerse, abstención omitida | F: cita donde debía abstenerse, abstención omitida |
+| RAG-10-b | OK | OK | OK | F: texto prohibido |
+| RAG-10-c | OK | F: usoDatos | OK | OK |
+| ACAD-08-c | F: cita de más | OK | F: falta "inasistencia", faltan citas, usoDatos [respuesta = abstención] | OK |
+| ACAD-09-b | OK | OK | F: falta 2.28, usoDatos [respuesta = abstención] | F: falta 2.28, usoDatos [respuesta = abstención] |
+| ACAD-12-c | OK | F: faltan citas | F: falta "coordinador", faltan citas, usoDatos [respuesta = abstención] | F: falta "coordinador", faltan citas, usoDatos [respuesta = abstención] |
+| ACAD-13-c | OK | OK | F: faltan citas, usoDatos [respuesta = abstención] | F: faltan citas, usoDatos [respuesta = abstención] |
+| ACAD-14-b | OK | OK | F: falta 4.05, usoDatos [respuesta = abstención] | F: cita de más |
+| ACAD-15-c | OK | F: faltan citas, cita de más, usoDatos | F: faltan citas, usoDatos [respuesta = abstención] | F: cita de más |
+| ACAD-16-c | OK | OK | F: faltan citas, usoDatos [respuesta = abstención] | OK |
+| ACAD-19-c | OK | OK | F: falta 2.65, falta "prueba académica", faltan citas, usoDatos [respuesta = abstención] | OK |
+| AUTH-01-d | OK | OK | OK | F: falta 4.1, faltan citas, usoDatos [respuesta = abstención] |
+| AUTH-02-b-nombre | F: falta 48 | OK | F: cita de más | F: cita de más |
+| AUTH-02-b-id | OK | OK | OK | F: falta 2, falta 48, usoDatos [respuesta = abstención] |
+| AUTH-15-d | OK | OK | F: falta 4.39, usoDatos [respuesta = abstención] | OK |
+| AUTH-16-c | F: cita de más | F: cita de más | F: falta 0.0, falta "inasistencia", faltan citas, usoDatos [respuesta = abstención] | F: falta 0.0, falta "inasistencia", faltan citas, usoDatos [respuesta = abstención] |
+| AUTH-20-b | OK | OK | F: falta "Cálculo Integral", falta "Bases de Datos", usoDatos [respuesta = abstención] | F: falta "Cálculo Integral", falta "Bases de Datos", usoDatos [respuesta = abstención] |
+
+Resumen de fallos: (a) 6, (b) 6, (d) 15, (e) 16 de 47. En (a) y (b) ningún fallo fue una respuesta de abstención; en (d) 13 de los 15 fallos y en (e) 10 de los 16 lo fueron.
+
+### Por qué no se cumplen los umbrales
+
+Aviso de método: la clasificación sale de los chequeos guardados en los crudos y de la lectura de las respuestas, **sin revisión humana**; Gemini (cd31f51) y Sonnet (cbd0321) corren sobre **código distinto**, así que "el caso pasa con Sonnet y falla con Gemini" solo sugiere un límite del modelo. No se tocó dataset, umbrales ni producto.
+
+**Hecho central de esta corrida: Sonnet no mejora; empeora, y por una causa distinta a la de Gemini.** Ninguna combinación cumple los umbrales. La mayoría de los fallos de Sonnet son respuestas de abstención en preguntas de datos del estudiante o del programa. Evidencia directa: repetí q02 con (d) con los logs del servicio visibles: la herramienta `obtener_resumen_academico` se invocó con decisión `permitido` sobre `EST-001`, la API respondió 200 con `usoDatosEstudiante=false`, `citas=[]` y la frase de abstención. Es decir, **los datos se consultaron y aun así la respuesta final fue una abstención sin datos**. Lo que no puedo distinguir con lo guardado es si la abstención la produjo el modelo o la capa del producto/adaptador (T-06.4/T-06.5: p. ej. validación de cifras, `refusal`, `max_tokens` o bloque vacío) que convierte la salida en abstención. Es la primera pista a revisar por IA/Core; no se afirma una causa.
+
+1. **Indicio de límite del modelo (falla con flash-lite, pasa con Sonnet; código distinto, no es prueba):**
+   - `q04` (pesos 30/40 y `Sección 2`): fallaba en (a) y (b), pasa en (d) y (e).
+   - `RAG-06-a` (fallaba en a y b por `usoDatosEstudiante` verdadero; pasa en d y e) y `RAG-07-a` (fallaba en a; pasa en d y e).
+   - `RAG-10-c` (fallaba en b; pasa en d y e).
+   - Son pocos casos (4); el cambio de código T-05h/T-06.4 también puede explicarlos (T-06.4 refuerza las cifras de herramientas y las normativas textuales).
+
+2. **Prompt o producto (falla con ambos modelos; no depende del modelo con la información disponible):**
+   - `ACAD-12-c` (faltan citas `Artículo 12`; falla en b, d y e), `ACAD-15-c` (faltan citas o cita de más; b, d y e), `AUTH-16-c` (falla en a, b, d y e; con Sonnet por abstención, con Gemini por cita de más).
+   - `AUTH-02-b-nombre`: con Sonnet (d y e) la cita `Artículo 22` queda fuera de las permitidas del dataset; en `AUTH-16-c` con (b) también falla por `Artículo 22`. La repetición del mismo motivo en modelos distintos apunta a producto o a dataset (¿es legítimo citar `Artículo 22` al explicar la restricción de acceso?). **Decisión pendiente del humano**; no se verificó.
+   - `RAG-10-a`: con Sonnet (d y e) responde con citas de `bienestar_y_becas.md` donde el dataset espera abstención; con Gemini pasaba. Es un caso donde Sonnet es **menos** prudente.
+   - Fallos de abstención solo con Sonnet (`q02`, `q06`, `ACAD-09-b`, `ACAD-13-c`, `AUTH-20-b`, etc.): origen indeterminado entre modelo y producto (ver arriba); no se clasifican como límite del modelo.
+
+3. **Dataset o evaluador (la respuesta es correcta y el chequeo la marca mal):** **no hay ningún caso de esta corrida donde pueda demostrarlo.** En todos los fallos de Sonnet que revisé, la respuesta es una abstención sin datos o carece de una cifra o cita obligatoria; ninguno es una respuesta correcta marcada como mala. Candidatos que no se pueden afirmar sin revisión humana: `AUTH-02-b-nombre` y `AUTH-16-c` por la regla de citas permitidas (`Artículo 22`), y `ACAD-14-b`/`q06` en (e) por `cita de más`.
+
+**Qué sostienen los datos:** (i) Sonnet 5.5 sobre `cbd0321` incumple los cuatro umbrales en las dos estrategias; (ii) su patrón dominante de fallo es la abstención en preguntas de datos, no la imprecisión; (iii) con flash-lite sobre `cd31f51` el patrón era omisión de cifras y citas de más. **Qué no sostienen:** que Sonnet sea "peor" como modelo (el código cambió), ni que el defecto sea del modelo, del prompt o del adaptador.
+
+### Recomendación SPEC §7.3 (T-10.4, umbrales vigentes)
+
+**Ninguna combinación (a, b, d, e) cumple todos los umbrales; no se recomienda estrategia ni modelo por defecto.**
+
+- (d) y (e) incumplen los cuatro umbrales. No hay motivo para elegir Sonnet: cuesta unas 12 a 17 veces más por pregunta con peor exactitud.
+- (b) `gemini-3.5-flash-lite` + `bm25` (T-10.2, `cd31f51`) sigue siendo la más cercana: incumple solo cobertura de citas (0.8889). **Esa medición es anterior a T-05h/T-06.4/T-06.5 y no se repitió** con el código actual (la 3.ª corrida de Gemini no se ejecutó por decisión humana), así que no hay evidencia de que siga igual.
+- Siguiente paso técnico con más valor antes de gastar otra corrida: diagnosticar por qué el flujo con herramientas devuelve la frase de abstención con Sonnet pese a que la herramienta respondió (IA/Core); el resultado cambia la lectura de toda la tabla.
+
 ## Cómo repetir
 
 ```bash
