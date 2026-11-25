@@ -102,7 +102,7 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
         _auditoria?.Iniciar(comando.Pregunta, comando.Rol, comando.Id);
         var principal = await _identidad.ValidarAsync(comando.Rol, comando.Id, ct).ConfigureAwait(false);
         _auditoria?.IdentidadValidada();
-        var roster = await _roster.ObtenerAsync(ct).ConfigureAwait(false);
+        var roster = await _roster.ObtenerAsync(ct);
 
         // L2a + L2b: 403-acceso (motivo "referencia") antes de cualquier recuperacion o llamada al LLM.
         DenegarSiMarcada(GuardiaReferenciasExplicitas.Evaluar(comando.Pregunta, principal, roster), principal);
