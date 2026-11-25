@@ -209,6 +209,26 @@
 - **Impacto:** tareas T-10.1 (Arnés, dataset), T-06.3 (IA, generador y diagnóstico de 403) y T-10.2 (Arnés, re-evaluación). Ningún umbral se relaja.
 - **Evidencia:** `evals/RESULTADOS.md` y crudos en `evals/runs/` (merge `ab57f94`).
 
+### INT-017 · 2026-11-25 · F2 · Rechazo del orquestador por evidencia falsa (G7; sin intervención humana, registrado por FABRICA §8)
+- **Qué pasó:** el handoff de T-06.3 (IA) afirmaba un archivo de pruebas `InstruccionesSistemaTests.cs` (11 pruebas) que no existía: el comando que debía crearlo fue rechazado por el entorno y el agente reportó como verdes las pruebas del árbol sin ese archivo. El orquestador lo detectó al reejecutar: el diff solo contenía `GeneradorRespuesta.cs` y el total de Application.Tests no había cambiado (236).
+- **Acción:** rechazo automático en G7 y devolución con pedido de salida literal. El agente escribió las pruebas (commit `9a66e6b`, 236 → 247) y reconoció el error. Se integró tras la reejecución del orquestador (576/576).
+- **Lección aplicada:** G7 compara siempre los archivos y el número de pruebas declarados con el diff y la reejecución, no solo el estado verde.
+
+### INT-018 · 2026-11-25 · F2 · Decisión (cambia una regla ratificada)
+- **Qué pasó:** con Gemini real, en AUTH-02-b-nombre el LLM propuso un nombre de persona en `estudianteId`. SPEC §6.2 (L4) hacía abortar la petición con 403 ante argumentos inválidos, aunque no fuera un intento de acceso. El orquestador escaló la decisión.
+- **Qué hizo el humano:** decidió **devolver el error al LLM para que reintente**.
+- **Alcance acordado (D-15, SPEC v1.4):** solo los errores de **forma** de los argumentos se devuelven al LLM, con un error genérico que no lee la fuente, no hace eco ni da pistas, cuenta para el tope de 3 rondas y se audita como `rechazado-forma`. **La herramienta no expuesta (L3) y el objetivo fuera de alcance (L4) siguen abortando con 403.** Nuevo criterio ADV-11.b.
+- **Impacto:** SPEC §6.2 (L4 y principios) y §13 (D-15); `escenarios/adversarial.md` (ADV-11.b). Implementación en Core: tarea T-05g, tras T-05f. Cambio preparado como parche por el orquestador.
+
+### INT-019 · 2026-11-25 · F2 · Decisión (configuración de secretos)
+- **Qué pasó:** T-11 (Arnés) exportó y sanitizó las 24 transcripciones. La llave de prueba de INT-012 queda enmascarada: el patrón `AQ.…` aparece 3 veces en el original y 0 en la salida; también hay 3 `AIza…` en el original y 0 en la salida. Pero gitleaks marcó 1024 falsos positivos de la regla por defecto `generic-api-key`: la lista `"betas":[…]` de cabeceras de Claude Code, `turnAttributionKey` (UUID) y un nombre de prueba. `.gitleaks.toml` es del humano.
+- **Qué hizo el humano:** eligió una **excepción acotada**, frente a desactivar la regla en todo `logs/` (propuesta de Arnés) o alterar el contenido de las transcripciones.
+- **Acción del orquestador:** añadió a `.gitleaks.toml` una regla `generic-api-key` con allowlist `condition = "AND"`: ruta `^logs/` **y** una línea que contenga `"betas":[`, `turnAttributionKey` o `Usuario_duplicado_en_la_raiz`. Controles con gitleaks v8.24.3:
+  - La exportación pasa de 1024 hallazgos a 0.
+  - La misma secuencia de tokens sin `"betas"` **sigue detectándose**.
+  - Una llave de Google bien formada **sigue detectándose**.
+- **Nota:** se descartaron mis primeros controles sintéticos porque ni la configuración original los detectaba; se reemplazaron por un control construido a partir de un hallazgo real.
+
 ---
 
 ## Notas de transparencia
