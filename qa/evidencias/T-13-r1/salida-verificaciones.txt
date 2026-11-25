@@ -1,0 +1,95 @@
+[movil-375x812] q01-inicial: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q02-lista-para-enviar: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q03-403-acceso-real: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q04-403-identidad-real: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q05-503-real: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q06-400-real: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] 400 alert text: "La solicitud no es válida\n\nRevisa la pregunta (no puede estar vacía ni superar 1000 caracteres) e inténtalo de nuevo.\n\nDetalle: Solicitud invalida"
+[movil-375x812] consola(real): ["error: Failed to load resource: the server responded with a status of 403 (Forbidden)","error: Failed to load resource: the server responded with a status of 403 (Forbidden)","error: Failed to load resource: the server responded with a status of 503 (Service Unavailable)","error: Failed to load resource: the server responded with a status of 400 (Bad Request)"]
+[movil-375x812] boton en envio: count=1 disabled=true
+[movil-375x812] q10-envio-en-curso: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] foco tras 200: {"tag":"DIV","text":"Respuesta de TutorFlow\n\nTu promedio es 4","role":null,"inLive":true}
+[movil-375x812] q11-200-varias-citas-expandida: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] texto 200: "TutorFlow\n\nDisponible\n\nIdentidad declarada — no es una autenticación\n\nLa API solo comprueba que el rol y el identificador sean consistentes entre sí.\n\nRol\nestudiante\ncoordinador\nIdentificador\nHasta 32 caracteres\nTu pregunta\nEnter envía · Shift+Enter inserta una línea nueva\n0 / 1000\nEnviar\n\nTu pregunta · estudiante\n\npregunta lenta\n\nRespuesta de TutorFlow\n\nTu promedio es 4.39.\n\nMatemáticas: 4.5\nBases de Datos: 4.2\n\nEste texto es una prueba.\n\nFuentes (3)\nreglamento_academico_2025.md · Artículo 22\nreglamento_academico_2025.md · Artículo 12\nguia_evaluacion.md · Sección 3\nUsó datos del estudiante: sí\nTokens: 1234\nCosto: US$ 0.00395\nRol declarado: estudiante"
+[movil-375x812] q12-200-sin-citas: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q13-500: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q14-400-simulado: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q15-respuesta-no-reconocida: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q16-respuesta-html-no-reconocida: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q17-sin-conexion: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] q17b-sin-conexion-indicador: scrollW=375 clientW=375 bodySW=375 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[movil-375x812] cuerpos POST: ["{\"pregunta\":\"primera\",\"usuario\":{\"rol\":\"estudiante\",\"id\":\"EST-001\"}}","{\"pregunta\":\"segunda\",\"usuario\":{\"rol\":\"estudiante\",\"id\":\"EST-001\"}}"]
+[movil-375x812] almacenamiento: {"ls":0,"ss":0,"ck":"","idb":0,"caches":0,"sw":0}
+[movil-375x812] consola(sim): ["error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)","error: Failed to load resource: the server responded with a status of 400 (Bad Request)","error: Failed to load resource: net::ERR_CONNECTION_REFUSED"]
+[tablet-768x1024] q01-inicial: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q02-lista-para-enviar: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q03-403-acceso-real: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q04-403-identidad-real: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q05-503-real: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q06-400-real: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] 400 alert text: "La solicitud no es válida\n\nRevisa la pregunta (no puede estar vacía ni superar 1000 caracteres) e inténtalo de nuevo.\n\nDetalle: Solicitud invalida"
+[tablet-768x1024] consola(real): ["error: Failed to load resource: the server responded with a status of 403 (Forbidden)","error: Failed to load resource: the server responded with a status of 403 (Forbidden)","error: Failed to load resource: the server responded with a status of 503 (Service Unavailable)","error: Failed to load resource: the server responded with a status of 400 (Bad Request)"]
+[tablet-768x1024] boton en envio: count=1 disabled=true
+[tablet-768x1024] q10-envio-en-curso: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] foco tras 200: {"tag":"DIV","text":"Respuesta de TutorFlow\n\nTu promedio es 4","role":null,"inLive":true}
+[tablet-768x1024] q11-200-varias-citas-expandida: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] texto 200: "TutorFlow\n\nAPI · Disponible\n\nIdentidad declarada — no es una autenticación\n\nLa API solo comprueba que el rol y el identificador sean consistentes entre sí.\n\nRol\nestudiante\ncoordinador\nIdentificador\nHasta 32 caracteres\nTu pregunta\nEnter envía · Shift+Enter inserta una línea nueva\n0 / 1000\nEnviar\n\nTu pregunta · estudiante\n\npregunta lenta\n\nRespuesta de TutorFlow\n\nTu promedio es 4.39.\n\nMatemáticas: 4.5\nBases de Datos: 4.2\n\nEste texto es una prueba.\n\nFuentes (3)\nreglamento_academico_2025.md · Artículo 22\nreglamento_academico_2025.md · Artículo 12\nguia_evaluacion.md · Sección 3\nUsó datos del estudiante: sí\nTokens: 1234\nCosto: US$ 0.00395\nRol declarado: estudiante"
+[tablet-768x1024] q12-200-sin-citas: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q13-500: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q14-400-simulado: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q15-respuesta-no-reconocida: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q16-respuesta-html-no-reconocida: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q17-sin-conexion: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] q17b-sin-conexion-indicador: scrollW=768 clientW=768 bodySW=768 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[tablet-768x1024] cuerpos POST: ["{\"pregunta\":\"primera\",\"usuario\":{\"rol\":\"estudiante\",\"id\":\"EST-001\"}}","{\"pregunta\":\"segunda\",\"usuario\":{\"rol\":\"estudiante\",\"id\":\"EST-001\"}}"]
+[tablet-768x1024] almacenamiento: {"ls":0,"ss":0,"ck":"","idb":0,"caches":0,"sw":0}
+[tablet-768x1024] consola(sim): ["error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)","error: Failed to load resource: the server responded with a status of 400 (Bad Request)","error: Failed to load resource: net::ERR_CONNECTION_REFUSED"]
+[escritorio-1440x900] q01-inicial: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q02-lista-para-enviar: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q03-403-acceso-real: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q04-403-identidad-real: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q05-503-real: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q06-400-real: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] 400 alert text: "La solicitud no es válida\n\nRevisa la pregunta (no puede estar vacía ni superar 1000 caracteres) e inténtalo de nuevo.\n\nDetalle: Solicitud invalida"
+[escritorio-1440x900] consola(real): ["error: Failed to load resource: the server responded with a status of 403 (Forbidden)","error: Failed to load resource: the server responded with a status of 403 (Forbidden)","error: Failed to load resource: the server responded with a status of 503 (Service Unavailable)","error: Failed to load resource: the server responded with a status of 400 (Bad Request)"]
+[escritorio-1440x900] boton en envio: count=1 disabled=true
+[escritorio-1440x900] q10-envio-en-curso: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] foco tras 200: {"tag":"DIV","text":"Respuesta de TutorFlow\n\nTu promedio es 4","role":null,"inLive":true}
+[escritorio-1440x900] q11-200-varias-citas-expandida: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] texto 200: "TutorFlow\n\nAPI · Disponible\n\nIdentidad declarada — no es una autenticación\n\nLa API solo comprueba que el rol y el identificador sean consistentes entre sí.\n\nRol\nestudiante\ncoordinador\nIdentificador\nHasta 32 caracteres\nTu pregunta\nEnter envía · Shift+Enter inserta una línea nueva\n0 / 1000\nEnviar\n\nTu pregunta · estudiante\n\npregunta lenta\n\nRespuesta de TutorFlow\n\nTu promedio es 4.39.\n\nMatemáticas: 4.5\nBases de Datos: 4.2\n\nEste texto es una prueba.\n\nFuentes (3)\nreglamento_academico_2025.md · Artículo 22\nreglamento_academico_2025.md · Artículo 12\nguia_evaluacion.md · Sección 3\nUsó datos del estudiante: sí\nTokens: 1234\nCosto: US$ 0.00395\nRol declarado: estudiante"
+[escritorio-1440x900] q12-200-sin-citas: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q13-500: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q14-400-simulado: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q15-respuesta-no-reconocida: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q16-respuesta-html-no-reconocida: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q17-sin-conexion: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] q17b-sin-conexion-indicador: scrollW=1440 clientW=1440 bodySW=1440 axeSerious/Critical=[] axeAll=[] contrastRuleRan=true
+[escritorio-1440x900] cuerpos POST: ["{\"pregunta\":\"primera\",\"usuario\":{\"rol\":\"estudiante\",\"id\":\"EST-001\"}}","{\"pregunta\":\"segunda\",\"usuario\":{\"rol\":\"estudiante\",\"id\":\"EST-001\"}}"]
+[escritorio-1440x900] almacenamiento: {"ls":0,"ss":0,"ck":"","idb":0,"caches":0,"sw":0}
+[escritorio-1440x900] consola(sim): ["error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)","error: Failed to load resource: the server responded with a status of 400 (Bad Request)","error: Failed to load resource: net::ERR_CONNECTION_REFUSED"]
+TECLADO:
+tab: {"tag":"SELECT","name":"estudiante\ncoordinador","outline":"solid 2px rgb(52, 81, 209)","shadow":"none","w":120,"h":44}
+tab: {"tag":"INPUT","name":"","outline":"solid 2px rgb(52, 81, 209)","shadow":"none","w":666,"h":44}
+tab: {"tag":"TEXTAREA","name":"","outline":"solid 2px rgb(52, 81, 209)","shadow":"none","w":790,"h":96}
+tab: {"tag":"BUTTON","name":"Enviar","outline":"solid 2px rgb(52, 81, 209)","shadow":"rgba(15, 23, 42, 0.05) 0px 1px 2px 0px","w":91.59375,"h":44}
+tras-envio: {"tag":"DIV","name":"Respuesta de TutorFlow\n\nTu promedio es 4","outline":"solid 2px rgb(52, 81, 209)","shadow":"rgba(15, 23, 42, 0.06) 0px 4px 12px 0px","w":832,"h":433.21875}
+tab: {"tag":"BUTTON","name":"reglamento_academico_2025.md · Artículo ","outline":"solid 2px rgb(52, 81, 209)","shadow":"none","w":788,"h":44}
+contador: 1001 / 1000
+validacion id vacio: "Identidad declarada — no es una autenticación\n\nLa API solo comprueba que el rol y el identificador sean consistentes entre sí.\n\nRol\nestudiante\ncoordinador\nIdentificador\nIngresa tu identificador.\nTu pregunta\nEnter envía · Shift+Enter inserta una línea nueva\n4 / 1000\nEnviar"
+cuerpo enviado: {"pregunta":"hola","usuario":{"rol":"coordinador","id":" Abc 1 "}}
+opciones rol: ["estudiante","coordinador"]
+controles: ["SELECT:estudiante\ncoordinador:disabled=false","INPUT::disabled=false","TEXTAREA::disabled=false","BUTTON:Enviar:disabled=true","DIV:Respuesta de TutorFlow\n\nTu pro:disabled=undefined","BUTTON:reglamento_academico_2025.md ·:disabled=false","BUTTON:reglamento_academico_2025.md ·:disabled=false","BUTTON:guia_evaluacion.md · Sección 3:disabled=false","DIV:Respuesta de TutorFlow\n\nTu pro:disabled=undefined","BUTTON:reglamento_academico_2025.md ·:disabled=false","BUTTON:reglamento_academico_2025.md ·:disabled=false","BUTTON:guia_evaluacion.md · Sección 3:disabled=false"]
+enlaces <a>: 0
+elementos con transicion/animacion bajo reduced-motion: 0
+textos < 13px: 0
+font-family: ["Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif"]
+gradientes: 0
+[tactil inicial] [{"n":"SELECT:estudiante\ncoordinador","w":309,"h":44},{"n":"INPUT:","w":309,"h":44},{"n":"TEXTAREA:","w":301,"h":96},{"n":"BUTTON:Enviar","w":301,"h":44},{"n":"BUTTON:¿Cuál es mi promedio del ","w":301,"h":44},{"n":"BUTTON:¿Cuántas faltas puedo ten","w":301,"h":63},{"n":"BUTTON:¿Qué requisitos tiene la ","w":301,"h":63}]
+[tactil respuesta] [{"n":"SELECT:estudiante\ncoordinador","w":309,"h":44},{"n":"INPUT:","w":309,"h":44},{"n":"TEXTAREA:","w":301,"h":96},{"n":"BUTTON:Enviar","w":301,"h":44},{"n":"BUTTON:reglamento_academico_2025","w":299,"h":61},{"n":"BUTTON:reglamento_academico_2025","w":299,"h":61},{"n":"BUTTON:guia_evaluacion.md · Secc","w":299,"h":44}]
+objetivos < 44: []
+cabeceras / [200]: csp=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none' nosniff=nosniff ref=no-referrer
+cabeceras /api/salud [200]: csp=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none' nosniff=nosniff ref=no-referrer
+cabeceras /assets/nope.js [404]: csp=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none' nosniff=nosniff ref=no-referrer
+sondeo: inicial=1 a los 29s=1 a los 31s=1 tras caida: Sin conexion visible
+sondeo: inicial=1 a los 29s=1 a los 31s=1 tras caida: Sin conexion visible
+sondeo: inicial=1 a los 29s=1 a los 31s=2 tras caida: Sin conexion visible
