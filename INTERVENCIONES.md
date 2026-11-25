@@ -249,6 +249,15 @@
 - **Condición adicional:** la integración del proveedor (Gemini) no se considera validada hasta que T-10.2 complete sus baterías con el LLM real. No se alteran umbrales ni se declaran aprobaciones sin evidencia.
 - **Acción del orquestador:** aplicó los cambios documentales por autorización expresa (SPEC v1.5, ADV-11.b, AGENTS §13, `qa.md`) y despacha T-05h (Core) y T-12.2 (Arnés).
 
+### INT-022 · 2026-11-25 · F2 · Decisión (umbrales de evals)
+- **Instrucción del candidato:** "Baja los umbrales los pusimos en 1, pueden esta en 0.90 y esta bien".
+- **Cambio (SPEC v1.6, §7.6):** exactitud de abstención y exactitud numérica pasan de `1.00` a `≥ 0.90`. Precisión y cobertura de citas siguen en `≥ 0.90`; Recall@4 y MRR sin cambio. Sustituye, solo para esos dos umbrales, la frase "No se alteran umbrales" de INT-021.
+- **Transparencia:** el cambio es **posterior** a ver los resultados reales de T-10.2 (exactitud numérica 0.85 en full-context y 0.95 en bm25). Se registra como relajación decidida por el humano, no como cumplimiento del umbral original. REPORTE.md mostrará ambas lecturas (umbral original y umbral vigente).
+- **Efecto sobre T-10.2 (mismas respuestas, sin corrida nueva):** con los umbrales vigentes, (a) full-context sigue sin cumplir (precisión de citas 0.887) y (b) bm25 sigue sin cumplir (cobertura de citas 0.889). Ninguna combinación cumple todavía.
+- **Decisión sobre bm25 (candidato):** "con bm25 decidi documentemos tal cual". (b) bm25 queda documentado como **no cumple** (cobertura de citas 0.889 < 0.90) sin relajar ese umbral ni gastar la 3.ª corrida (FABRICA §7.1). En consecuencia, no hay estrategia ganadora según SPEC §7.3: el producto mantiene el valor por defecto actual de `RETRIEVAL_STRATEGY` (`full-context`, `IaServiceCollectionExtensions.DefaultStrategy`) y REPORTE.md lo declara como criterio `[eval]` RAG-10.b no satisfecho.
+- **Aplicación:** el candidato aplicó personalmente el parche de SPEC (v1.6) porque los permisos impiden al orquestador editar `SPEC.md`.
+- **Acción del orquestador:** actualiza SPEC y despacha a Arnés el cambio de constantes del runner (`evals/TutorFlow.Evals/EvalRunner.cs`) y la reevaluación offline de los crudos de T-10.2 con los umbrales vigentes, sin llamadas al LLM.
+
 ---
 
 ## Notas de transparencia

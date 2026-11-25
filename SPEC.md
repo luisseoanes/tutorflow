@@ -3,7 +3,7 @@
 > Especificación funcional y técnica de TutorFlow. Es la **fuente de verdad** para los agentes de la fábrica.
 > Si un agente encuentra una contradicción entre este documento y el código, **gana este documento**; si la encuentra entre este documento y el enunciado original de Q10, **se detiene y escala** (`AGENTS.md` §12, `FABRICA.md` §8).
 >
-> Versión: 1.5 · 2026-11-25 · Estado: v1.4 (INT-018) + D-15 ampliado al coordinador sin `estudianteId` (INT-021).
+> Versión: 1.6 · 2026-11-25 · Estado: v1.5 (INT-021) + umbrales de abstención y exactitud numérica de §7.6 en ≥ 0.90 (INT-022).
 
 ---
 
@@ -441,8 +441,8 @@ Son 4 documentos y unos 10 KB (unos 3 000 tokens). La arquitectura debe **demost
 | MRR | Rango recíproco medio | ≥ 0.85 |
 | Precisión de citas | Citas devueltas que están en el conjunto esperado | ≥ 0.90 |
 | Cobertura de citas | Citas esperadas presentes | ≥ 0.90 |
-| Exactitud de abstención | Abstiene si y solo si debe | 1.00 |
-| Exactitud numérica | Las cifras golden aparecen en `respuesta` | 1.00 |
+| Exactitud de abstención | Abstiene si y solo si debe | ≥ 0.90 (era 1.00; INT-022) |
+| Exactitud numérica | Las cifras golden aparecen en `respuesta` | ≥ 0.90 (era 1.00; INT-022) |
 | Tokens, costo y latencia (p50/p95) por pregunta | | Se reportan |
 
 Gana la estrategia de **menor costo** que cumpla todos los umbrales. El resultado se registra en `evals/RESULTADOS.md` **solo con ejecuciones reales** (commit, fecha, modelo y estrategia).
