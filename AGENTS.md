@@ -233,6 +233,8 @@ Código fuente en la rama; salida literal de `npm ci`, `tsc --noEmit`, pruebas `
 | QA-T13-r1-01 | crítico/alto/medio/bajo | WEB-xx.y | … | qa/evidencias/T-13-r1/… | … |
 ## Verificación de hallazgos de rondas anteriores (desde r2)
 | Id anterior | Estado: resuelto / no resuelto / regresión | Evidencia |
+## Criterios [qa] verificados (OBLIGATORIA)
+| Criterio | Estado: cumple / no cumple / no verificable | Evidencia |
 ## Correcciones requeridas (si CHANGES_REQUESTED) / Qué falta para verificar (si BLOCKED)
 ```
 
@@ -245,6 +247,6 @@ Código fuente en la rama; salida literal de `npm ci`, `tsc --noEmit`, pruebas `
 | Medio | Inconsistencia visual frente a los tokens, texto poco claro, defecto menor de UX o accesibilidad no bloqueante | Se corrige o el humano lo acepta explícitamente en `INTERVENCIONES.md` antes del *merge* |
 | Bajo | Pulido cosmético | Se documenta; no bloquea |
 
-- **APPROVED** ⇔ ningún hallazgo crítico ni alto abierto, todos los criterios `[qa]` verificados y los medios corregidos o listados para aceptación humana.
+- **APPROVED** ⇔ ningún hallazgo crítico ni alto abierto, todos los criterios `[qa]` verificados y los medios corregidos o listados para aceptación humana. **Un informe sin la sección `## Criterios [qa] verificados` no puede ser APPROVED** (INT-021); la compuerta G9 y la trazabilidad lo rechazan.
 - **BLOCKED** cuando falta evidencia, entorno o dependencia para verificar; el informe dice exactamente qué falta. BLOCKED nunca equivale a APPROVED.
 - Máximo **3 rondas** de CHANGES_REQUESTED por tarea; a la cuarta, el orquestador escala al humano (`FABRICA.md` §8).

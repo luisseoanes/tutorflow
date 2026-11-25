@@ -3,7 +3,7 @@
 > Especificación funcional y técnica de TutorFlow. Es la **fuente de verdad** para los agentes de la fábrica.
 > Si un agente encuentra una contradicción entre este documento y el código, **gana este documento**; si la encuentra entre este documento y el enunciado original de Q10, **se detiene y escala** (`AGENTS.md` §12, `FABRICA.md` §8).
 >
-> Versión: 1.4 · 2026-11-25 · Estado: v1.3 (INT-015) + D-15 argumentos mal formados devueltos al LLM (INT-018).
+> Versión: 1.5 · 2026-11-25 · Estado: v1.4 (INT-018) + D-15 ampliado al coordinador sin `estudianteId` (INT-021).
 
 ---
 
@@ -292,7 +292,7 @@ Asignaturas perdidas por programa: **ADM (COORD-02):** Valentina Castro, Microec
 
 Principios:
 
-- Una denegación en cualquier capa **aborta toda la petición**: nunca hay una respuesta parcial. Excepción acotada (D-15): un error de **forma** de los argumentos no es una denegación de permiso; se devuelve al LLM como resultado de herramienta con un mensaje genérico (sin eco de datos ni pistas de alcance), no llega a la fuente de datos, cuenta para el tope de 3 rondas y se audita como herramienta `rechazado-forma`. Si el LLM vuelve a proponer un objetivo válido fuera de alcance, se aplica L4 (403).
+- Una denegación en cualquier capa **aborta toda la petición**: nunca hay una respuesta parcial. Excepción acotada (D-15): un error de **forma** de los argumentos —incluido el argumento obligatorio ausente, p. ej. un coordinador que no indica `estudianteId` en una herramienta individual (INT-021)— no es una denegación de permiso; se devuelve al LLM como resultado de herramienta con un mensaje genérico (sin eco de datos ni pistas de alcance), no llega a la fuente de datos, cuenta para el tope de 3 rondas y se audita como herramienta `rechazado-forma`. Si el LLM vuelve a proponer un objetivo válido fuera de alcance, se aplica L4 (403).
 - Si el LLM se niega en texto sin que ninguna capa haya detectado nada, la respuesta es 200 con esa negativa y sin datos (el ejemplo 10 admite "403 o negativa"). La garantía de seguridad es que **no hay fuga de datos**; el código 403 se garantiza cuando la detección es determinista (D-03).
 - La API simulada solo se llama con ids validados y con *URL-encoding*.
 
@@ -627,7 +627,7 @@ Leer y validar el cuerpo (400) → L1 consistencia de identidad (403-identidad /
 | D-12 | Límite de `pregunta`. | 1000 caracteres (→ 400). | Una prueba con preguntas muy largas recibiría 400. |
 | D-13 | L2a/L2b necesitan referencias sin hacer consultas académicas. | `IRosterProvider` de sistema con datos mínimos, caché y auditoría propia (§6.6). | Datos de hasta TTL de antigüedad. |
 | D-14 | Una auditoría obligatoria que no puede tumbar el servicio. | `stdout` como destino principal; archivo opcional no fatal (§9.3). | Si `stdout` no se recolecta, la auditoría se pierde (responsabilidad del operador). |
-| D-15 | Argumentos de herramienta con forma inválida (p. ej. un nombre en `estudianteId`) abortaban con 403, aunque no son un intento de acceso. | Se devuelven al LLM como error de herramienta para que reintente (INT-018). L3 (herramienta no expuesta) y L4 (política) siguen abortando con 403. | Un LLM que insista en argumentos inválidos agota las rondas y termina en abstención; aumenta algo el consumo de tokens. |
+| D-15 | Argumentos de herramienta con forma inválida (p. ej. un nombre en `estudianteId`) abortaban con 403, aunque no son un intento de acceso. | Se devuelven al LLM como error de herramienta para que reintente (INT-018). Ampliado en INT-021 al argumento obligatorio ausente (coordinador sin `estudianteId`): mismo error genérico, sin lectura, nunca 403. L3 (herramienta no expuesta) y L4 (política) siguen abortando con 403. | Un LLM que insista en argumentos inválidos agota las rondas y termina en abstención; aumenta algo el consumo de tokens. |
 
 ---
 

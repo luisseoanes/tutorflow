@@ -242,6 +242,13 @@
     4. Ningún archivo ya publicado de `logs/` se modificó.
 - **Pendiente:** las fixtures futuras de los agentes deben usar `test-key-NOT-REAL`.
 
+### INT-021 · 2026-11-25 · F2 · Decisión (tres decisiones del candidato)
+1. **Interfaz en `docker compose up -d`:** al integrar T-13 se quita `profiles: ["web"]` del servicio `web`. El candidato acepta un smoke más lento y pide optimizarlo con caché y sin reconstrucciones innecesarias. Lo hará Arnés en T-12.2, sobre la rama de T-12.1, que ya incluye T-13.
+2. **D-15 ampliado (SPEC v1.5):** un coordinador que no indica `estudianteId` en una herramienta individual recibe el **mismo error genérico de argumento dirigido al LLM** para que corrija y reintente: no es 403, no hay lectura de datos, sin eco. L3 y L4 siguen en 403. Se exigen pruebas de regresión (Core, T-05h). ADV-11.b ampliado.
+3. **QA:** se aplica el cambio a `.claude/agents/qa.md` y a `AGENTS.md` §13.4–§13.5. La sección `## Criterios [qa] verificados` es **obligatoria**: un informe sin ella no puede ser APPROVED.
+- **Condición adicional:** la integración del proveedor (Gemini) no se considera validada hasta que T-10.2 complete sus baterías con el LLM real. No se alteran umbrales ni se declaran aprobaciones sin evidencia.
+- **Acción del orquestador:** aplicó los cambios documentales por autorización expresa (SPEC v1.5, ADV-11.b, AGENTS §13, `qa.md`) y despacha T-05h (Core) y T-12.2 (Arnés).
+
 ---
 
 ## Notas de transparencia
