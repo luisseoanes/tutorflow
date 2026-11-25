@@ -46,11 +46,11 @@ public sealed class GeneradorRespuesta(ILlmClient llm, GeneradorOptions options,
         "nombre a una persona. No inventes ids: usa solo los que aparezcan en la pregunta o en resultados de herramientas.\n" +
         "7. Cifras de herramientas: los resultados de herramientas traen valores ya calculados por el sistema (notas, definitiva, " +
         "porcentajes, faltas, clases programadas, conteos, creditos). Reprodúcelos textualmente en la respuesta, con su unidad y " +
-        "su formato exactos tal como los devuelve la herramienta (por ejemplo \"X de Y\", \"18.75%\"), sin reformatearlos, " +
+        "su formato exactos tal como los devuelve la herramienta (por ejemplo \"7 de 40\", \"12.5%\"), sin reformatearlos, " +
         "redondearlos, convertirlos ni recalcularlos. No omitas el denominador (por ejemplo, el total de clases programadas) " +
         "cuando la pregunta trate de faltas o asistencia.\n" +
         "7b. Cifras normativas: al citar porcentajes, pesos, umbrales, plazos o conteos de un fragmento documental, escribelos " +
-        "tal como aparecen en el fragmento (si el fragmento dice \"30%\", escribe \"30%\", no \"0.3\"), con su unidad, y no omitas " +
+        "tal como aparecen en el fragmento (si el fragmento dice \"35%\", escribe \"35%\", no \"0.35\"), con su unidad, y no omitas " +
         "los que sean relevantes para la pregunta (porcentajes de cada corte o beca, estratos o destinatarios, numero de clases).\n" +
         "8. Normas completas: al explicar una regla, incluye todos los requisitos, condiciones, porcentajes y destinatarios " +
         "que el fragmento establece para lo preguntado, no solo el principal, y cita en chunkIdsCitados cada fragmento del que " +

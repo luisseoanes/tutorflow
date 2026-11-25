@@ -80,7 +80,7 @@ public class InstruccionesSistemaTests
     [InlineData("ACAD-07.c", "sin reformatearlos")]
     [InlineData("AUTH-02.b", "No omitas el denominador")]
     [InlineData("RAG-07.b", "escribelos tal como aparecen en el fragmento")]
-    [InlineData("RAG-07.b", "no \"0.3\"")]
+    [InlineData("RAG-07.b", "no \"0.35\"")]
     [InlineData("RAG-10.c", "NO invoques herramientas de datos academicos")]
     [InlineData("RAG-10.c", "no mezcles datos del usuario")]
     [InlineData("ACAD-15.c", "pide datos propios: consulta la herramienta")]
@@ -111,5 +111,37 @@ public class InstruccionesSistemaTests
         Assert.Equal(RolMensaje.Usuario, mensajes[iHerr + 1].Rol);
         Assert.Contains("citar textualmente", mensajes[iHerr + 1].Contenido, StringComparison.Ordinal);
         Assert.Contains("sin recalcular ni reformatear", mensajes[iHerr + 1].Contenido, StringComparison.Ordinal);
+    }
+
+    /// <summary>Cifras golden de SPEC 5.8/5.9 y del reglamento evaluado: no deben aparecer en el prompt (sin fuga de datos del dataset).</summary>
+    [Theory]
+    [Trait("Criterio", "ACAD-07.c")]
+    [InlineData("18.75")]
+    [InlineData("9/48")]
+    [InlineData("4.39")]
+    [InlineData("2.28")]
+    [InlineData("2.275")]
+    [InlineData("4.11")]
+    [InlineData("3.88")]
+    [InlineData("2.65")]
+    [InlineData("4.05")]
+    [InlineData("52.7")]
+    [InlineData("27.3")]
+    [InlineData("32.4")]
+    [InlineData("2.40")]
+    [InlineData("4.30")]
+    [InlineData("30%")]
+    [InlineData("40%")]
+    [InlineData("60%")]
+    [InlineData("0.3")]
+    [InlineData("0.4")]
+    [InlineData("15%")]
+    [InlineData("48")]
+    [InlineData("48 clases")]
+    public async Task El_sistema_no_contiene_cifras_golden_del_dataset(string cifra)
+    {
+        var patron = new System.Text.RegularExpressions.Regex(@"(?<![\d.])" + System.Text.RegularExpressions.Regex.Escape(cifra) + @"(?![\d])");
+        Assert.DoesNotMatch(patron, await SistemaEnviado(Estudiante()));
+        Assert.DoesNotMatch(patron, await SistemaEnviado(Coordinador()));
     }
 }
