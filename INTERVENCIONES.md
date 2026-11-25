@@ -181,6 +181,11 @@
   - La llamada a herramientas por el endpoint compatible con OpenAI no está confirmada en la documentación de precios.
 - **Fuentes:** https://ai.google.dev/gemini-api/docs/pricing y https://ai.google.dev/gemini-api/docs/rate-limits (consultadas el 2026-11-25).
 
+### INT-014 · 2026-11-25 · F2 · Incidente menor del orquestador (registrado por transparencia)
+- **Qué pasó:** al verificar T-08 con un smoke en contenedor que pretendía ser "sin llave", el orquestador ejecutó `docker compose --env-file /dev/null up`. Esa opción solo afecta a la interpolación del compose; el servicio `tutorflow` carga `.env` por su `env_file`. El contenedor usó la llave de Gemini del candidato y una pregunta normativa produjo **1 llamada real** al proveedor (cuota gratuita).
+- **Efectos:** ningún agente leyó la llave. El resultado validó, por primera vez contra el proveedor real, el adaptador `openai-compatible`: respuesta correcta ("3.0 en una escala de 0.0 a 5.0") con cita `reglamento_academico_2025.md · Artículo 5`.
+- **Corrección:** las verificaciones "sin llave" se apoyan en la prueba automatizada RES-05.c (cliente LLM real sin llave dentro de WebApplicationFactory). Para un smoke de contenedor sin llave hay que sobrescribir explícitamente la variable en el servicio, lo que se pedirá a Arnés en T-07b.
+
 ---
 
 ## Notas de transparencia
