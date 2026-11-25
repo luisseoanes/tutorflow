@@ -31,7 +31,7 @@ const CARPETA_POR_NIVEL = {
 };
 const CLAVES_CASO = new Set(['id', 'tipo', 'usuario', 'pregunta', 'cuerpo_crudo', 'criterios', 'esperado']);
 const CLAVES_ESPERADO = new Set([
-  'status', 'cifras', 'contiene', 'citas', 'citas_prohibidas', 'citas_permitidas', 'chunks_relevantes',
+  'status', 'cifras', 'contiene', 'citas', 'citas_prohibidas', 'citas_permitidas', 'nota_citas', 'chunks_relevantes',
   'chunks_prohibidos', 'abstencion', 'prohibido', 'usoDatosEstudiante', 'estudiantesConsultados', 'nota',
 ]);
 

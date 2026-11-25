@@ -19,6 +19,7 @@ Una línea JSON por caso. Cada pregunta del material y cada criterio `[ret]` y `
     "contiene": ["Valentina Castro"],            // otros textos obligatorios en `respuesta`
     "citas": ["reglamento_academico_2025.md · Artículo 5"],   // ⊇ esperadas ("documento · seccion")
     "citas_permitidas": [],                      // si existe, `citas` ⊆ este conjunto (cota superior)
+    "nota_citas": "...",                         // por qué se permiten esas citas (regla de SPEC aplicada); no activa revisión manual
     "citas_prohibidas": ["reglamento_academico_2023.md · *"], // `*` final = prefijo
     "chunks_relevantes": ["reglamento_academico_2025.md#Artículo 5"],  // chunkId que deben estar en el top 4
     "chunks_prohibidos": ["reglamento_academico_2023.md#*"],           // no deben aparecer en la recuperación
@@ -42,6 +43,21 @@ Reglas de interpretación (para los runners):
 - Cuando el escenario no fija un actor, el caso usa `EST-001` (decisión de la fábrica, marcada en el handoff de T-04).
 
 `AUTH-25.c` está en `q01`..`q10`: ninguna de las 10 preguntas responde 403 salvo la 10.
+
+### Versión del dataset y regla de `citas_permitidas`
+
+- **Dataset v2 (INT-016, T-10.1).** v1 solo permitía en la precisión de citas las citas esperadas, y penalizaba las citas deterministas que SPEC §7.5.2-§7.5.3 obliga a añadir a las herramientas. En v2, para cada caso con flujo de herramientas, `citas_permitidas` = todas las citas que la(s) herramienta(s) que razonablemente resuelven la pregunta deben emitir según esas tablas y los datos golden del estudiante o programa (SPEC §5.9): p. ej. `Artículo 6` solo si el estudiante tiene perdidas, `Artículo 11` si hay pérdida por inasistencia (o dato de asistencia para `obtener_asistencia`), `Artículo 12` si la asistencia es `null`, `Datos del estudiante · Notas|Asistencia|Resumen académico` o `Datos del programa · <id>`.
+- `citas_permitidas` debe contener también las `citas` esperadas (el chequeo `⊆` no las suma). La precisión usa `citas ∪ citas_permitidas` como universo; solo cuentan los casos con `citas` no vacías.
+- Se derivan de SPEC y de los golden, **nunca** de lo que devolvió el producto en una corrida. Las citas documentales recuperadas (p. ej. `Artículo 7`) no se permiten por esta vía.
+- 18 casos tocados (lista en `RESULTADOS.md`, «Dataset v2»). Los umbrales y la métrica no cambian.
+
+## Re-evaluación offline
+
+```bash
+dotnet run --project evals/TutorFlow.Evals -- reevaluar evals/runs/<crudo>.json [--detalle]
+```
+
+Aplica los chequeos deterministas del dataset actual a las respuestas guardadas en un crudo: **sin API, sin LLM, sin llaves**. Sirve para comprobar un cambio de dataset sin gastar cuota; **no sustituye** a una corrida real (no mide el producto) y no escribe archivos.
 
 ## `runs/` y `RESULTADOS.md`
 
