@@ -9,6 +9,7 @@ builder.Services.AddTutorFlowCore(builder.Configuration);
 
 var app = builder.Build();
 app.UseMiddleware<RequestIdMiddleware>();
+app.UseMiddleware<AuditoriaMiddleware>();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.MapTutorFlow();
 app.Run();
