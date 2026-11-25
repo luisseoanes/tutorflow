@@ -4,6 +4,7 @@ using TutorFlow.Application.Identity;
 using TutorFlow.Application.Llm;
 using TutorFlow.Application.Ports;
 using TutorFlow.Application.Security;
+using TutorFlow.Application.Tools;
 using TutorFlow.Domain.Authorization;
 
 namespace TutorFlow.Application.Preguntar;
@@ -114,10 +115,11 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
         // Bucle LLM + herramientas. Toda AccesoDenegadoException del despachador (L3/L4) se propaga y aborta la peticion;
         // LlmNoDisponibleException la mapea el middleware a 503.
         _auditoria?.FlujoLlm(estrategia: _info.Estrategia, modelo: _info.Modelo);
+        var registro = new RegistroCodigosAsignatura(_herramientas);
         RespuestaGenerada generada;
         try
         {
-            generada = await _generador().GenerarAsync(principal, comando.Pregunta, fragmentos, _herramientas, ct).ConfigureAwait(false);
+            generada = await _generador().GenerarAsync(principal, comando.Pregunta, fragmentos, registro, ct).ConfigureAwait(false);
         }
         catch (AccesoDenegadoException ex) when (ex.Tokens > 0)
         {
@@ -128,7 +130,7 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
 
 
         // L5: la respuesta no puede nombrar ni identificar a estudiantes fuera del alcance. Conserva lo consumido.
-        var salida = GuardiaSalida.Evaluar(generada.Respuesta, principal, roster);
+        var salida = GuardiaSalida.Evaluar(generada.Respuesta, principal, roster, registro.Codigos);
         if (salida.Marcada)
         {
             _auditoria?.ObjetivosDenegados(salida.Objetivos);
