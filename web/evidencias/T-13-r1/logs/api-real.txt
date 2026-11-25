@@ -1,0 +1,70 @@
+$ GET /api/salud
+HTTP/1.1 200 OK
+Server: nginx
+Date: Wed, 25 Nov 2026 17:56:41 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Request-Id: 2db52e126febce0e1c0d008d669c9e96
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+
+{"estado":"ok"}
+
+$ POST AUTH-03 (EST-001) -> 403-acceso
+HTTP/1.1 403 Forbidden
+Server: nginx
+Date: Wed, 25 Nov 2026 17:56:41 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Request-Id: 547ce025bede6c399b26132ed4aef0df
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+
+{"respuesta":"No tienes permiso para consultar esa información. Solo puedes consultar tus propios datos académicos.","citas":[{"documento":"reglamento_academico_2025.md","seccion":"Artículo 22"}],"usoDatosEstudiante":false,"tokens":0,"costoUsd":0}
+
+$ POST id inexistente -> 403-identidad
+HTTP/1.1 403 Forbidden
+Server: nginx
+Date: Wed, 25 Nov 2026 17:56:41 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Request-Id: f7f1db3b70286cdaadbe7ba3fb02f1c7
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+
+{"respuesta":"No fue posible validar la identidad indicada en la solicitud.","citas":[],"usoDatosEstudiante":false,"tokens":0,"costoUsd":0}
+
+$ POST 1001 caracteres -> 400
+HTTP/1.1 400 Bad Request
+Server: nginx
+Date: Wed, 25 Nov 2026 17:56:41 GMT
+Content-Type: application/problem+json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Request-Id: 51b491a689026b74d857ee85c733e9b6
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+
+{"type":"about:blank","title":"Solicitud invalida","status":400,"detail":"La propiedad 'pregunta' supera la longitud maxima permitida.","requestId":"51b491a689026b74d857ee85c733e9b6"}
+
+$ POST pregunta normativa sin llave -> 503
+HTTP/1.1 503 Service Unavailable
+Server: nginx
+Date: Wed, 25 Nov 2026 17:56:41 GMT
+Content-Type: application/problem+json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Request-Id: dbe60e0d0797e40641b8494790990847
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+
+{"type":"about:blank","title":"Servicio no disponible","status":503,"detail":"El modelo de lenguaje no esta disponible. Intenta de nuevo mas tarde.","requestId":"dbe60e0d0797e40641b8494790990847"}
+
