@@ -8,7 +8,13 @@ using TutorFlow.Application.Retrieval;
 
 // Runner [ret] determinista (SPEC 7.6, AGENTS 6). Sin LLM, sin red, sin llaves.
 // Uso: dotnet run --project evals/TutorFlow.Evals -- ret [--json] [--json-out <ruta>] [--raiz <dir>] [--cuarentena a,b]
+// Uso offline: dotnet run --project evals/TutorFlow.Evals -- reevaluar <crudo.json> [--detalle]  (re-evalua respuestas guardadas; sin API ni LLM)
 // Uso [eval] (T-10, contra la API en ejecucion): dotnet run --project evals/TutorFlow.Evals -- eval --modelo <id> --estrategia <e> [--base-url ...]
+if (args.Length > 0 && args[0] == "reevaluar")
+{
+    return EvalRunner.Reevaluar(args);
+}
+
 return args.Length > 0 && args[0] == "eval" ? EvalRunner.Run(args) : RetRunner.Run(args);
 
 internal static class RetRunner

@@ -223,30 +223,7 @@ internal static class EvalRunner
         var validos = resultados.Where(r => r.Error is null).ToList();
 
         // --- Metricas SPEC 7.6 ---
-        var conCitas = validos.Where(r => Esp(r.Caso).TryGetProperty("citas", out var a) && a.GetArrayLength() > 0).ToList();
-        int devueltas = 0, devueltasEsperadas = 0, esperadas = 0, esperadasPresentes = 0;
-        foreach (var r in conCitas)
-        {
-            var esp = Esp(r.Caso);
-            var set = Lista(esp, "citas");
-            var permitidas = Lista(esp, "citas_permitidas");
-            var universo = set.Concat(permitidas).ToList();
-            devueltas += r.Citas.Count;
-            devueltasEsperadas += r.Citas.Count(x => universo.Contains(x, StringComparer.OrdinalIgnoreCase));
-            esperadas += set.Count;
-            esperadasPresentes += set.Count(x => r.Citas.Contains(x, StringComparer.OrdinalIgnoreCase));
-        }
-
-        double? precision = devueltas == 0 ? null : (double)devueltasEsperadas / devueltas;
-        double? cobertura = esperadas == 0 ? null : (double)esperadasPresentes / esperadas;
-
-        var conAbst = validos.Where(r => Esp(r.Caso).TryGetProperty("abstencion", out _)).ToList();
-        var abstOk = conAbst.Count(r => EsAbstencion(r) == Esp(r.Caso).GetProperty("abstencion").GetBoolean());
-        double? exactAbst = conAbst.Count == 0 ? null : (double)abstOk / conAbst.Count;
-
-        var conCifras = validos.Where(r => Lista(Esp(r.Caso), "cifras").Count > 0).ToList();
-        var cifrasOk = conCifras.Count(r => Lista(Esp(r.Caso), "cifras").All(f => CifraPresente(f, r.Respuesta)));
-        double? exactNum = conCifras.Count == 0 ? null : (double)cifrasOk / conCifras.Count;
+        var (precision, cobertura, exactAbst, exactNum, conCitas, conAbst, conCifras) = MetricasDeterministas(validos);
 
         var tokens = resultados.Sum(r => r.Tokens);
         var costo = resultados.Sum(r => r.CostoUsd);
@@ -394,6 +371,116 @@ internal static class EvalRunner
         return hayFalla ? 1 : 0;
     }
 
+    private static (double? Precision, double? Cobertura, double? ExactAbst, double? ExactNum, List<Resultado> ConCitas, List<Resultado> ConAbst, List<Resultado> ConCifras) MetricasDeterministas(List<Resultado> validos)
+    {
+        var conCitas = validos.Where(r => Esp(r.Caso).TryGetProperty("citas", out var a) && a.GetArrayLength() > 0).ToList();
+        int devueltas = 0, devueltasEsperadas = 0, esperadas = 0, esperadasPresentes = 0;
+        foreach (var r in conCitas)
+        {
+            var esp = Esp(r.Caso);
+            var set = Lista(esp, "citas");
+            var permitidas = Lista(esp, "citas_permitidas");
+            var universo = set.Concat(permitidas).ToList();
+            devueltas += r.Citas.Count;
+            devueltasEsperadas += r.Citas.Count(x => universo.Contains(x, StringComparer.OrdinalIgnoreCase));
+            esperadas += set.Count;
+            esperadasPresentes += set.Count(x => r.Citas.Contains(x, StringComparer.OrdinalIgnoreCase));
+        }
+
+        double? precision = devueltas == 0 ? null : (double)devueltasEsperadas / devueltas;
+        double? cobertura = esperadas == 0 ? null : (double)esperadasPresentes / esperadas;
+
+        var conAbst = validos.Where(r => Esp(r.Caso).TryGetProperty("abstencion", out _)).ToList();
+        var abstOk = conAbst.Count(r => EsAbstencion(r) == Esp(r.Caso).GetProperty("abstencion").GetBoolean());
+        double? exactAbst = conAbst.Count == 0 ? null : (double)abstOk / conAbst.Count;
+
+        var conCifras = validos.Where(r => Lista(Esp(r.Caso), "cifras").Count > 0).ToList();
+        var cifrasOk = conCifras.Count(r => Lista(Esp(r.Caso), "cifras").All(f => CifraPresente(f, r.Respuesta)));
+        double? exactNum = conCifras.Count == 0 ? null : (double)cifrasOk / conCifras.Count;
+        return (precision, cobertura, exactAbst, exactNum, conCitas, conAbst, conCifras);
+    }
+
+    /// <summary>
+    /// Re-evaluacion OFFLINE (sin API ni LLM): aplica los chequeos deterministas del dataset actual a las respuestas
+    /// guardadas en un crudo. No sustituye a una corrida real: no mide nada nuevo del producto.
+    /// Uso: eval-reevaluar &lt;crudo.json&gt; [--raiz dir] [--detalle]
+    /// </summary>
+    internal static int Reevaluar(string[] args)
+    {
+        string? crudo = null;
+        string? raiz = null;
+        var detalle = false;
+        for (var i = 1; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--raiz": raiz = args[++i]; break;
+                case "--detalle": detalle = true; break;
+                default: crudo = args[i]; break;
+            }
+        }
+
+        if (crudo is null)
+        {
+            Console.Error.WriteLine("Uso: reevaluar <crudo.json> [--raiz <dir>] [--detalle]");
+            return 2;
+        }
+
+        try
+        {
+            raiz ??= BuscarRaiz();
+            var inv = CultureInfo.InvariantCulture;
+            var porId = LeerDataset(Path.Combine(raiz, "evals", "dataset.jsonl")).ToDictionary(c => c.Id, StringComparer.Ordinal);
+            using var doc = JsonDocument.Parse(File.ReadAllText(crudo));
+            var r = doc.RootElement;
+            var resultados = new List<Resultado>();
+            foreach (var cs in r.GetProperty("casos").EnumerateArray())
+            {
+                var id = cs.GetProperty("id").GetString()!;
+                if (!porId.TryGetValue(id, out var caso))
+                {
+                    Console.WriteLine($"[reevaluar] caso {id} del crudo ya no existe en el dataset; se omite");
+                    continue;
+                }
+
+                var err = cs.TryGetProperty("error", out var e) && e.ValueKind == JsonValueKind.String ? e.GetString() : null;
+                var citas = cs.GetProperty("citas").EnumerateArray().Select(x => x.GetString()!).ToList();
+                bool? uso = cs.TryGetProperty("usoDatosEstudiante", out var u) && u.ValueKind is JsonValueKind.True or JsonValueKind.False ? u.GetBoolean() : null;
+                resultados.Add(err is not null
+                    ? new Resultado(caso, cs.GetProperty("status").GetInt32(), 0, 0, string.Empty, [], null, 0, 0, [], [], false, err)
+                    : EvaluarCampos(caso, cs.GetProperty("status").GetInt32(), cs.GetProperty("respuesta").GetString() ?? string.Empty, citas, uso, cs.GetProperty("tokens").GetInt64(), cs.GetProperty("costoUsd").GetDouble(), 0, 0, null));
+            }
+
+            var validos = resultados.Where(x => x.Error is null).ToList();
+            var (precision, cobertura, exactAbst, exactNum, conCitas, conAbst, conCifras) = MetricasDeterministas(validos);
+            string F(double? v, double u) => v is null ? "n/a" : $"{v.Value.ToString("F4", inv)} (umbral >= {u.ToString("F2", inv)}: {(v >= u ? "CUMPLE" : "NO CUMPLE")})";
+            Console.WriteLine($"[reevaluar] RE-EVALUACION OFFLINE (sin LLM ni API) de {Path.GetFileName(crudo)} (modelo={r.GetProperty("modelo").GetString()}, estrategia={r.GetProperty("estrategia").GetString()}, commit={r.GetProperty("commit").GetString()?[..7]}) con el dataset actual");
+            Console.WriteLine($"- Precision de citas: {F(precision, UmbralPrecision)} sobre {conCitas.Count} casos");
+            Console.WriteLine($"- Cobertura de citas: {F(cobertura, UmbralCobertura)}");
+            Console.WriteLine($"- Exactitud de abstencion: {F(exactAbst, UmbralAbstencion)} sobre {conAbst.Count} casos");
+            Console.WriteLine($"- Exactitud numerica: {F(exactNum, UmbralNumerica)} sobre {conCifras.Count} casos");
+            Console.WriteLine($"- Casos {resultados.Count}; OK {resultados.Count(x => x.Ok)}; FALLA {resultados.Count(x => !x.Ok)}");
+            if (detalle)
+            {
+                foreach (var x in resultados.Where(x => !x.Ok))
+                {
+                    Console.WriteLine($"  FALLA {x.Caso.Id}");
+                    foreach (var ch in x.Chequeos.Where(ch => !ch.Ok))
+                    {
+                        Console.WriteLine($"    - {ch.Nombre}: {ch.Detalle}");
+                    }
+                }
+            }
+
+            return 0;
+        }
+        catch (Exception e) when (e is IOException or JsonException or InvalidOperationException or KeyNotFoundException)
+        {
+            Console.Error.WriteLine("ERROR de reevaluar: " + e.Message);
+            return 2;
+        }
+    }
+
     private static double? Redondeo(double? v) => v is null ? null : Math.Round(v.Value, 4);
 
     private static string Slug(string s) => Regex.Replace(s.ToLowerInvariant(), @"[^a-z0-9.]+", "-").Trim('-');
@@ -503,8 +590,6 @@ internal static class EvalRunner
 
     private static Resultado Evaluar(Caso c, int status, string texto, int intentos, long ms)
     {
-        var esp = c.Esperado;
-        var chequeos = new List<Chequeo>();
         string respuesta = string.Empty;
         var citas = new List<string>();
         bool? uso = null;
@@ -551,6 +636,15 @@ internal static class EvalRunner
             respuesta = Sanear(texto.Length > 300 ? texto[..300] : texto);
             error = null;
         }
+
+        return EvaluarCampos(c, status, respuesta, citas, uso, tokens, costo, intentos, ms, error);
+    }
+
+    // Chequeos deterministas sobre una respuesta ya parseada (comun a la corrida real y a `reevaluar`).
+    private static Resultado EvaluarCampos(Caso c, int status, string respuesta, List<string> citas, bool? uso, long tokens, double costo, int intentos, long ms, string? error)
+    {
+        var esp = c.Esperado;
+        var chequeos = new List<Chequeo>();
 
         // status
         if (esp.TryGetProperty("status", out var st))

@@ -144,6 +144,26 @@ Crudo: `evals/runs/ret-20261125-t10.json` (corpus real, cuarentena `bienestar_y_
 
 Primera sesión de T-10, commit del runner `1666da3`. La batería (a) se **detuvo en el segundo caso**: q02 devolvió 503 en los 3 intentos. Los logs del contenedor mostraron que la herramienta `obtener_resumen_academico` se ejecutó bien y que después `TutorFlow.Llm` registraba "El proveedor 'openai-compatible' rechazó la solicitud (HTTP 400)" y `ErrorHandlingMiddleware` "LLM no disponible (estado del proveedor: 400)". La primera llamada funcionaba y la segunda (la que devuelve el resultado de la herramienta) fallaba. Hipótesis (entonces sin verificar): Gemini 3 exige reenviar la *thought signature* (`extra_content.google.thought_signature`) y el adaptador no la conservaba. IA lo corrigió en T-06.2 (merge `e6d0500`) y la nueva validación lo confirma. Evidencia de aquella sesión, sin cambios: `evals/runs/validacion-q01.json` (q01: 200, `3.0`, cita Artículo 5, 2587 tokens, 0.000939 USD equivalentes, `commit` nulo porque el argumento `--commit` se añadió después) y `evals/runs/diagnostico-20261125-q02-503.txt`. En aquella sesión se gastaron unas 8 llamadas al proveedor y no se produjo ningún resultado de batería ni recomendación.
 
+## Dataset v2 (INT-016)
+
+**Esto es una re-evaluación offline de las respuestas ya guardadas (sin LLM, sin API, sin llaves). No es una corrida nueva ni sustituye a la re-ejecución real (T-10.2).** No mide nada nuevo del producto: solo aplica los chequeos deterministas del dataset v2 a los crudos de las corridas (a) y (b) del commit `980131f`.
+
+**Qué cambió (INT-016, punto 1: se corrige el dataset, no la métrica ni el umbral).** 18 casos con flujo de herramientas ganaron `esperado.citas_permitidas` y `esperado.nota_citas`; se derivaron de la tabla de SPEC §7.5.2, de las citas de datos de §7.5.3 y de los valores golden de SPEC §5.9 (qué estudiante tiene perdidas, pérdida por inasistencia o asistencia `null`), no de lo que devolvió el producto. No se tocaron `citas`, `cifras`, `prohibido`, umbrales ni la métrica, y no se eliminó ningún caso. Casos tocados: q02, q03, q05, q06, ACAD-08-c, ACAD-09-b, ACAD-12-c, ACAD-13-c, ACAD-14-b, ACAD-15-c, ACAD-16-c, ACAD-19-c, AUTH-01-d, AUTH-02-b-nombre, AUTH-02-b-id, AUTH-15-d, AUTH-16-c, AUTH-20-b.
+
+| Corrida (crudo, sin cambios) | Precisión de citas antes | Precisión de citas después | Cobertura | Exactitud numérica | Casos OK antes → después |
+|---|---|---|---|---|---|
+| (a) `gemini-3.5-flash-lite` + `full-context` (`eval-20261125T171325Z-980131f-...-full-context.json`) | 0.5000 (NO CUMPLE) | **0.9800 (CUMPLE)** | 0.9259 (sin cambio) | 0.6500 (sin cambio, NO CUMPLE) | 38 → 38 |
+| (b) `gemini-3.5-flash-lite` + `bm25` (`eval-20261125T171939Z-980131f-...-bm25.json`) | 0.4444 (NO CUMPLE) | **0.9630 (CUMPLE)** | 0.8889 (sin cambio, NO CUMPLE) | 0.7000 (sin cambio, NO CUMPLE) | 38 → 36 |
+
+Lectura:
+
+- La precisión de citas pasa el umbral 0.90 en ambas por la corrección del dataset. La cobertura y la exactitud numérica **no cambian** (no dependen de `citas_permitidas`): siguen incumpliendo (b: cobertura; a y b: exactitud numérica), lo que corresponde a T-06.3 (IA) y a T-10.2.
+- (b) pasa de 38 a 36 casos OK porque los nuevos `citas_permitidas` activan un chequeo `citas ⊆ permitidas` en casos que antes no lo tenían (AUTH-20-b: cita `Artículo 22` por un 403 inesperado; ACAD-15-c: `Artículo 7`, una cita documental recuperada, no de herramienta). Son hallazgos reales, no ajustes.
+- Casos con citas fuera de lo permitido tras v2 (sin reinterpretar): (a) AUTH-16-c, con 403 inesperado (`Artículo 22`); (b) q06 y AUTH-02-b-nombre (403 inesperados), AUTH-20-b (403) y ACAD-15-c (`Artículo 7`).
+- Salida literal: comando `dotnet run --project evals/TutorFlow.Evals -- reevaluar <crudo> [--detalle]`.
+
+Interpretaciones del dataset v2 que conviene confirmar: (1) `obtener_asistencia` aplica la regla de inasistencia a toda fila con dato, así que `Artículo 11` se permite aunque el estudiante no haya perdido por inasistencia; (2) para el coordinador que pregunta por un estudiante por nombre (AUTH-16-c) se permite `Datos del programa · ING-SIS` porque necesita resolver el id con `listar_estudiantes_programa`.
+
 ## Cómo repetir
 
 ```bash
