@@ -23,7 +23,7 @@ test("sondeo de salud cada 30 s y estado Sin conexion si cae", async ({ page }) 
   await expect(page.getByRole("status").filter({ hasText: "Sin conexión" })).toBeVisible();
   const msg = `sondeo: inicial=${c0} a los 29s=${c1} a los 31s=${c2} tras caida: Sin conexion visible`;
   console.log(msg);
-  appendFileSync("../evidencias/T-13-r2/salida-verificaciones.txt", msg + "\n");
+  appendFileSync("../evidencias/T-13-r3/salida-verificaciones.txt", msg + "\n");
   expect(c1).toBe(c0);
   expect(c2).toBe(c0 + 1);
 });
