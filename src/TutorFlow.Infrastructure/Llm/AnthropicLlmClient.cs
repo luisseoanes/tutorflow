@@ -2,7 +2,9 @@ using System.Text;
 using System.Text.Json;
 using TutorFlow.Application.Ports;
 
-namespace TutorFlow.Application.Llm;
+using TutorFlow.Application.Llm;
+
+namespace TutorFlow.Infrastructure.Llm;
 
 /// <summary>Adaptador de la Messages API de Anthropic con herramientas. Temperatura 0.</summary>
 public sealed class AnthropicLlmClient(

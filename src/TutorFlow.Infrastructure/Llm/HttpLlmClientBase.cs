@@ -4,7 +4,9 @@ using System.Text;
 using System.Text.Json;
 using TutorFlow.Application.Ports;
 
-namespace TutorFlow.Application.Llm;
+using TutorFlow.Application.Llm;
+
+namespace TutorFlow.Infrastructure.Llm;
 
 /// <summary>
 /// Base de los adaptadores HTTP: timeout de 20 s por intento, 2 reintentos ante 429/5xx/red respetando retry-after,

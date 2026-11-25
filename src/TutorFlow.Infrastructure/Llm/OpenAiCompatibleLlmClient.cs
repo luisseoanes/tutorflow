@@ -3,7 +3,9 @@ using System.Text;
 using System.Text.Json;
 using TutorFlow.Application.Ports;
 
-namespace TutorFlow.Application.Llm;
+using TutorFlow.Application.Llm;
+
+namespace TutorFlow.Infrastructure.Llm;
 
 /// <summary>Adaptador de chat completions con herramientas (OpenAI, Ollama, LM Studio...). Temperatura 0.</summary>
 public sealed class OpenAiCompatibleLlmClient(

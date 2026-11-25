@@ -1,6 +1,8 @@
 using TutorFlow.Application.Ports;
 
-namespace TutorFlow.Application.Llm;
+using TutorFlow.Application.Llm;
+
+namespace TutorFlow.Infrastructure.Llm;
 
 /// <summary>Resuelve el adaptador segun LLM_PROVIDER. Sin proveedor falso en ejecucion (SPEC A-11).</summary>
 public static class LlmClientFactory
