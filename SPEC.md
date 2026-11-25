@@ -3,7 +3,7 @@
 > Especificación funcional y técnica de TutorFlow. Es la **fuente de verdad** para los agentes de la fábrica.
 > Si un agente encuentra una contradicción entre este documento y el código, **gana este documento**; si la encuentra entre este documento y el enunciado original de Q10, **se detiene y escala** (`AGENTS.md` §12, `FABRICA.md` §8).
 >
-> Versión: 1.6 · 2026-11-25 · Estado: v1.5 (INT-021) + umbrales de abstención y exactitud numérica de §7.6 en ≥ 0.90 (INT-022).
+> Versión: 1.7 · 2026-11-25 · Estado: v1.6 (INT-022) + tope de tokens por petición por defecto 20000 y effort `low` en el proveedor `anthropic` (D-16, INT-026).
 
 ---
 
@@ -408,7 +408,7 @@ Son 4 documentos y unos 10 KB (unos 3 000 tokens). La arquitectura debe **demost
 
 - El LLM recibe: instrucciones de sistema, el rol del principal, los chunks recuperados con su `chunkId` entre delimitadores, las herramientas de su rol (§8) y la pregunta.
 - Salida **JSON estructurado**: `{ "respuesta": string, "chunkIdsCitados": string[] }`. Nada más: no hay un campo que el LLM pueda usar para afectar permisos.
-- Como máximo **3 rondas** de herramientas y un tope de `LLM_MAX_TOKENS_PER_REQUEST` (por defecto 8000) por petición. Si se alcanza un tope, se responde con lo obtenido o se abstiene.
+- Como máximo **3 rondas** de herramientas y un tope de `LLM_MAX_TOKENS_PER_REQUEST` (por defecto 20000; era 8000, D-16) por petición. Si se alcanza un tope, se responde con lo obtenido o se abstiene.
 - Temperatura 0.
 
 ### 7.5 Validación de citas y abstención (determinista, después del LLM)
@@ -547,7 +547,7 @@ Son las únicas que conoce el LLM. Cada una valida el esquema de sus argumentos,
 | `LLM_MODEL` | `claude-haiku-5-5` | Se eligió por costo y se valida en evals. |
 | `LLM_BASE_URL` | según el proveedor | Para `openai-compatible` (OpenAI, Ollama, LM Studio, etc.). |
 | `LLM_PRICE_INPUT_PER_MTOK` / `LLM_PRICE_OUTPUT_PER_MTOK` | por proveedor | Para `costoUsd`. |
-| `LLM_MAX_TOKENS_PER_REQUEST` | `8000` | Tope de tokens por petición. |
+| `LLM_MAX_TOKENS_PER_REQUEST` | `20000` | Tope de tokens por petición (entrada + salida de todas las llamadas; D-16). |
 | `RETRIEVAL_STRATEGY` | (lo deciden las evals; `full-context` \| `bm25`) | `vector` e `hybrid` solo con embeddings configurados. |
 | `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `EMBEDDING_API_KEY` / `EMBEDDING_PRICE_PER_MTOK` | vacíos | Opcionales; solo para `vector` e `hybrid`. |
 | `MOCK_API_BASE_URL` | `http://mock-api:4000` | API simulada. |
@@ -628,6 +628,7 @@ Leer y validar el cuerpo (400) → L1 consistencia de identidad (403-identidad /
 | D-13 | L2a/L2b necesitan referencias sin hacer consultas académicas. | `IRosterProvider` de sistema con datos mínimos, caché y auditoría propia (§6.6). | Datos de hasta TTL de antigüedad. |
 | D-14 | Una auditoría obligatoria que no puede tumbar el servicio. | `stdout` como destino principal; archivo opcional no fatal (§9.3). | Si `stdout` no se recolecta, la auditoría se pierde (responsabilidad del operador). |
 | D-15 | Argumentos de herramienta con forma inválida (p. ej. un nombre en `estudianteId`) abortaban con 403, aunque no son un intento de acceso. | Se devuelven al LLM como error de herramienta para que reintente (INT-018). Ampliado en INT-021 al argumento obligatorio ausente (coordinador sin `estudianteId`): mismo error genérico, sin lectura, nunca 403. L3 (herramienta no expuesta) y L4 (política) siguen abortando con 403. | Un LLM que insista en argumentos inválidos agota las rondas y termina en abstención; aumenta algo el consumo de tokens. |
+| D-16 | El tope de 8000 tokens por petición, calibrado con Gemini flash-lite (~6k por pregunta con herramienta), hacía abstenerse a los modelos Claude 5: con su tokenizador y el pensamiento adaptativo, una pregunta con herramienta consume 11k–13k (T-10.4). | Tope por defecto 20000; el adaptador `anthropic` envía `output_config.effort: "low"` para limitar los tokens de pensamiento (INT-026). | Mayor gasto máximo por petición (el tope sigue acotándolo); effort `low` puede reducir algo la calidad del razonamiento en preguntas complejas. |
 
 ---
 
