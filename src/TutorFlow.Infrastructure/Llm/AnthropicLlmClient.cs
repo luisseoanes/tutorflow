@@ -41,6 +41,9 @@ public sealed class AnthropicLlmClient(
             w.WriteString("model", Options.Model);
             w.WriteNumber("max_tokens", r.MaxTokens);
             w.WriteString("system", r.Sistema);
+            w.WriteStartObject("output_config");
+            w.WriteString("effort", "low");
+            w.WriteEndObject();
             w.WriteStartArray("messages");
             var msgs = r.Mensajes;
             for (var i = 0; i < msgs.Count;)
