@@ -1,0 +1,109 @@
+/*
+  Tokens de diseño (SPEC-WEB §3). ÚNICO lugar con literales de color y tamaños en px.
+  Espejo tipado: tokens.ts (una prueba verifica que ambos coinciden).
+  Cualquier otro archivo de src/ solo usa var(--…).
+*/
+:root {
+  /* §3.1 Color */
+  --color-bg: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-text: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748B;
+  --color-border: #E2E8F0;
+  --color-border-control: #858FA1;
+  --color-accent: #3451D1;
+  --color-focus: #3451D1;
+  --color-danger: #B42318;
+  --color-danger-bg: #FEF3F2;
+  --color-warning: #B54708;
+  --color-warning-bg: #FFFAEB;
+  --color-success: #067647;
+  --color-success-bg: #ECFDF3;
+  --color-info: #3451D1;
+  --color-info-bg: #F8FAFC;
+  --color-on-accent: #FFFFFF;
+
+  /* §3.2 Tipografía */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-size-xs: 0.8125rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.75rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --line-height-body: 1.6;
+  --line-height-heading: 1.25;
+  --measure-answer: 68ch;
+
+  /* §3.3 Espaciado */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* §3.3 Radios, bordes, sombras */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --border-width: 1px;
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.06);
+
+  /* §3.3 Movimiento */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --motion-spin: 800ms;
+  --motion-pulse: 1200ms;
+  --opacity-disabled: 0.55;
+  --tracking-tight: -0.01em;
+  --tracking-wide: 0.02em;
+
+  /* §3.3 Breakpoints (referencia; las media queries usan su equivalente en em: 40em, 48em, 64em, 80em) */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  /* Dimensiones de componentes (derivadas de §3.4, §5 y §6) */
+  --size-touch: 44px;
+  --size-icon: 20px;
+  --size-icon-sm: 16px;
+  --size-icon-lg: 28px;
+  --size-spinner: 18px;
+  --size-spinner-stroke: 2px;
+  --size-container: 880px;
+  --size-focus-ring: 2px;
+  --size-focus-offset: 2px;
+  --size-textarea-min: 96px;
+  --size-label-min: 120px;
+}
+
+/* §3.3 y §6: con reducción de movimiento no hay transiciones ni animaciones. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

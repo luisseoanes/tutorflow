@@ -1,0 +1,14 @@
+
+> tutorflow-web@1.0.0 test
+> vitest run
+
+
+ RUN  v5.1.2 /Users/luisseoanes/Documents/Trabajo/PruebaTecnicaQ10/.claude/worktrees/agent-a615191d8a17922be/web
+
+
+ Test Files  6 passed (6)
+      Tests  89 passed (89)
+   Start at  12:55:51
+   Duration  3.47s (tests 46%, environment 39%, setup 7%, import 5%, transform 3%)
+
+exit=0

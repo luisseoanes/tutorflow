@@ -1,0 +1,190 @@
+/* Layout de la vista única (SPEC-WEB §4.1, §5). Mobile-first. Breakpoints en em: 40em = sm, 48em = md, 64em = lg. */
+
+.app-header {
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-bg);
+}
+.app-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  max-width: var(--size-container);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  letter-spacing: var(--tracking-tight);
+}
+.brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-icon-lg);
+  height: var(--size-icon-lg);
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.status__prefix {
+  display: none;
+}
+
+.app-main {
+  display: grid;
+  gap: var(--space-6);
+  max-width: var(--size-container);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-16);
+}
+.stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Identidad declarada */
+.identity {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.identity__legend {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.identity__note {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.identity__note .icon {
+  margin-top: var(--space-1);
+}
+.identity__fields {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* Composer */
+.composer {
+  display: grid;
+  gap: var(--space-3);
+}
+.composer__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.composer__actions .btn {
+  width: 100%;
+}
+
+/* Conversación */
+.conversation {
+  display: grid;
+  gap: var(--space-6);
+  min-width: 0;
+}
+.turn {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.pending {
+  display: grid;
+}
+.pending__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Bienvenida */
+.welcome {
+  display: grid;
+  gap: var(--space-3);
+}
+.welcome__title {
+  font-size: var(--font-size-xl);
+}
+.welcome__text {
+  color: var(--color-text-secondary);
+  max-width: var(--measure-answer);
+}
+.welcome__label {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+.examples {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+}
+.example {
+  width: 100%;
+  min-height: var(--size-touch);
+  padding: var(--space-2) var(--space-4);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+.example:hover {
+  background: var(--color-surface);
+  border-color: var(--color-text-secondary);
+}
+.example:active {
+  background: var(--color-border);
+}
+
+/* El atajo de teclado no aplica a pantallas táctiles */
+@media (hover: none) {
+  .hint-keys {
+    display: none;
+  }
+}
+
+@media (min-width: 40em) {
+  .status__prefix {
+    display: inline;
+  }
+  .app-header__inner {
+    padding: var(--space-3) var(--space-6);
+  }
+  .app-main {
+    padding: var(--space-8) var(--space-6) var(--space-16);
+  }
+  .identity__fields {
+    grid-template-columns: var(--size-label-min) 1fr;
+    align-items: start;
+  }
+  .composer__actions .btn {
+    width: auto;
+  }
+}
+
+@media (min-width: 64em) {
+  .app-main {
+    padding-top: var(--space-10);
+  }
+}
