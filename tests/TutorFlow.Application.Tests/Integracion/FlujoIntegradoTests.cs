@@ -231,6 +231,72 @@ public class FlujoIntegradoTests
         Assert.Empty(l3.Fuente.Lecturas);
     }
 
+    private static PrincipalAcademico CoordProg => Coord1();
+
+    [Fact]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task ADV_11_coordinador_sin_estudianteId_recibe_error_sin_lectura_y_reintenta_con_estudiante_de_su_programa_200()
+    {
+        var llm = new LlmEscrito(
+            LlmEscrito.Invoca("obtener_notas"),
+            LlmEscrito.Invoca("obtener_notas", """{"estudianteId":"EST-002"}"""),
+            LlmEscrito.Final("Listo."));
+        var m = new Montaje(CoordProg, llm);
+
+        var r = await m.PreguntarAsync("¿Cómo le fue a mi estudiante?");
+
+        Assert.Equal("Listo.", r.Respuesta);
+        Assert.Equal(["notas:EST-002", "asistencia:EST-002"], m.Fuente.Lecturas);
+        var primero = llm.Solicitudes[1].Mensajes.First(x => x.Rol == RolMensaje.Herramienta).Contenido;
+        Assert.Contains("Falta el argumento estudianteId para obtener_notas", primero);
+        var e = m.Evento();
+        Assert.Equal(["rechazado-forma", "permitido"], e.Herramientas.Select(h => h.Decision).ToArray());
+        Assert.Null(e.Herramientas[0].Objetivo);
+    }
+
+    [Fact]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task ADV_11_coordinador_que_reintenta_con_estudiante_de_otro_programa_recibe_403_acceso_L4()
+    {
+        var llm = new LlmEscrito(
+            LlmEscrito.Invoca("obtener_notas"),
+            LlmEscrito.Invoca("obtener_notas", """{"estudianteId":"EST-005"}"""),
+            LlmEscrito.Final("x"));
+        var m = new Montaje(CoordProg, llm);
+
+        var ex = await Assert.ThrowsAsync<AccesoDenegadoException>(() => m.BucleDirectoAsync("¿Notas?"));
+
+        Assert.Equal("politica", ex.Motivo);
+        Assert.Equal(RolAcademico.Coordinador, ex.Rol);
+        Assert.Empty(m.Fuente.Lecturas);
+    }
+
+    [Fact]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task ADV_11_coordinador_tres_rondas_sin_id_terminan_en_200_con_abstencion_nunca_500()
+    {
+        var m = new Montaje(CoordProg, new LlmEscrito(LlmEscrito.Invoca("obtener_notas")));
+
+        var r = await m.PreguntarAsync("¿Cómo le fue a mi estudiante?");
+
+        Assert.Empty(m.Fuente.Lecturas);
+        Assert.False(r.UsoDatosEstudiante);
+        Assert.Empty(r.Citas);
+        Assert.Equal(3, m.Evento().Herramientas.Count(h => h.Decision == "rechazado-forma"));
+    }
+
+    [Fact]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task ADV_11_el_estudiante_sin_estudianteId_sigue_consultando_su_propio_id()
+    {
+        var m = new Montaje(Est001, new LlmEscrito(LlmEscrito.Invoca("obtener_notas"), LlmEscrito.Final("ok")));
+
+        await m.PreguntarAsync("¿Cómo me fue?");
+
+        Assert.Equal(["notas:EST-001", "asistencia:EST-001"], m.Fuente.Lecturas);
+        Assert.Equal(["permitido"], m.Evento().Herramientas.Select(h => h.Decision).ToArray());
+    }
+
     // ------------------------------------------------------------------ ADV-04.a
 
     [Fact]

@@ -90,6 +90,14 @@ public sealed class ToolDispatcher : IToolDispatcher
             return ErrorDeForma(spec.Nombre);
         }
 
+        // D-15 ampliado (INT-021): el coordinador que omite estudianteId en una herramienta individual es un error de
+        // forma (argumento requerido ausente), no un intento de acceso: se devuelve al LLM sin leer fuente ni roster.
+        if (spec.Individual && args.EstudianteId is null && principal.Rol != RolAcademico.Estudiante)
+        {
+            _auditoria?.HerramientaRechazadaForma(invocacion.Nombre);
+            return ErrorDeForma(spec.Nombre, requiereEstudianteId: true);
+        }
+
         intento(spec.Individual
             ? (args.EstudianteId ?? (principal.Rol == RolAcademico.Estudiante ? principal.Id : null), false)
             : (args.ProgramaId ?? (principal.ProgramasCoordinados.Count > 0 ? string.Join(",", principal.ProgramasCoordinados) : null), true));
@@ -291,14 +299,15 @@ public sealed class ToolDispatcher : IToolDispatcher
     /// D-15: <see cref="ResultadoHerramienta"/> no tiene marca de error; el error viaja como contenido JSON
     /// <c>{"error": "..."}</c>. Mensaje fijo: no repite los argumentos recibidos ni da pistas de alcance.
     /// </summary>
-    private static ResultadoHerramienta ErrorDeForma(string herramienta)
+    private static ResultadoHerramienta ErrorDeForma(string herramienta, bool requiereEstudianteId = false)
     {
+        var mensaje = requiereEstudianteId
+            ? $"Falta el argumento estudianteId para {herramienta}: debes proporcionar el id del estudiante a consultar."
+            : $"Argumentos no válidos para {herramienta}: usa ids con letras, dígitos y guiones, u omite estudianteId para consultar tus propios datos.";
         var contenido = PeriodoAcademico.Json(w =>
         {
             w.WriteStartObject();
-            w.WriteString(
-                "error",
-                $"Argumentos no válidos para {herramienta}: usa ids con letras, dígitos y guiones, u omite estudianteId para consultar tus propios datos.");
+            w.WriteString("error", mensaje);
             w.WriteEndObject();
         });
         return new ResultadoHerramienta(contenido, [], UsoDatosEstudiante: false, Objetivo: null);
