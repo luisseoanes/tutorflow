@@ -56,8 +56,8 @@ test.describe("recorrido con respuestas simuladas", () => {
       session: window.sessionStorage.length,
       cookies: document.cookie,
       indexedDb: (await window.indexedDB.databases()).length,
-      cache: (await window.caches.keys()).length,
-      workers: (await navigator.serviceWorker.getRegistrations()).length,
+      cache: typeof window.caches === "undefined" ? 0 : (await window.caches.keys()).length,
+      workers: typeof navigator.serviceWorker === "undefined" ? 0 : (await navigator.serviceWorker.getRegistrations()).length,
     }));
     expect(almacenamiento).toEqual({ local: 0, session: 0, cookies: "", indexedDb: 0, cache: 0, workers: 0 });
     expect(await page.context().cookies()).toEqual([]);
@@ -186,6 +186,8 @@ test.describe("accesibilidad en navegador real", () => {
   test("recorrido solo con teclado: rol, id, pregunta, enviar y expandir una cita, con foco visible en cada paso", async ({ page }) => {
     await simularApi(page);
     await page.goto("/");
+    // Esperar al formulario montado: sin esto el primer Tab puede ocurrir antes de que React monte la vista.
+    await expect(page.getByLabel("Rol")).toBeVisible();
 
     const foco = async (): Promise<{ etiqueta: string; anchoContorno: number; estilo: string }> =>
       page.evaluate(() => {
