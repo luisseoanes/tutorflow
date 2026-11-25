@@ -2,7 +2,7 @@ import { test, expect, type Page, type Route } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
 
-const OUT = "../evidencias/T-13-r1";
+const OUT = "../evidencias/T-13-r2";
 const SIZES = [
   { name: "movil-375x812", width: 375, height: 812 },
   { name: "tablet-768x1024", width: 768, height: 1024 },
@@ -482,5 +482,5 @@ test("cabeceras", async ({ request }) => {
 });
 
 test.afterAll(() => {
-  writeFileSync("../evidencias/T-13-r1/salida-verificaciones.txt", log.join("\n") + "\n");
+  writeFileSync("../evidencias/T-13-r2/salida-verificaciones.txt", log.join("\n") + "\n");
 });
