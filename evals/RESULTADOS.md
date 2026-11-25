@@ -164,6 +164,121 @@ Lectura:
 
 Interpretaciones del dataset v2 que conviene confirmar: (1) `obtener_asistencia` aplica la regla de inasistencia a toda fila con dato, así que `Artículo 11` se permite aunque el estudiante no haya perdido por inasistencia; (2) para el coordinador que pregunta por un estudiante por nombre (AUTH-16-c) se permite `Datos del programa · ING-SIS` porque necesita resolver el id con `listar_estudiantes_programa`.
 
+## T-10.2 (tras T-06.3, T-05f, T-05g y dataset v2)
+
+> Re-ejecución **real** con Gemini (2.ª corrida de (a) y de (b); FABRICA §7.1: máx. 3). Fecha 2026-11-25. **Base `cd31f51`** (main con T-06.3, T-05f, T-05g y dataset v2/T-10.1; **no incluye T-05h**). Rama `agent/arnes/t102-reevaluacion`. Dataset v2. La combinación (c) `gemini-3.8-flash` se **omite** por INT-016 (429 del proveedor en T-10): NO EJECUTADO. `vector`/`hybrid`: NO EJECUTADO (sin proveedor de embeddings comprobable). Plan gratuito: costo **equivalente a precio de pago** (gasto real 0); precios 0.30 / 2.50 USD por M tokens (entrada/salida) de https://ai.google.dev/gemini-api/docs/pricing consultada el 2026-11-25.
+
+| Ejecución | Resultado | Crudo |
+|---|---|---|
+| Validación (q02, EST-001, combinación (a)) | 200; `4.39`; ACAD-01.d CUMPLE; 6 024 tokens; 2 356 ms | `evals/runs/validacion-t102-q02.json` |
+| Batería (a) `gemini-3.5-flash-lite` + `full-context`, `cd31f51`, 2026-11-25T18:11Z | COMPLETA 47/47; 41 OK, 6 con falla; 362 s | `evals/runs/eval-20261125T181100Z-cd31f51-gemini-3.5-flash-lite-full-context.json` |
+| Batería (b) `gemini-3.5-flash-lite` + `bm25`, `cd31f51`, 2026-11-25T18:17Z | COMPLETA 47/47; 41 OK, 6 con falla; 357 s | `evals/runs/eval-20261125T181712Z-cd31f51-gemini-3.5-flash-lite-bm25.json` |
+
+Las sesiones se interrumpieron una vez por la cuota del modelo del agente (no del proveedor); las dos baterías ya estaban completas y no se repitieron.
+
+### Métricas SPEC §7.6 por combinación
+
+| Métrica (umbral) | (a) flash-lite + full-context | (b) flash-lite + bm25 |
+|---|---|---|
+| Precisión de citas (≥ 0.90) | 0.8871 **NO CUMPLE** | 0.9107 CUMPLE |
+| Cobertura de citas (≥ 0.90) | 0.9630 CUMPLE | 0.8889 **NO CUMPLE** |
+| Exactitud de abstención (= 1.00) | 1.0000 CUMPLE (11 casos) | 1.0000 CUMPLE |
+| Exactitud numérica (= 1.00) | 0.8500 **NO CUMPLE** (20 casos) | 0.9500 **NO CUMPLE** |
+| Recall@4 / MRR (`[ret]`, sin cambio) | no aplica | 1.0000 / 0.9167 (CUMPLE; ver advertencia de sobreajuste) |
+| Cumple todos los umbrales | **NO** | **NO** |
+| Tokens totales (47) / medios por pregunta con LLM (42) | 193 108 / 4 598 | 107 993 / 2 571 |
+| Costo equivalente total | 0.065950 USD | 0.041024 USD |
+| Costo equivalente por 1 000 preguntas (medio × 1 000) | **1.40 USD** (0.001403) | **0.87 USD** (0.000873) |
+| Latencia p50 / p95 (todas) | 1 522 / 12 930 ms | 1 367 / 7 625 ms |
+| Latencia p50 / p95 (solo con LLM) | 1 793 / 12 930 ms | 1 563 / 7 625 ms |
+| 429 / 503 | 0 / 0 | 0 / 1 (AUTH-01-d, 503 pasajero; el reintento dio 200) |
+
+Advertencia (se mantiene): el Recall@4/MRR de `bm25` se obtuvo tras ajustar el ranking sobre estas mismas 12 preguntas (INT-011, T-09); puede ser optimista y no generalizar a preguntas nuevas. p95 de (a) 12.9 s supera el objetivo de SPEC §10.1 (< 10 s); (b) lo cumple (7.6 s), con 47 muestras y plan gratuito, no concluyente.
+
+### Comparación con T-10 (commit `980131f`, dataset v1) y con T-10 reevaluado offline con v2
+
+| Métrica | (a) T-10 | (a) T-10 con v2 (offline) | (a) T-10.2 | (b) T-10 | (b) T-10 con v2 (offline) | (b) T-10.2 |
+|---|---|---|---|---|---|---|
+| Precisión de citas | 0.5000 | 0.9800 | 0.8871 | 0.4444 | 0.9630 | 0.9107 |
+| Cobertura de citas | 0.9259 | 0.9259 | 0.9630 | 0.8889 | 0.8889 | 0.8889 |
+| Exactitud numérica | 0.6500 | 0.6500 | 0.8500 | 0.7000 | 0.7000 | 0.9500 |
+| Casos OK / 47 | 38 | 38 | 41 | 38 | 36 | 41 |
+| Criterios `[eval]` CUMPLE (de 42 ejecutables) | 30 | - | 36 | 29 | - | 36 |
+| Costo por 1 000 preguntas | 1.15 USD | - | 1.40 USD | 0.62 USD | - | 0.87 USD |
+| Tokens medios por pregunta con LLM | 3 738 | - | 4 598 | 1 725 | - | 2 571 |
+
+Lectura: la exactitud numérica mejora mucho (0.65 → 0.85 y 0.70 → 0.95) pero no llega a 1.00. La precisión de citas de T-10.2 queda por debajo de la medida offline con v2 sobre las respuestas viejas (el producto ahora cita más: más tokens y costo, +22 % en (a) y +41 % en (b)); en (a) incumple 0.90 y en (b) cumple. El costo creció por el prompt más largo (T-06.3).
+
+Casos que cambian entre T-10 y T-10.2 (el resultado de T-10 se evaluó con el dataset v1; los cambios de ACAD-15-c, AUTH-16-c, ACAD-08-c, AUTH-20-b y q06 incluyen el efecto de v2):
+
+| Caso | (a) T-10 → T-10.2 | (b) T-10 → T-10.2 |
+|---|---|---|
+| q03 | FALLA → OK | OK → OK |
+| q06 | OK → OK | FALLA (403) → OK |
+| q08 | FALLA → OK | FALLA → OK |
+| RAG-07-a | FALLA → FALLA (sin `30%` ni estratos) | FALLA → OK |
+| RAG-10-b | OK → OK | FALLA → OK |
+| ACAD-12-c | FALLA → OK | FALLA → FALLA (ahora falta la cita `Artículo 12`; antes faltaba mencionar al coordinador) |
+| AUTH-02-b-nombre | FALLA → FALLA (falta `48`) | FALLA (403) → OK |
+| AUTH-02-b-id | FALLA → OK | FALLA → OK |
+| ACAD-08-c | OK → FALLA (cita `Artículo 7`, fuera de `citas_permitidas`) | OK → OK |
+| RAG-10-c | OK → OK | OK → FALLA (`usoDatosEstudiante` verdadero; esperado falso) |
+| ACAD-15-c | OK → OK | OK → FALLA (no consulta notas: cita solo `Artículo 7`, `usoDatosEstudiante` falso) |
+| AUTH-16-c | FALLA → FALLA (citas `Sección 2` y `Artículo 7`) | OK → FALLA (cita `Artículo 22`) |
+| q04, RAG-06-a | FALLA → FALLA | FALLA → FALLA |
+
+Sin cambio de estado en los demás casos. Los 403 inesperados de (b) en T-10 (q06, AUTH-02-b-nombre) desaparecieron (T-05f/T-05g): 0 casos con 403 inesperado en ambas baterías.
+
+### Fallos restantes y clasificación
+
+Clasificación (producto / dataset / evaluador) hecha por lectura de la respuesta guardada, **sin revisión humana**; no se tocó ningún umbral, dataset ni producto.
+
+| Caso | Batería | Falla | Clase probable |
+|---|---|---|---|
+| q04 | a, b | no aparecen las cifras `30`/`40` (la respuesta da `0.3/0.3/0.4`, equivalente) y cita `Sección 3`, no `Sección 2` | evaluador (notación de pesos equivalente) y producto/dataset (la cita esperada `Sección 2`); decisión humana |
+| RAG-06-a | a, b | usa datos del estudiante en una pregunta normativa (`usoDatosEstudiante` verdadero); en (a) además no dice "derogado" | producto |
+| RAG-07-a | a | no menciona `30%` ni estratos 1 y 2 | producto |
+| ACAD-08-c | a | cita `Artículo 7` (documental, no permitida por la regla v2) | producto o dataset (¿es legítima esa cita?); decisión humana |
+| AUTH-02-b-nombre | a | falta la cifra `48` (responde "2 faltas") | producto (el dato existe en la herramienta); dataset si se acepta no dar el total |
+| AUTH-16-c | a, b | citas fuera de lo permitido (`Sección 2`, `Artículo 7` en (a); `Artículo 22` en (b)) | producto (citas de más); dataset si la respuesta con 9 faltas/18.75 % justifica esas citas |
+| RAG-10-c | b | `usoDatosEstudiante` verdadero en pregunta normativa | producto |
+| ACAD-12-c | b | falta la cita `Artículo 12` (asistencia nula) | producto |
+| ACAD-15-c | b | no consulta las notas del estudiante; cita solo `Artículo 7` | producto (efecto de la recuperación `bm25`) |
+
+### Criterios `[eval]`, uno por uno (T-10.2)
+
+CUMPLE = todos los chequeos deterministas del caso pasaron; los casos con `nota` o `estudiantesConsultados` siguen **sin verificación humana** (provisional), igual que en T-10. Cambios frente a T-10 entre paréntesis.
+
+| Criterio | (a) full-context | (b) bm25 |
+|---|---|---|
+| ACAD-07.c (q04) | NO CUMPLE | NO CUMPLE |
+| ACAD-08.c | NO CUMPLE (antes CUMPLE) | CUMPLE |
+| ACAD-12.c | CUMPLE (antes NO) | NO CUMPLE |
+| ACAD-15.c | CUMPLE | NO CUMPLE (antes CUMPLE) |
+| AUTH-02.b | NO CUMPLE | CUMPLE (antes NO) |
+| AUTH-16.c | NO CUMPLE | NO CUMPLE (antes CUMPLE) |
+| RAG-06.b | NO CUMPLE | NO CUMPLE |
+| RAG-07.b | NO CUMPLE | CUMPLE (antes NO) |
+| RAG-10.b | CUMPLE | CUMPLE (antes NO) |
+| RAG-10.c | CUMPLE | NO CUMPLE (antes CUMPLE) |
+| ACAD-11.c | CUMPLE (antes NO) | CUMPLE |
+| ACAD-18.b, ADV-07.c | CUMPLE (antes NO) | CUMPLE (antes NO) |
+| AUTH-19.c, AUTH-25.c | CUMPLE | CUMPLE (antes NO: 403 de q06) |
+| Resto (ACAD-01.d, 06.c, 09.b, 13.c, 14.b, 16.c, 19.c; ADV-01.b, 06.b, 08.b, 14.b; AUTH-01.d, 06.e, 15.d, 18.b, 20.b; RAG-01.c, 02.b, 04.b, 05.b, 08.b, 09.b, 10.a, 11.a) | CUMPLE | CUMPLE |
+| RAG-16.a, RAG-16.b, RES-13.b | NO EJECUTADO | NO EJECUTADO |
+
+Totales: (a) 36 de 42 criterios ejecutables CUMPLE (6 NO CUMPLE: ACAD-07.c, ACAD-08.c, AUTH-02.b, AUTH-16.c, RAG-06.b, RAG-07.b); (b) 36 de 42 (6 NO CUMPLE: ACAD-07.c, ACAD-12.c, ACAD-15.c, AUTH-16.c, RAG-06.b, RAG-10.c). El detalle completo por criterio está en el campo `criterios` de cada crudo. RAG-16.a/b y RES-13.b siguen NO EJECUTADO por las mismas razones que en T-10 (faltan `vector`/`hybrid`, ninguna estrategia cumple, no hay segundo proveedor).
+
+### Recomendación SPEC §7.3 (T-10.2)
+
+**Ninguna combinación cumple todos los umbrales; no se recomienda estrategia ni modelo por defecto.**
+
+- (a) incumple precisión de citas (0.8871) y exactitud numérica (0.85).
+- (b) incumple cobertura de citas (0.8889) y exactitud numérica (0.95).
+- Progreso real frente a T-10: exactitud numérica +0.20 y +0.25, desaparecen los 403 inesperados, y precisión de citas pasa a umbral en (b); pero ningún umbral duro de exactitud numérica (= 1.00) se alcanzó. Los fallos restantes (tabla arriba) son en su mayoría de producto/prompt (omisión de cifras, uso indebido de datos del estudiante, citas de más) y 2-3 casos pendientes de decisión humana sobre dataset/evaluador (q04, ACAD-08-c, AUTH-16-c).
+- Si el humano decide que q04 es un falso negativo del evaluador y que `Artículo 7` en ACAD-08-c/AUTH-16-c es legítimo, (a) quedaría con RAG-06-a, RAG-07-a y AUTH-02-b-nombre como únicos fallos y (b) con RAG-06-a, RAG-10-c, ACAD-12-c y ACAD-15-c; seguiría sin cumplir. Esto es una hipótesis, no un resultado.
+- Con 47 casos, una sola corrida por combinación y variabilidad del LLM (en (b) 3 casos pasaron a fallar y 6 a pasar entre corridas), las diferencias pequeñas no son concluyentes. Quedan como máximo una corrida más por combinación (FABRICA §7.1).
+
 ## Cómo repetir
 
 ```bash
