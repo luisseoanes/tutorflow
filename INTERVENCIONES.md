@@ -126,6 +126,16 @@
 - **Hallazgo adicional (pendiente del candidato):** los worktrees de agentes viven en `.claude/worktrees/`, que `.gitignore` no excluye. Aparecen como no rastreados en `main` y un `git add -A` podría incorporarlos. Mientras el candidato no actualice `.gitignore` (archivo humano), los briefs exigen hacer `git add` solo con rutas explícitas, y la compuerta G1 lo verifica.
 - **Evidencia:** transcripción de la sesión.
 
+### INT-009 · 2026-11-25 · F2 · Decisión
+- **Qué pasó:** al integrar T-02 (Core), el orquestador escaló dos interpretaciones que no estaban cerradas en SPEC:
+  1. **Datos de un coordinador sobre sí mismo.** SPEC §6.1 solo dice "datos de otro coordinador ❌". El brief de T-02 decía "nadie ve datos de coordinadores" y la política deniega también los propios: 14 de 80 celdas permitidas en AUTH-22.
+  2. **Asignatura con un corte pendiente que además pierde por inasistencia.** SPEC §5.2 (sin definitiva, no entra al promedio) frente a §5.3 (pérdida por inasistencia: definitiva efectiva 0.0 "sin importar los cortes"). Core aplicó §5.3. No hay ningún caso así en los datos.
+- **Qué hizo el humano:**
+  1. Ratificó **denegar también los datos del propio coordinador**. Es más restrictivo y no tiene impacto funcional, porque ninguna herramienta expone datos de coordinador.
+  2. Ratificó que **prevalece §5.3**: la asignatura entra al promedio con 0.0 y cuenta como perdida.
+- **Impacto:** ninguno en el código integrado (`22a08f1`). Quedan como aclaraciones de SPEC §6.1 y §5.2/§5.3, a la espera de la próxima revisión de SPEC por el candidato.
+- **Evidencia:** merge de T-02 y transcripción de la sesión.
+
 ---
 
 ## Notas de transparencia
