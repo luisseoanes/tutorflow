@@ -1,5 +1,5 @@
 # Configuración de gitleaks para TutorFlow (repositorio público).
-# La CI de la fase 2 (DevOps Agent) la ejecuta sobre el diff y la historia completa.
+# La CI de la fase 2 (agente Arnés) la ejecuta sobre el diff y la historia completa.
 # Localmente: gitleaks git --config .gitleaks.toml   ·   gitleaks dir --config .gitleaks.toml .
 
 title = "TutorFlow"

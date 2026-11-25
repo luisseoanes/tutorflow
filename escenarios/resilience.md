@@ -1,82 +1,88 @@
 # Escenarios — Resiliencia, contrato y operación
 
+> Formato y niveles: `AGENTS.md` §6.
+
 ---
 
 ### RES-01 · Salud
 - **Severidad:** Crítica
-- **Actor:** cliente HTTP
-- **Precondiciones:** `docker compose up` en una máquina limpia, **sin** `LLM_API_KEY`.
-- **Entrada:** `GET http://localhost:8080/api/salud`
-- **Resultado esperado:** 200 con el cuerpo exacto `{"estado":"ok"}` en menos de 30 s desde el arranque.
-- **Criterios de aceptación:** la salud no depende del LLM ni de la API simulada.
+- **Precondiciones:** sin `LLM_API_KEY`.
+- **Entrada:** `GET /api/salud`
+- **Criterios:**
+  - a. `[api]` 200 con el cuerpo exacto `{"estado":"ok"}`, aunque la fuente de datos y el roster fallen.
+  - b. `[cont]` `docker compose up` en un *runner* limpio → 200 en menos de 30 s desde el arranque.
 
 ### RES-02 · Forma exacta del contrato
 - **Severidad:** Crítica
-- **Actor:** prueba de contrato (`WebApplicationFactory` + LLM `fake`)
-- **Entrada:** las 10 preguntas de ejemplo.
-- **Resultado esperado:** cada 200 tiene exactamente las propiedades `respuesta` (string), `citas` (array de `{documento: string, seccion: string}`), `usoDatosEstudiante` (bool), `tokens` (entero ≥ 0) y `costoUsd` (número ≥ 0); `Content-Type` es `application/json`.
-- **Criterios de aceptación:** validación con JSON Schema con `additionalProperties: false` (decisión: no se añaden propiedades fuera del contrato).
+- **Criterios:**
+  - a. `[api]` Con un LLM guionizado, las 10 preguntas de ejemplo producen respuestas 200 o 403 que validan contra un JSON Schema del contrato con `additionalProperties: false` (en la raíz y en `citas[]`), con `tokens` entero ≥ 0 y `costoUsd` ≥ 0.
+  - b. `[api]` Los cuerpos 403-acceso y 403-identidad validan contra el mismo esquema.
+  - c. `[api]` `Content-Type` de la respuesta: `application/json`.
 
 ### RES-03 · Arranque con Docker Compose
 - **Severidad:** Crítica
 - **Entrada:** `cp .env.example .env && docker compose up -d`
-- **Resultado esperado:** los servicios `tutorflow` (puerto 8080 publicado) y `mock-api` (solo red interna) quedan healthy; el reglamento se monta de solo lectura desde el material original.
-- **Criterios de aceptación:** un *smoke test* de CI ejecuta RES-01 + AUTH-03 (403 sin LLM) contra el contenedor real.
+- **Criterios:**
+  - a. `[cont]` `tutorflow` (8080 publicado) y `mock-api` (solo red interna) quedan healthy; `q10/material/reglamento` se monta de solo lectura.
+  - b. `[cont]` Sin `LLM_API_KEY`, AUTH-03 contra el contenedor real → 403-acceso (L2, sin LLM).
 
 ### RES-04 · La API simulada no está disponible
-- **Severidad:** Alta
-- **Actor:** `EST-001`
-- **Precondiciones:** `mock-api` detenida.
-- **Entrada:** `"¿Cuál es mi promedio?"`
-- **Resultado esperado:** **503** `problem+json` en menos de 10 s (timeout de 3 s + reintentos); **nunca** 200 con datos inventados ni 403 engañoso.
-- **Criterios de aceptación:** la auditoría registra un `resultado=503`.
+- **Severidad:** Alta · **Actor:** `EST-001`
+- **Criterios:**
+  - a. `[api]` Una fuente de datos falsa con timeout → **503** `problem+json` en menos de 10 s; nunca 200 con datos ni 403.
+  - b. `[api]` Auditoría `resultado == 503`.
 
 ### RES-05 · El LLM no está disponible o la llave es inválida
 - **Severidad:** Alta
-- **Precondiciones:** el proveedor devuelve 401, 429 o 5xx, o hay un timeout.
-- **Resultado esperado:** 401 → 503 inmediato (sin reintentar); 429/5xx → 2 reintentos con *backoff* y después 503; los 403 deterministas (AUTH-03, AUTH-08) siguen respondiendo 403 sin LLM.
-- **Criterios de aceptación:** los logs no contienen la llave.
+- **Criterios:**
+  - a. `[app]` Un proveedor que responde 401 → 503 sin reintentos (1 sola llamada).
+  - b. `[app]` Un proveedor que responde 429 y luego 5xx → 3 llamadas en total y después 503; respeta `retry-after`.
+  - c. `[api]` Con el LLM fallando, AUTH-03 sigue en 403-acceso y AUTH-08 en 403-identidad.
+  - d. `[app]` Los logs capturados no contienen `test-key-NOT-REAL`.
 
 ### RES-06 · El LLM devuelve una salida inválida
 - **Severidad:** Alta
-- **Actor:** prueba de aplicación con un LLM *fake* que devuelve texto no JSON, JSON sin `respuesta` o un bucle infinito de herramientas.
-- **Resultado esperado:** 1 reintento de corrección y después abstención; el bucle se corta en 3 rondas; status 200 con una abstención (no 500).
+- **Criterios:**
+  - a. `[app]` Texto no JSON → 1 reintento con corrección; si persiste → 200 con abstención.
+  - b. `[app]` JSON sin `respuesta` → igual que a.
 
-### RES-07 · Tokens y costo coherentes
+### RES-07 · Tokens y costo exactos
 - **Severidad:** Alta
-- **Actor:** prueba de aplicación con un LLM *fake* que reporta un *usage* conocido (2 llamadas: 1000/200 y 1200/150 tokens) y precios configurados de 1.00/5.00 USD por millón.
-- **Resultado esperado:** `tokens = 2550`; `costoUsd = (2200×1.00 + 350×5.00)/1e6 = 0.003950`.
-- **Criterios de aceptación:** igualdad exacta (en `decimal`); proveedor local o `fake` sin precios → `costoUsd = 0`.
+- **Criterios:**
+  - a. `[app]` Un LLM guionizado con 2 llamadas de *usage* (1000/200) y (1200/150), y precios 1.00/5.00 USD por millón → `tokens == 2550` y `costoUsd == 0.003950m`.
+  - b. `[app]` Sin precios configurados → `costoUsd == 0`.
+  - c. `[app]` Los adaptadores `anthropic` y `openai-compatible` extraen el *usage* correcto de respuestas HTTP grabadas (sin red).
 
 ### RES-08 · La auditoría se escribe en todos los caminos
 - **Severidad:** Alta
-- **Entrada:** una petición de cada tipo: 200, 400, 403 (L1), 403 (L2), 403 (L4) y 503.
-- **Resultado esperado:** exactamente un registro por petición con `requestId`, `usuario`, `pregunta`, `estudiantesConsultados` y `resultado`.
-- **Criterios de aceptación:** si la escritura de auditoría falla (*fake* que lanza una excepción) → 500 y no se devuelven datos.
+- **Criterios:**
+  - a. `[api]` Una petición de cada tipo (200, 400, 403-identidad, 403-acceso por L2, 403-acceso por L4, 503) produce **exactamente un** evento `pregunta` en `stdout` con `requestId`, `usuario` (o `null` si no es legible), `pregunta`, `estudiantesConsultados` y `resultado`.
+  - b. `[api]` Con un archivo de auditoría que falla al escribir (doble que lanza una excepción), la petición se responde igual (200) y se registra un error de operación (SPEC §9.3).
 
 ### RES-09 · Errores sin filtración interna
 - **Severidad:** Alta
-- **Entrada:** forzar una excepción no controlada en una herramienta.
-- **Resultado esperado:** 500 `problem+json` con `requestId`; sin *stack trace*, rutas, nombres de clases ni la configuración.
+- **Criterios:**
+  - a. `[api]` Una excepción no controlada en una herramienta → 500 `problem+json` con `requestId`; sin *stack trace*, rutas, nombres de clases ni configuración.
 
-### RES-10 · Cultura del contenedor
+### RES-10 · Cultura del proceso
 - **Severidad:** Alta
-- **Precondiciones:** el contenedor con `LANG=es_CO.UTF-8` / `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false`.
-- **Entrada:** ACAD-01.
-- **Resultado esperado:** la respuesta contiene `4.39` (punto), no `4,39`.
+- **Criterios:**
+  - a. `[app]` Con `CultureInfo.CurrentCulture = es-CO`, las herramientas serializan `4.39` (punto), no `4,39`.
 
-### RES-11 · Indexación ante documentos ausentes o vacíos
+### RES-11 · Documentos ausentes
 - **Severidad:** Media
-- **Precondiciones:** `KNOWLEDGE_PATH` vacío o inexistente.
-- **Resultado esperado:** la aplicación arranca, la salud responde 200 y escribe un error en el log; las preguntas normativas → abstención (no 500). Con un documento adicional válido, este se indexa sin cambiar el código.
+- **Criterios:**
+  - a. `[api]` Un `KNOWLEDGE_PATH` vacío → la aplicación arranca; `GET /api/salud` responde 200; una pregunta normativa (con un LLM guionizado sin citas) → 200 con abstención.
+  - b. `[app]` Un documento adicional válido en `KNOWLEDGE_PATH` se indexa sin cambiar el código.
 
-### RES-12 · Datos de la API distintos a los originales
+### RES-12 · Datos distintos a los originales
 - **Severidad:** Alta
-- **Precondiciones:** la API simulada sirve un `datos.json` alternativo (otro estudiante `EST-007` en ADM con notas conocidas).
-- **Resultado esperado:** los cálculos y permisos funcionan sin cambios de código: **nada de ids, nombres ni notas fijos en el código**.
-- **Criterios de aceptación:** una búsqueda en `src/` de `EST-00`, `COORD-0`, `Laura` o `Andrés` no encuentra coincidencias fuera de las pruebas.
+- **Criterios:**
+  - a. `[api]` Una fuente de datos alternativa con `EST-007` (ADM, notas conocidas) → `COORD-02` obtiene sus datos y `EST-007` los suyos, sin cambios de código.
+  - b. `[dom]` Prueba de arquitectura: ningún archivo de `src/` contiene `EST-00`, `COORD-0`, `Laura` ni `Andrés`.
 
 ### RES-13 · Proveedor intercambiable
 - **Severidad:** Media
-- **Entrada:** la misma batería de evals deterministas con `LLM_PROVIDER=fake`, y la batería E2E con `anthropic` y con `openai-compatible` (si hay una llave o un modelo local disponibles).
-- **Resultado esperado:** cambiar de proveedor solo requiere variables de entorno; los resultados de cada proveedor se reportan por separado en `evals/RESULTADOS.md`.
+- **Criterios:**
+  - a. `[app]` `LLM_PROVIDER=anthropic` y `openai-compatible` resuelven sus adaptadores; un valor desconocido falla al arrancar con un error de configuración claro.
+  - b. `[eval]` La batería `[eval]` se ejecuta con al menos un proveedor real; si hay un segundo disponible, se reporta por separado en `RESULTADOS.md`.
