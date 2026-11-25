@@ -47,7 +47,7 @@ test("contraste de dt y dd de la cita expandida: en reposo y a mitad de animacio
   const lines = medidas.map((m) => `${m.el}: color=${m.color} fondo=${m.bg} opacidad panel=${m.op} ratio=${ratio(m.color, m.bg).toFixed(2)}`);
   const msg = `contraste cita en reposo: ${lines.join(" | ")} | axe color-contrast tras click inmediato=${midBad} violaciones, en reposo=${restBad}`;
   console.log(msg);
-  appendFileSync("../evidencias/T-13-r3/salida-verificaciones.txt", msg + "\n");
+  appendFileSync("../evidencias/T-13-r4/salida-verificaciones.txt", msg + "\n");
   for (const m of medidas) expect(ratio(m.color, m.bg)).toBeGreaterThanOrEqual(4.5);
   expect(restBad).toBe(0);
 });
