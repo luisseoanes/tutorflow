@@ -12,8 +12,16 @@ public static class GuardiaSalida
 {
     public const string Motivo = "salida";
 
-    public static ResultadoGuardia Evaluar(string respuesta, PrincipalAcademico principal, RosterSnapshot roster) =>
-        GuardiaReferenciasExplicitas.Evaluar(respuesta, principal, roster, incluirCoordinadores: false, regla: Motivo);
+    /// <param name="codigosAsignatura">
+    /// Codigos de asignatura devueltos por las herramientas de esta peticion: no son ids de estudiante y no se marcan
+    /// (un estudiante real del roster fuera de alcance se marca siempre).
+    /// </param>
+    public static ResultadoGuardia Evaluar(
+        string respuesta,
+        PrincipalAcademico principal,
+        RosterSnapshot roster,
+        IReadOnlyCollection<string>? codigosAsignatura = null) =>
+        GuardiaReferenciasExplicitas.Evaluar(respuesta, principal, roster, incluirCoordinadores: false, regla: Motivo, codigosAsignatura);
 
     /// <exception cref="AccesoDenegadoException">La respuesta menciona estudiantes fuera del alcance.</exception>
     public static void Verificar(string respuesta, PrincipalAcademico principal, RosterSnapshot roster, int tokens = 0, decimal costoUsd = 0m)
