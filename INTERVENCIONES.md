@@ -136,6 +136,14 @@
 - **Impacto:** ninguno en el código integrado (`22a08f1`). Quedan como aclaraciones de SPEC §6.1 y §5.2/§5.3, a la espera de la próxima revisión de SPEC por el candidato.
 - **Evidencia:** merge de T-02 y transcripción de la sesión.
 
+### INT-010 · 2026-11-25 · F2 · Decisión del orquestador (registrada para revisión del candidato)
+- **Qué pasó:** dos ajustes operativos durante W1 y W2, que no cambian ni SPEC ni los criterios:
+  1. **Trazabilidad por tareas integradas.** Si la CI exigiera desde el inicio todos los criterios bloqueantes (`AGENTS.md` §6.4), bloquearía cualquier integración hasta el final de F2. El brief de T-04 la hizo exigir solo los criterios de las tareas ya integradas en la rama, deducidas de los merge `merge: T-xx`, con la asignación de `scripts/trazabilidad/asignacion.json` transcrita de FABRICA. El modo `--completo` (todos los criterios) es el que se usará al cierre de F2 (SPEC §14) y hoy falla como debe (exit 1).
+  2. **División de T-07.** FABRICA §6 hace depender T-07 solo de T-01 y T-04, pero sus criterios requieren código posterior: RES-02 necesita el flujo de T-08, RES-01.b necesita `/api/salud` (T-05b) y RES-03.b necesita la guardia L2a (T-05c). Se divide en **T-07a** (runner `[ret]` y job `retrieval`; infraestructura de mutantes con el catálogo de FABRICA §5.3, cada mutante ligado a su tarea y aplicable solo si esa tarea está integrada) y **T-07b** (pruebas de contrato RES-02, `smoke` en contenedor RES-01.b y RES-03, y la exigencia completa de mutantes), que irá después de T-08.
+- **Evidencia de la CI:** la primera ejecución real en GitHub (run 45644838620, commit `8c23d84`) pasó en verde los 4 jobs bloqueantes: build-test, trazabilidad, secretos y lights-out.
+- **Impacto:** el plan de §6 conserva su orden; T-07 se parte según dependencias reales. Ningún criterio se relaja: los mutantes y criterios no aplicables se reportan como "pendientes", nunca como aprobados.
+- **Pendiente del candidato:** revisar ambos ajustes.
+
 ---
 
 ## Notas de transparencia

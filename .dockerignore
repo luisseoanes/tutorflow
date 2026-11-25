@@ -1,0 +1,30 @@
+# Fuera del contexto de build: historia, configuracion de agentes, secretos y documentos que la imagen no necesita.
+.git
+.github
+.claude
+.env
+.env.*
+.gitignore
+.gitleaks.toml
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Confidencial / transcripciones / datos de ejecucion
+q10
+logs
+audit
+
+# Artefactos de compilacion
+**/bin
+**/obj
+**/TestResults
+coverage*
+
+# No forman parte de la imagen
+tests
+evals
+scripts
+escenarios
+*.md
+*.sln

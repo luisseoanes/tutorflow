@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TutorFlow.Application\TutorFlow.Application.csproj" />
     <ProjectReference Include="..\..\src\TutorFlow.Domain\TutorFlow.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TutorFlow.Infrastructure\TutorFlow.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
