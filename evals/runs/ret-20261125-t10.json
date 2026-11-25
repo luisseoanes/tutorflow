@@ -1,0 +1,874 @@
+{
+  "modo": "ret",
+  "commit": null,
+  "fecha": "2026-11-25T16:49:43.0473625Z",
+  "cuarentena": [
+    "bienestar_y_becas.md#Anexo"
+  ],
+  "estrategiaPorDefecto": "full-context",
+  "umbrales": {
+    "recallAt4": 0.95,
+    "mrr": 0.85,
+    "aplicanA": "ninguna (full-context: no aplica)"
+  },
+  "porDefecto": {
+    "estrategia": "full-context",
+    "bloqueante": true,
+    "recallAt4": null,
+    "mrr": null,
+    "casos": 12,
+    "criterios": [
+      {
+        "id": "ACAD-07.a",
+        "estado": "OK",
+        "casos": "q04"
+      },
+      {
+        "id": "ACAD-18.a",
+        "estado": "OK",
+        "casos": "q08"
+      },
+      {
+        "id": "RAG-01.a",
+        "estado": "OK",
+        "casos": "q01"
+      },
+      {
+        "id": "RAG-02.a",
+        "estado": "OK",
+        "casos": "q07"
+      },
+      {
+        "id": "RAG-04.a",
+        "estado": "OK",
+        "casos": "RAG-04-a"
+      },
+      {
+        "id": "RAG-05.a",
+        "estado": "OK",
+        "casos": "RAG-05-a"
+      },
+      {
+        "id": "RAG-06.a",
+        "estado": "OK",
+        "casos": "RAG-06-a"
+      },
+      {
+        "id": "RAG-07.a",
+        "estado": "OK",
+        "casos": "RAG-07-a"
+      },
+      {
+        "id": "RAG-08.a",
+        "estado": "OK",
+        "casos": "RAG-08-a"
+      },
+      {
+        "id": "RAG-12.a",
+        "estado": "OK",
+        "casos": "RAG-12-a,RAG-12-b,RAG-12-c"
+      }
+    ],
+    "detalle": [
+      {
+        "id": "q01",
+        "pregunta": "¿Cuál es la nota mínima para aprobar una asignatura?",
+        "criterios": [
+          "RAG-01.a",
+          "RAG-01.c",
+          "AUTH-25.c"
+        ],
+        "relevantes": [
+          "reglamento_academico_2025.md#Artículo 5"
+        ],
+        "prohibidos": [
+          "reglamento_academico_2023.md#*"
+        ],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "q04",
+        "pregunta": "¿Cómo se calcula la nota definitiva de una asignatura?",
+        "criterios": [
+          "ACAD-07.a",
+          "ACAD-07.c",
+          "AUTH-25.c"
+        ],
+        "relevantes": [
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "q07",
+        "pregunta": "¿Cuál es el horario de atención de Bienestar?",
+        "criterios": [
+          "RAG-02.a",
+          "RAG-02.b",
+          "AUTH-25.c"
+        ],
+        "relevantes": [
+          "bienestar_y_becas.md#Sección 1"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "q08",
+        "pregunta": "¿Qué requisitos tiene la beca por rendimiento académico?",
+        "criterios": [
+          "ACAD-18.a",
+          "ACAD-18.b",
+          "ADV-07.c",
+          "AUTH-25.c"
+        ],
+        "relevantes": [
+          "bienestar_y_becas.md#Sección 3.1"
+        ],
+        "prohibidos": [
+          "bienestar_y_becas.md#Anexo"
+        ],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-04-a",
+        "pregunta": "¿Con qué porcentaje de fallas se pierde una materia?",
+        "criterios": [
+          "RAG-04.a",
+          "RAG-04.b"
+        ],
+        "relevantes": [
+          "reglamento_academico_2025.md#Artículo 11"
+        ],
+        "prohibidos": [
+          "reglamento_academico_2023.md#*"
+        ],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-05-a",
+        "pregunta": "¿Hasta qué semana puedo cancelar una asignatura?",
+        "criterios": [
+          "RAG-05.a",
+          "RAG-05.b"
+        ],
+        "relevantes": [
+          "reglamento_academico_2025.md#Artículo 15"
+        ],
+        "prohibidos": [
+          "reglamento_academico_2023.md#*"
+        ],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-06-a",
+        "pregunta": "¿Qué decía el reglamento 2023 sobre la habilitación?",
+        "criterios": [
+          "RAG-06.a",
+          "RAG-06.b"
+        ],
+        "relevantes": [
+          "reglamento_academico_2023.md#Artículo 6"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2023.md#Artículo 1",
+          "reglamento_academico_2023.md#Artículo 2",
+          "reglamento_academico_2023.md#Artículo 5",
+          "reglamento_academico_2023.md#Artículo 6",
+          "reglamento_academico_2023.md#Artículo 7",
+          "reglamento_academico_2023.md#Artículo 10",
+          "reglamento_academico_2023.md#Artículo 11",
+          "reglamento_academico_2023.md#Artículo 12",
+          "reglamento_academico_2023.md#Artículo 15",
+          "reglamento_academico_2023.md#Artículo 16",
+          "reglamento_academico_2023.md#Artículo 20",
+          "reglamento_academico_2023.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-07-a",
+        "pregunta": "¿Cómo se solicita la beca de apoyo socioeconómico?",
+        "criterios": [
+          "RAG-07.a",
+          "RAG-07.b"
+        ],
+        "relevantes": [
+          "bienestar_y_becas.md#Sección 3.2"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-08-a",
+        "pregunta": "¿Quién puede consultar mi información académica?",
+        "criterios": [
+          "RAG-08.a",
+          "RAG-08.b"
+        ],
+        "relevantes": [
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-12-a",
+        "pregunta": "con cuánto paso una materia?",
+        "criterios": [
+          "RAG-12.a"
+        ],
+        "relevantes": [
+          "reglamento_academico_2025.md#Artículo 5"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-12-b",
+        "pregunta": "si falto mucho pierdo la materia?",
+        "criterios": [
+          "RAG-12.a"
+        ],
+        "relevantes": [
+          "reglamento_academico_2025.md#Artículo 11"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      },
+      {
+        "id": "RAG-12-c",
+        "pregunta": "cuanto descuento da la beca de notas",
+        "criterios": [
+          "RAG-12.a"
+        ],
+        "relevantes": [
+          "bienestar_y_becas.md#Sección 3.1"
+        ],
+        "prohibidos": [],
+        "recuperado": [
+          "bienestar_y_becas.md#Sección 1",
+          "bienestar_y_becas.md#Sección 2",
+          "bienestar_y_becas.md#Sección 3.1",
+          "bienestar_y_becas.md#Sección 3.2",
+          "evaluacion_y_calificaciones.md#Sección 1",
+          "evaluacion_y_calificaciones.md#Sección 2",
+          "evaluacion_y_calificaciones.md#Sección 3",
+          "evaluacion_y_calificaciones.md#Sección 4",
+          "evaluacion_y_calificaciones.md#Sección 5",
+          "reglamento_academico_2025.md#Artículo 1",
+          "reglamento_academico_2025.md#Artículo 2",
+          "reglamento_academico_2025.md#Artículo 3",
+          "reglamento_academico_2025.md#Artículo 5",
+          "reglamento_academico_2025.md#Artículo 6",
+          "reglamento_academico_2025.md#Artículo 7",
+          "reglamento_academico_2025.md#Artículo 10",
+          "reglamento_academico_2025.md#Artículo 11",
+          "reglamento_academico_2025.md#Artículo 12",
+          "reglamento_academico_2025.md#Artículo 15",
+          "reglamento_academico_2025.md#Artículo 16",
+          "reglamento_academico_2025.md#Artículo 20",
+          "reglamento_academico_2025.md#Artículo 21",
+          "reglamento_academico_2025.md#Artículo 22"
+        ],
+        "rango": null,
+        "hit": true,
+        "prohibidosPresentes": [],
+        "ok": true
+      }
+    ]
+  },
+  "experimento": [
+    {
+      "estrategia": "bm25",
+      "bloqueante": false,
+      "recallAt4": 1,
+      "mrr": 0.9166666666666666,
+      "casos": 12,
+      "detalle": [
+        {
+          "id": "q01",
+          "pregunta": "¿Cuál es la nota mínima para aprobar una asignatura?",
+          "criterios": [
+            "RAG-01.a",
+            "RAG-01.c",
+            "AUTH-25.c"
+          ],
+          "relevantes": [
+            "reglamento_academico_2025.md#Artículo 5"
+          ],
+          "prohibidos": [
+            "reglamento_academico_2023.md#*"
+          ],
+          "recuperado": [
+            "reglamento_academico_2025.md#Artículo 5",
+            "reglamento_academico_2025.md#Artículo 16",
+            "reglamento_academico_2025.md#Artículo 11",
+            "evaluacion_y_calificaciones.md#Sección 3"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "q04",
+          "pregunta": "¿Cómo se calcula la nota definitiva de una asignatura?",
+          "criterios": [
+            "ACAD-07.a",
+            "ACAD-07.c",
+            "AUTH-25.c"
+          ],
+          "relevantes": [
+            "evaluacion_y_calificaciones.md#Sección 2",
+            "evaluacion_y_calificaciones.md#Sección 3"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "evaluacion_y_calificaciones.md#Sección 3",
+            "evaluacion_y_calificaciones.md#Sección 4",
+            "evaluacion_y_calificaciones.md#Sección 2",
+            "reglamento_academico_2025.md#Artículo 11"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "q07",
+          "pregunta": "¿Cuál es el horario de atención de Bienestar?",
+          "criterios": [
+            "RAG-02.a",
+            "RAG-02.b",
+            "AUTH-25.c"
+          ],
+          "relevantes": [
+            "bienestar_y_becas.md#Sección 1"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "bienestar_y_becas.md#Sección 1",
+            "bienestar_y_becas.md#Sección 3.2"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "q08",
+          "pregunta": "¿Qué requisitos tiene la beca por rendimiento académico?",
+          "criterios": [
+            "ACAD-18.a",
+            "ACAD-18.b",
+            "ADV-07.c",
+            "AUTH-25.c"
+          ],
+          "relevantes": [
+            "bienestar_y_becas.md#Sección 3.1"
+          ],
+          "prohibidos": [
+            "bienestar_y_becas.md#Anexo"
+          ],
+          "recuperado": [
+            "bienestar_y_becas.md#Sección 3.1",
+            "bienestar_y_becas.md#Sección 3.2",
+            "reglamento_academico_2025.md#Artículo 20",
+            "reglamento_academico_2025.md#Artículo 2"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-04-a",
+          "pregunta": "¿Con qué porcentaje de fallas se pierde una materia?",
+          "criterios": [
+            "RAG-04.a",
+            "RAG-04.b"
+          ],
+          "relevantes": [
+            "reglamento_academico_2025.md#Artículo 11"
+          ],
+          "prohibidos": [
+            "reglamento_academico_2023.md#*"
+          ],
+          "recuperado": [
+            "reglamento_academico_2025.md#Artículo 11",
+            "reglamento_academico_2025.md#Artículo 21",
+            "reglamento_academico_2025.md#Artículo 7",
+            "evaluacion_y_calificaciones.md#Sección 4"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-05-a",
+          "pregunta": "¿Hasta qué semana puedo cancelar una asignatura?",
+          "criterios": [
+            "RAG-05.a",
+            "RAG-05.b"
+          ],
+          "relevantes": [
+            "reglamento_academico_2025.md#Artículo 15"
+          ],
+          "prohibidos": [
+            "reglamento_academico_2023.md#*"
+          ],
+          "recuperado": [
+            "reglamento_academico_2025.md#Artículo 15",
+            "reglamento_academico_2025.md#Artículo 16",
+            "evaluacion_y_calificaciones.md#Sección 2",
+            "bienestar_y_becas.md#Sección 3.2"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-06-a",
+          "pregunta": "¿Qué decía el reglamento 2023 sobre la habilitación?",
+          "criterios": [
+            "RAG-06.a",
+            "RAG-06.b"
+          ],
+          "relevantes": [
+            "reglamento_academico_2023.md#Artículo 6"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "reglamento_academico_2025.md#Artículo 3",
+            "reglamento_academico_2023.md#Artículo 6",
+            "reglamento_academico_2025.md#Artículo 6",
+            "reglamento_academico_2023.md#Artículo 1"
+          ],
+          "rango": 2,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-07-a",
+          "pregunta": "¿Cómo se solicita la beca de apoyo socioeconómico?",
+          "criterios": [
+            "RAG-07.a",
+            "RAG-07.b"
+          ],
+          "relevantes": [
+            "bienestar_y_becas.md#Sección 3.2"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "bienestar_y_becas.md#Sección 3.2",
+            "bienestar_y_becas.md#Sección 3.1"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-08-a",
+          "pregunta": "¿Quién puede consultar mi información académica?",
+          "criterios": [
+            "RAG-08.a",
+            "RAG-08.b"
+          ],
+          "relevantes": [
+            "reglamento_academico_2025.md#Artículo 22"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "reglamento_academico_2025.md#Artículo 22",
+            "evaluacion_y_calificaciones.md#Sección 3",
+            "reglamento_academico_2025.md#Artículo 20",
+            "reglamento_academico_2025.md#Artículo 2"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-12-a",
+          "pregunta": "con cuánto paso una materia?",
+          "criterios": [
+            "RAG-12.a"
+          ],
+          "relevantes": [
+            "reglamento_academico_2025.md#Artículo 5"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "reglamento_academico_2025.md#Artículo 5",
+            "reglamento_academico_2025.md#Artículo 12",
+            "reglamento_academico_2025.md#Artículo 7",
+            "evaluacion_y_calificaciones.md#Sección 4"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-12-b",
+          "pregunta": "si falto mucho pierdo la materia?",
+          "criterios": [
+            "RAG-12.a"
+          ],
+          "relevantes": [
+            "reglamento_academico_2025.md#Artículo 11"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "reglamento_academico_2025.md#Artículo 11",
+            "reglamento_academico_2025.md#Artículo 10",
+            "reglamento_academico_2025.md#Artículo 7",
+            "reglamento_academico_2025.md#Artículo 21"
+          ],
+          "rango": 1,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        },
+        {
+          "id": "RAG-12-c",
+          "pregunta": "cuanto descuento da la beca de notas",
+          "criterios": [
+            "RAG-12.a"
+          ],
+          "relevantes": [
+            "bienestar_y_becas.md#Sección 3.1"
+          ],
+          "prohibidos": [],
+          "recuperado": [
+            "bienestar_y_becas.md#Sección 3.2",
+            "bienestar_y_becas.md#Sección 3.1",
+            "reglamento_academico_2025.md#Artículo 5",
+            "evaluacion_y_calificaciones.md#Sección 3"
+          ],
+          "rango": 2,
+          "hit": true,
+          "prohibidosPresentes": [],
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "resultado": "OK",
+  "fallos": []
+}
