@@ -1,6 +1,7 @@
 using TutorFlow.Application.Errores;
 using TutorFlow.Application.Identity;
 using TutorFlow.Application.Ports;
+using TutorFlow.Application.Security;
 using TutorFlow.Domain.Authorization;
 
 namespace TutorFlow.Application.Preguntar;
@@ -21,8 +22,8 @@ public interface IPreguntarAsistente
 }
 
 /// <summary>
-/// Caso de uso de SPEC 12.3. Implementado hasta "roster vigente": L1 (403-identidad / 503) y roster (503).
-/// Los pasos siguientes (L2a/L2b, recuperacion, LLM + herramientas, validacion de citas, L5) se integran en T-05c..T-08.
+/// Caso de uso de SPEC 12.3. Implementado hasta L2: L1 (403-identidad / 503), roster (503) y L2a/L2b (403-acceso antes de cualquier LLM).
+/// Los pasos siguientes (recuperacion, LLM + herramientas, validacion de citas, L5) se integran en T-05c..T-08.
 /// </summary>
 public sealed class PreguntarAsistente : IPreguntarAsistente
 {
@@ -47,9 +48,9 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
     }
 
     /// <summary>
-    /// PUNTO DE EXTENSION (T-05c): aqui se inserta L2a + L2b (403-acceso antes de cualquier llamada al LLM) y, despues,
-    /// recuperacion, bucle LLM con IToolDispatcher, validacion de citas y L5 (T-05d..T-08).
-    /// Mientras tanto responde 503 explicito; nunca un 200 inventado.
+    /// L2a + L2b: 403-acceso (motivo "referencia") antes de cualquier recuperacion o llamada al LLM; tokens 0 y ninguna
+    /// consulta academica. Despues, PUNTO DE EXTENSION (T-05d..T-08): recuperacion, bucle LLM con IToolDispatcher,
+    /// validacion de citas y L5. Mientras tanto responde 503 explicito; nunca un 200 inventado.
     /// </summary>
     private static Task<PreguntarResultado> ContinuarTrasRosterAsync(
         PreguntarComando comando,
@@ -57,7 +58,18 @@ public sealed class PreguntarAsistente : IPreguntarAsistente
         RosterSnapshot roster,
         CancellationToken ct)
     {
-        _ = (comando, principal, roster, ct);
-        throw new PendienteDeIntegracionException("El flujo posterior al roster (L2, recuperacion, LLM, L5) aun no esta integrado.");
+        DenegarSiMarcada(GuardiaReferenciasExplicitas.Evaluar(comando.Pregunta, principal, roster), principal);
+        DenegarSiMarcada(GuardiaSolicitudesTerceros.Evaluar(comando.Pregunta, principal, roster), principal);
+
+        _ = ct;
+        throw new PendienteDeIntegracionException("El flujo posterior a L2 (recuperacion, LLM, herramientas, L5) aun no esta integrado.");
+    }
+
+    private static void DenegarSiMarcada(ResultadoGuardia resultado, PrincipalAcademico principal)
+    {
+        if (resultado.Marcada)
+        {
+            throw new AccesoDenegadoException(principal.Rol, "referencia");
+        }
     }
 }
