@@ -1,0 +1,18 @@
+# SDK .NET 8 en Docker para la fabrica (INT-007). Uso desde la raiz del repo o worktree:
+#   docker compose -f scripts/sdk/compose.yml run --rm sdk dotnet <args>
+name: tutorflow-sdk
+
+services:
+  sdk:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /src
+    volumes:
+      - ../..:/src
+      - nuget-cache:/root/.nuget/packages
+    environment:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+
+volumes:
+  nuget-cache:
