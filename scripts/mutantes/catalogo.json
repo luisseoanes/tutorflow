@@ -201,8 +201,14 @@
       "criterios": [
         "AUTH-24.b"
       ],
-      "parches": [],
-      "nota": "Parche por definir al integrar T-05e."
+      "parches": [
+        {
+          "archivo": "src/TutorFlow.Application/Preguntar/PreguntarAsistente.cs",
+          "buscar": "        var roster = await _roster.ObtenerAsync(ct);",
+          "reemplazar": "        var roster = await _roster.ObtenerAsync(ct);\n        foreach (var e in roster.Estudiantes)\n        {\n            _auditoria?.ConsultaExitosa(\"roster\", e.Id, false);\n        }"
+        }
+      ],
+      "nota": "El roster completo se registra como estudiantes consultados."
     },
     {
       "id": "M14",
