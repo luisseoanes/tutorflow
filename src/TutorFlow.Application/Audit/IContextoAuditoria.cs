@@ -24,6 +24,9 @@ public interface IContextoAuditoria
     /// <summary>Invocacion de herramienta denegada (objetivo intentado, sin datos).</summary>
     void HerramientaDenegada(string nombre, string? objetivo);
 
+    /// <summary>Invocacion con argumentos de forma invalida devuelta al LLM como error de herramienta (D-15): sin objetivo ni datos.</summary>
+    void HerramientaRechazadaForma(string nombre);
+
     /// <summary>
     /// Consulta academica ejecutada con exito: el objetivo entra a estudiantesConsultados o, si es de programa
     /// (ids separados por coma), a programasConsultados.

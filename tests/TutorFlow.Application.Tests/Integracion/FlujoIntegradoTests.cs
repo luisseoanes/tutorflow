@@ -170,6 +170,67 @@ public class FlujoIntegradoTests
         Assert.Empty(e.ProgramasConsultados);
     }
 
+    // ------------------------------------------------------------------ ADV-11.b (D-15)
+
+    [Fact]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task ADV_11_un_nombre_en_estudianteId_es_error_para_el_llm_sin_lectura_y_el_reintento_valido_responde_200()
+    {
+        var llm = new LlmEscrito(
+            LlmEscrito.Invoca("obtener_notas", """{"estudianteId":"Laura Gómez"}"""),
+            LlmEscrito.Invoca("obtener_notas"),
+            LlmEscrito.Final("Tus notas estan listas."));
+        var m = new Montaje(Est001, llm);
+
+        var r = await m.PreguntarAsync("¿Cómo me fue en mis materias?");
+
+        Assert.Equal("Tus notas estan listas.", r.Respuesta);
+        Assert.Equal(["notas:EST-001", "asistencia:EST-001"], m.Fuente.Lecturas); // solo la invocacion valida leyo
+        var primero = llm.Solicitudes[1].Mensajes.First(x => x.Rol == RolMensaje.Herramienta).Contenido;
+        Assert.Contains("Argumentos no válidos para obtener_notas", primero);
+        Assert.DoesNotContain("Laura", primero);
+        Assert.DoesNotContain("Gómez", primero);
+        var e = m.Evento();
+        Assert.Equal(["rechazado-forma", "permitido"], e.Herramientas.Select(h => h.Decision).ToArray());
+        Assert.Null(e.Herramientas[0].Objetivo);
+        Assert.Equal(["EST-001"], e.EstudiantesConsultados);
+    }
+
+    [Fact]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task ADV_11_tres_rondas_de_argumentos_invalidos_terminan_en_200_con_abstencion_nunca_500()
+    {
+        var llm = new LlmEscrito(LlmEscrito.Invoca("obtener_notas", """{"estudianteId":["EST-002","EST-005"]}"""));
+        var m = new Montaje(Est001, llm);
+
+        var r = await m.PreguntarAsync("¿Cómo me fue en mis materias?");
+
+        Assert.Empty(m.Fuente.Lecturas);
+        Assert.False(r.UsoDatosEstudiante);
+        Assert.Empty(r.Citas);
+        Assert.Equal(3, m.Evento().Herramientas.Count(h => h.Decision == "rechazado-forma"));
+    }
+
+    [Fact]
+    [Trait("Criterio", "ADV-11.b")]
+    public async Task ADV_11_tras_un_error_de_forma_un_objetivo_valido_fuera_de_alcance_sigue_dando_403_acceso()
+    {
+        var llm = new LlmEscrito(
+            LlmEscrito.Invoca("obtener_notas", """{"estudianteId":"Laura Gómez"}"""),
+            LlmEscrito.Invoca("obtener_notas", """{"estudianteId":"EST-002"}"""),
+            LlmEscrito.Final("x"));
+        var m = new Montaje(Est001, llm);
+
+        var l4 = await Assert.ThrowsAsync<AccesoDenegadoException>(() => m.BucleDirectoAsync("¿Notas de mi compañero?"));
+        Assert.Equal("politica", l4.Motivo);
+
+        var l3 = new Montaje(Est001, new LlmEscrito(LlmEscrito.Invoca("herramienta_inexistente", "{}"), LlmEscrito.Final("x")));
+        var ex = await Assert.ThrowsAsync<AccesoDenegadoException>(() => l3.BucleDirectoAsync("hola"));
+        Assert.Equal("herramienta", ex.Motivo);
+        Assert.Empty(m.Fuente.Lecturas);
+        Assert.Empty(l3.Fuente.Lecturas);
+    }
+
     // ------------------------------------------------------------------ ADV-04.a
 
     [Fact]

@@ -69,6 +69,14 @@ public sealed class ContextoAuditoria : IContextoAuditoria
         }
     }
 
+    public void HerramientaRechazadaForma(string nombre)
+    {
+        lock (_lock)
+        {
+            _herramientas.Add(new HerramientaAuditada(Acotar(nombre), null, "rechazado-forma"));
+        }
+    }
+
     public void ConsultaExitosa(string nombre, string objetivo, bool esPrograma)
     {
         lock (_lock)
