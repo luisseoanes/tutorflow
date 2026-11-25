@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TutorFlow.Application.Audit;
 using TutorFlow.Application.Identity;
 using TutorFlow.Application.Ports;
 using TutorFlow.Application.Preguntar;
@@ -38,7 +39,18 @@ public static class CoreServiceCollectionExtensions
         var ttl = TimeSpan.FromSeconds(ttlSeconds);
 
         services.TryAddSingleton<IClock, SystemClock>();
-        services.TryAddSingleton<IAuditLog, JsonLineAuditLog>();
+        services.TryAddSingleton(new AuditoriaStdout(Console.Out));
+        var rutaAuditoria = configuration["AUDIT_LOG_PATH"];
+        if (!string.IsNullOrWhiteSpace(rutaAuditoria))
+        {
+            services.TryAddSingleton<IAuditoriaArchivo>(new AuditoriaArchivo(rutaAuditoria));
+        }
+
+        services.TryAddSingleton<IAuditLog>(sp => new JsonLineAuditLog(
+            sp.GetRequiredService<AuditoriaStdout>(),
+            sp.GetService<IAuditoriaArchivo>(),
+            sp.GetRequiredService<ILoggerFactory>()));
+        services.TryAddScoped<IContextoAuditoria, ContextoAuditoria>();
         services.AddHttpClient(MockApiClientName, http =>
         {
             http.BaseAddress = new Uri(options.BaseUrl + "/", UriKind.Absolute);
@@ -58,7 +70,7 @@ public static class CoreServiceCollectionExtensions
 
         services.AddTutorFlowTools();
         services.AddSingleton<IValidadorIdentidad, ValidadorIdentidad>();
-        services.AddSingleton<IPreguntarAsistente, PreguntarAsistente>();
+        services.AddScoped<IPreguntarAsistente, PreguntarAsistente>();
         return services;
     }
 }

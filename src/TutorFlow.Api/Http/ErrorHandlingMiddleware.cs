@@ -1,3 +1,4 @@
+using TutorFlow.Application.Audit;
 using TutorFlow.Application.Errores;
 using TutorFlow.Domain.Academico;
 
@@ -35,11 +36,13 @@ public sealed class ErrorHandlingMiddleware
         catch (IdentidadInvalidaException ex)
         {
             _logger.LogInformation("Identidad rechazada por L1 (motivo: {Motivo}).", ex.Motivo);
+            context.RequestServices.GetService<IContextoAuditoria>()?.Denegar("identidad");
             await Responder403(context, Respuestas.Identidad());
         }
         catch (AccesoDenegadoException ex)
         {
             _logger.LogInformation("Acceso denegado (motivo: {Motivo}).", ex.Motivo);
+            context.RequestServices.GetService<IContextoAuditoria>()?.Denegar(ex.Motivo);
             await Responder403(context, Respuestas.Acceso(ex.Rol, ex.Tokens, ex.CostoUsd));
         }
         catch (DependenciaNoDisponibleException)

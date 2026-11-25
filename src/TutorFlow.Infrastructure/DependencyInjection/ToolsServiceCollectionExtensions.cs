@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using TutorFlow.Application.Audit;
 using TutorFlow.Application.Ports;
 using TutorFlow.Application.Tools;
 using TutorFlow.Domain.Authorization;
@@ -13,10 +14,11 @@ public static class ToolsServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         services.TryAddSingleton<IAuthorizationPolicy, AuthorizationPolicy>();
-        services.TryAddSingleton<IToolDispatcher>(sp => new ToolDispatcher(
+        services.TryAddScoped<IToolDispatcher>(sp => new ToolDispatcher(
             sp.GetRequiredService<IAcademicDataSource>(),
             sp.GetRequiredService<IRosterProvider>(),
-            sp.GetRequiredService<IAuthorizationPolicy>()));
+            sp.GetRequiredService<IAuthorizationPolicy>(),
+            sp.GetService<IContextoAuditoria>()));
         return services;
     }
 }

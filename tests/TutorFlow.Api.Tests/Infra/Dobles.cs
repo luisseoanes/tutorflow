@@ -21,6 +21,8 @@ internal sealed class FuenteEspia : IAcademicDataSource
         ["COORD-02"] = new("COORD-02", "Coordinador Dos", ["ADM"]),
     };
 
+    public List<ProgramaFuente> Programas { get; } = [];
+
     public Func<string, Exception?>? Fallo { get; set; }
 
     public IReadOnlyList<string> Llamadas => _llamadas.ToArray();
@@ -52,13 +54,14 @@ internal sealed class FuenteEspia : IAcademicDataSource
     public Task<IReadOnlyList<ProgramaFuente>> ListarProgramasAsync(CancellationToken ct)
     {
         Registrar("GET programas");
-        return Task.FromResult<IReadOnlyList<ProgramaFuente>>([]);
+        return Task.FromResult<IReadOnlyList<ProgramaFuente>>(Programas.ToList());
     }
 
     public Task<IReadOnlyList<EstudianteFuente>> ListarEstudiantesProgramaAsync(string programaId, CancellationToken ct)
     {
         Registrar("GET programa estudiantes " + programaId);
-        return Task.FromResult<IReadOnlyList<EstudianteFuente>>([]);
+        return Task.FromResult<IReadOnlyList<EstudianteFuente>>(
+            Estudiantes.Values.Where(e => e.ProgramaId == programaId).ToList());
     }
 
     private void Registrar(string llamada)
