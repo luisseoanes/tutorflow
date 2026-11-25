@@ -220,6 +220,15 @@
 - **Alcance acordado (D-15, SPEC v1.4):** solo los errores de **forma** de los argumentos se devuelven al LLM, con un error genérico que no lee la fuente, no hace eco ni da pistas, cuenta para el tope de 3 rondas y se audita como `rechazado-forma`. **La herramienta no expuesta (L3) y el objetivo fuera de alcance (L4) siguen abortando con 403.** Nuevo criterio ADV-11.b.
 - **Impacto:** SPEC §6.2 (L4 y principios) y §13 (D-15); `escenarios/adversarial.md` (ADV-11.b). Implementación en Core: tarea T-05g, tras T-05f. Cambio preparado como parche por el orquestador.
 
+### INT-019 · 2026-11-25 · F2 · Decisión (configuración de secretos)
+- **Qué pasó:** T-11 (Arnés) exportó y sanitizó las 24 transcripciones. La llave de prueba de INT-012 queda enmascarada: el patrón `AQ.…` aparece 3 veces en el original y 0 en la salida; también hay 3 `AIza…` en el original y 0 en la salida. Pero gitleaks marcó 1024 falsos positivos de la regla por defecto `generic-api-key`: la lista `"betas":[…]` de cabeceras de Claude Code, `turnAttributionKey` (UUID) y un nombre de prueba. `.gitleaks.toml` es del humano.
+- **Qué hizo el humano:** eligió una **excepción acotada**, frente a desactivar la regla en todo `logs/` (propuesta de Arnés) o alterar el contenido de las transcripciones.
+- **Acción del orquestador:** añadió a `.gitleaks.toml` una regla `generic-api-key` con allowlist `condition = "AND"`: ruta `^logs/` **y** una línea que contenga `"betas":[`, `turnAttributionKey` o `Usuario_duplicado_en_la_raiz`. Controles con gitleaks v8.24.3:
+  - La exportación pasa de 1024 hallazgos a 0.
+  - La misma secuencia de tokens sin `"betas"` **sigue detectándose**.
+  - Una llave de Google bien formada **sigue detectándose**.
+- **Nota:** se descartaron mis primeros controles sintéticos porque ni la configuración original los detectaba; se reemplazaron por un control construido a partir de un hallazgo real.
+
 ---
 
 ## Notas de transparencia

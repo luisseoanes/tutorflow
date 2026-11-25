@@ -27,3 +27,15 @@ keywords = ["@"]
 [allowlist]
 description = "Marcadores conocidos sin secreto"
 regexes = ['''test-key-NOT-REAL''']
+
+# Excepción ACOTADA (INT-019): falsos positivos conocidos de la regla por defecto generic-api-key en las
+# transcripciones sanitizadas de logs/. Solo aplica si el hallazgo está en logs/ Y su línea contiene uno de estos
+# patrones (condition AND). Cualquier otro hallazgo genérico en logs/ sigue bloqueando.
+[[rules]]
+id = "generic-api-key"
+  [rules.allowlist]
+  description = "Betas de cabecera de Claude Code, turnAttributionKey (UUID) y un nombre de prueba en transcripciones"
+  condition = "AND"
+  paths = ['''^logs/''']
+  regexTarget = "line"
+  regexes = ['''"betas":\[''', '''turnAttributionKey''', '''Usuario_duplicado_en_la_raiz''']
