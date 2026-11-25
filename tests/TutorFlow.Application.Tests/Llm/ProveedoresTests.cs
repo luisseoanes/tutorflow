@@ -165,7 +165,7 @@ public class ProveedoresTests
         Assert.Equal(LlaveCentinela, h.Solicitudes[0].Headers.GetValues("x-api-key").Single());
         using var cuerpo = JsonDocument.Parse(h.Cuerpos[0]);
         Assert.Equal("modelo-x", cuerpo.RootElement.GetProperty("model").GetString());
-        Assert.Equal(0, cuerpo.RootElement.GetProperty("temperature").GetInt32());
+        Assert.False(cuerpo.RootElement.TryGetProperty("temperature", out _));
         Assert.Equal(500, cuerpo.RootElement.GetProperty("max_tokens").GetInt32());
         Assert.Equal("obtener_notas", cuerpo.RootElement.GetProperty("tools")[0].GetProperty("name").GetString());
         Assert.DoesNotContain(LlaveCentinela, h.Cuerpos[0], StringComparison.Ordinal);
