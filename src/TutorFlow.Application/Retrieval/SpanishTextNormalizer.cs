@@ -31,6 +31,48 @@ public static class SpanishTextNormalizer
         return sb.ToString().Normalize(NormalizationForm.FormC);
     }
 
+    /// <summary>Tokeniza una CONSULTA: ademas de sus terminos, agrega las equivalencias academicas generales.</summary>
+    public static IReadOnlyList<string> TokenizeQuery(string query)
+    {
+        var tokens = new List<string>(Tokenize(query));
+        if (string.IsNullOrEmpty(query))
+        {
+            return tokens;
+        }
+
+        var plain = RemoveDiacritics(query).ToLowerInvariant();
+        var sb = new StringBuilder();
+        void Expand()
+        {
+            if (sb.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var eq in AcademicEquivalences.Expand(sb.ToString()))
+            {
+                tokens.AddRange(Tokenize(eq));
+            }
+
+            sb.Clear();
+        }
+
+        foreach (var ch in plain)
+        {
+            if (char.IsLetterOrDigit(ch))
+            {
+                sb.Append(ch);
+            }
+            else
+            {
+                Expand();
+            }
+        }
+
+        Expand();
+        return tokens;
+    }
+
     public static IReadOnlyList<string> Tokenize(string text)
     {
         if (string.IsNullOrEmpty(text))

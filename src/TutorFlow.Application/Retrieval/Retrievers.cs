@@ -38,7 +38,7 @@ public sealed class FullContextRetriever(IChunkCatalog catalog) : IRetriever
 }
 
 /// <summary>BM25 propio en memoria (k1=1.2, b=0.75), top-k=4. Sin abstencion por puntaje.</summary>
-public sealed class Bm25Retriever : IRetriever
+public sealed class Bm25Retriever : IRetriever, IChunkRanker
 {
     public const int DefaultTopK = 4;
     private readonly IChunkCatalog _catalog;
@@ -57,13 +57,20 @@ public sealed class Bm25Retriever : IRetriever
 
     public Task<IReadOnlyList<Fragmento>> RecuperarAsync(string pregunta, CancellationToken ct)
     {
-        var elegibles = RetrievalFilter.Elegibles(_catalog.Chunks, pregunta).Select(c => c.ChunkId).ToHashSet(StringComparer.Ordinal);
-        IReadOnlyList<Fragmento> result = _index.Search(pregunta)
-            .Where(s => s.Score > 0 && elegibles.Contains(s.Chunk.ChunkId))
-            .Take(_topK)
-            .Select(s => RetrievalFilter.ToFragmento(s.Chunk))
-            .ToList();
+        IReadOnlyList<Fragmento> result = Rank(pregunta).Take(_topK).Select(RetrievalFilter.ToFragmento).ToList();
         return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Chunk>> RankearAsync(string pregunta, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<Chunk>>(Rank(pregunta));
+
+    private List<Chunk> Rank(string pregunta)
+    {
+        var elegibles = RetrievalFilter.Elegibles(_catalog.Chunks, pregunta).Select(c => c.ChunkId).ToHashSet(StringComparer.Ordinal);
+        return _index.Search(pregunta)
+            .Where(s => s.Score > 0 && elegibles.Contains(s.Chunk.ChunkId))
+            .Select(s => s.Chunk)
+            .ToList();
     }
 }
 
@@ -107,7 +114,7 @@ public sealed class Bm25Index
 
     public IReadOnlyList<ScoredChunk> Search(string query)
     {
-        var terms = SpanishTextNormalizer.Tokenize(query).Distinct(StringComparer.Ordinal).ToList();
+        var terms = SpanishTextNormalizer.TokenizeQuery(query).Distinct(StringComparer.Ordinal).ToList();
         var n = _chunks.Count;
         var scored = new List<(int Index, double Score)>(n);
         for (var i = 0; i < n; i++)
