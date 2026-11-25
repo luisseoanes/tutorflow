@@ -70,7 +70,14 @@
       "Bash(head *)",
       "Bash(tail *)",
       "Bash(shasum *)",
-      "Bash(mkdir -p *)"
+      "Bash(mkdir -p *)",
+      "Edit(**/web/**)",
+      "Edit(**/qa/**)",
+      "Bash(npm ci)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright *)"
     ],
     "ask": [
       "Bash(git push*)",
@@ -79,7 +86,10 @@
       "Edit(**/REPORTE.md)",
       "Bash(curl *)",
       "Bash(wget *)",
-      "Bash(gh api *)"
+      "Bash(gh api *)",
+      "Bash(npm install*)",
+      "Bash(npm i *)",
+      "Bash(npm uninstall*)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -162,7 +172,9 @@
       "Bash(export -p)",
       "Bash(echo $LLM_API_KEY*)",
       "Bash(echo ${LLM_API_KEY}*)",
-      "Bash(echo $EMBEDDING_API_KEY*)"
+      "Bash(echo $EMBEDDING_API_KEY*)",
+      "Edit(**/SPEC-WEB.md)",
+      "Bash(npm publish*)"
     ]
   }
 }

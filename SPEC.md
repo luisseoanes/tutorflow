@@ -3,7 +3,7 @@
 > Especificación funcional y técnica de TutorFlow. Es la **fuente de verdad** para los agentes de la fábrica.
 > Si un agente encuentra una contradicción entre este documento y el código, **gana este documento**; si la encuentra entre este documento y el enunciado original de Q10, **se detiene y escala** (`AGENTS.md` §12, `FABRICA.md` §8).
 >
-> Versión: 1.2 · Fase 1 · 2026-11-25 · Estado: ratificaciones y correcciones de INT-005 aplicadas; pendiente de autorizar la fase 2.
+> Versión: 1.3 · 2026-11-25 · Estado: v1.2 (INT-005) + incorporación de la interfaz web P2 y la revisión independiente (INT-015).
 
 ---
 
@@ -26,7 +26,7 @@ TutorFlow es un asistente académico HTTP para **estudiantes** y **coordinadores
 | P1 | Auditoría por pregunta (§9), `tokens` y `costoUsd` reales (§10.3). |
 | P1 | Proveedor LLM intercambiable por configuración (§11). |
 | P1 | Evaluación comparativa de recuperación: `full-context`, `bm25`, `vector` e `hybrid` (§7.6). |
-| P2 | Interfaz web React + TypeScript (opcional; **fuera de alcance de la fase 2** salvo autorización). |
+| P2 | Interfaz web React + TypeScript: **autorizada en INT-015**. Especificación y diseño en `SPEC-WEB.md`; criterios en `escenarios/web.md`. No modifica el contrato (§3) ni traslada autorización o cálculos al navegador, y **no puede retrasar ni bloquear P0/P1**. |
 
 ### 0.2 Fuera de alcance
 
@@ -574,6 +574,8 @@ src/
 tests/
   TutorFlow.Domain.Tests/  TutorFlow.Application.Tests/  TutorFlow.Api.Tests/  TutorFlow.Architecture.Tests/
 evals/                       Dataset etiquetado + runner + RESULTADOS.md
+web/                         Interfaz React + TypeScript (P2, SPEC-WEB.md); consume solo el contrato §3.
+qa/                          Informes, evidencias y verificaciones del revisor independiente (AGENTS.md §13).
 ```
 
 Dependencias: `Api → Application → Domain`; `Infrastructure → Application, Domain`; `Api` compone por DI. Los puertos (en `Application`): `IAcademicDataSource`, `IRosterProvider`, `ILlmClient`, `IEmbeddingClient`, `IRetriever`, `IAuditLog`, `IClock`; `IAuthorizationPolicy` vive en `Domain`. Contrato interno: `IToolDispatcher` (Core) es la **única** vía por la que el bucle del LLM (IA) ejecuta herramientas; aplica L3 → esquema → L4 → ejecución.
@@ -637,6 +639,7 @@ Leer y validar el cuerpo (400) → L1 consistencia de identidad (403-identidad /
 5. Cero `double` o `float` en `TutorFlow.Domain` (prueba de arquitectura).
 6. `docker compose up` en una máquina limpia → `GET http://localhost:8080/api/salud` responde 200 en menos de 30 s.
 7. La CI bloquea el *merge* ante fallos de compilación, pruebas, recuperación, trazabilidad, mutantes, gitleaks o la regla lights-out.
+8. **Si se entrega la interfaz web (P2):** se cumplen los criterios de `SPEC-WEB.md` §11, incluido un informe **APPROVED** del revisor independiente sobre el commit integrado (`AGENTS.md` §13) y la aceptación humana registrada en `INTERVENCIONES.md`. La ausencia de la web no impide cerrar F2 (P2).
 
 ## 15. Limitaciones conocidas
 

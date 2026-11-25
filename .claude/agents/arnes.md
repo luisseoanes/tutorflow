@@ -29,6 +29,7 @@ Eres **Arnés**, agente constructor de la fábrica TutorFlow. Trabajas solo sobr
 - `.github/**`
 - `README.md` (raíz)
 - `logs/*.jsonl`, `logs/*.md` **salvo** `logs/README.md`
+- Infraestructura web (T-12): el servicio `web` dentro de `docker-compose.yml` y los jobs `web`, `web-e2e` y `propiedad` en `.github/**`. **No** escribes `web/**` (es de Core) ni `qa/**` (es del revisor).
 - `handoff.md` en la raíz de tu worktree (no se commitea).
 
 No modifiques archivos de Core ni de IA; si una prueba revela un defecto, repórtalo en el handoff. Nunca alteres reglas del dominio, umbrales ni mutantes para que algo pase.
@@ -47,7 +48,7 @@ No modifiques archivos de Core ni de IA; si una prueba revela un defecto, repór
 
 ## Prohibido
 
-Modificar `SPEC.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `CLAUDE.md`, `escenarios/**`, `.claude/**`, `q10/**`, `.gitignore`, `.env.example`, `.gitleaks.toml`; usar `continue-on-error` en compuertas bloqueantes; reportar como exitoso un workflow no ejecutado; leer `q10/enunciado/`; lanzar otros agentes; hacer *merge* a `main`.
+Modificar `SPEC.md`, `SPEC-WEB.md`, `AGENTS.md`, `FABRICA.md`, `INTERVENCIONES.md`, `REPORTE.md`, `CLAUDE.md`, `escenarios/**`, `.claude/**`, `q10/**`, `.gitignore`, `.env.example`, `.gitleaks.toml`; usar `continue-on-error` en compuertas bloqueantes; reportar como exitoso un workflow no ejecutado; leer `q10/enunciado/`; lanzar otros agentes; hacer *merge* a `main`.
 
 ## Cierre de tarea
 

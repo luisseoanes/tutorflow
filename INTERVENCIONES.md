@@ -186,6 +186,20 @@
 - **Efectos:** ningún agente leyó la llave. El resultado validó, por primera vez contra el proveedor real, el adaptador `openai-compatible`: respuesta correcta ("3.0 en una escala de 0.0 a 5.0") con cita `reglamento_academico_2025.md · Artículo 5`.
 - **Corrección:** las verificaciones "sin llave" se apoyan en la prueba automatizada RES-05.c (cliente LLM real sin llave dentro de WebApplicationFactory). Para un smoke de contenedor sin llave hay que sobrescribir explícitamente la variable en el servicio, lo que se pedirá a Arnés en T-07b.
 
+### INT-015 · 2026-11-25 · F2 · Dirección + Decisión (alcance P2 y gobierno de la fábrica)
+- **Qué pasó:** el candidato pidió dos cosas: (1) **autorizar la interfaz web React + TypeScript** (P2 en SPEC §0.1), con una especificación de producto y diseño propia; (2) **incorporar a la fábrica la revisión independiente**: quien construye no se aprueba a sí mismo, con un perfil QA visual y funcional y un flujo APPROVED / CHANGES_REQUESTED / BLOCKED.
+- **Restricciones fijadas por el humano:** sin cambio de contrato HTTP; sin autenticación ficticia; sin permisos ni cálculos en el navegador; sin funcionalidades que la API no soporte; sin dependencias injustificadas; sin retrasar T-08, T-10 ni los P0/P1; sin commits, merges ni pushes autónomos del agente para este cambio. **La aceptación final de la web la conserva el humano.**
+- **Acción del orquestador:** como `.claude/settings.json` deniega a los agentes editar documentos humanos, preparó el cambio como **parche para revisión humana** (no aplicado ni commiteado por el agente):
+  - Nuevo `SPEC-WEB.md`: tokens con contrastes WCAG calculados, estados, responsive, accesibilidad, arquitectura, dependencias permitidas y despliegue por mismo origen.
+  - Nuevo `escenarios/web.md`: WEB-01..WEB-17 con los niveles nuevos `[web]`, `[e2e]` y `[qa]`.
+  - Nuevo perfil `.claude/agents/qa.md`.
+  - `SPEC.md` v1.3: §0.1 P2, §12.1 y §14 punto 8.
+  - `AGENTS.md`: §1, §3, §6.3, §10 y el nuevo §13 (protocolo de revisión, informe inmutable, severidades, resultados, límite de rondas).
+  - `FABRICA.md`: principio 8, rol QA, tabla de propiedad (`web/**` → Core, `qa/**` → QA), compuerta G9, §5.4, jobs `web`, `web-e2e` y `propiedad`, plan §6.1 (T-12, T-13, T-14, T-13.n), límites y fallos.
+  - Ajustes en `CLAUDE.md`, en los perfiles `core`, `ia` y `arnes`, y en `settings.json`: editar `web/**` y `qa/**`; `npm ci`/`npm run`/`npx tsc|vitest|playwright` permitidos; `npm install` pide confirmación; `npm publish` y editar `SPEC-WEB.md` denegados.
+- **Pendiente del candidato:** revisar y aplicar el parche (o ajustarlo), hacer su commit, y autorizar después el inicio de T-12/T-13. Mientras tanto, la web no se implementa.
+- **Evidencia:** parche entregado en la conversación; este registro.
+
 ---
 
 ## Notas de transparencia
