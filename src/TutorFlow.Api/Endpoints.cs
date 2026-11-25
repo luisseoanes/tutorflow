@@ -1,5 +1,6 @@
 using TutorFlow.Api.Contracts;
 using TutorFlow.Api.Http;
+using TutorFlow.Application.Audit;
 using TutorFlow.Application.Preguntar;
 
 namespace TutorFlow.Api;
@@ -12,12 +13,13 @@ public static class Endpoints
         app.MapGet("/api/salud", (HttpContext ctx) =>
             Respuestas.EscribirJsonAsync(ctx.Response, StatusCodes.Status200OK, new SaludResponse("ok")));
 
-        app.MapPost("/api/asistente/preguntar", async (HttpContext ctx, IPreguntarAsistente caso) =>
+        app.MapPost("/api/asistente/preguntar", async (HttpContext ctx, IPreguntarAsistente caso, IContextoAuditoria auditoria) =>
         {
             var requestId = RequestIdMiddleware.Obtener(ctx);
             var lectura = await PreguntarBodyReader.LeerAsync(ctx.Request, requestId, ctx.RequestAborted);
             if (lectura.Comando is null)
             {
+                auditoria.Iniciar(string.Empty, lectura.UsuarioLegible?.Rol, lectura.UsuarioLegible?.Id);
                 await Respuestas.EscribirProblemaAsync(
                     ctx.Response, StatusCodes.Status400BadRequest, "Solicitud invalida", lectura.Detalle!, requestId);
                 return;

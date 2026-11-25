@@ -159,7 +159,7 @@ public class AuditoriaPreguntaApiTests
                 LoggerFactory.Create(b => b.AddProvider(logs))));
         });
 
-        // Un 200 requiere el flujo LLM de T-08: se usa el camino 403 disponible (misma auditoria, mismo destino).
+        // Camino 403 (misma auditoria, mismo destino); el 200 con archivo que falla se verifica en el flujo completo.
         var r = await PostAsync(f.CreateClient(), ConUsuario(Usuario("estudiante", "EST-999")));
 
         await Afirmar403IdentidadAsync(r);
@@ -259,17 +259,20 @@ public class AuditoriaPreguntaApiTests
     }
 
     [Fact]
-    public async Task Flujo_pendiente_503_emite_un_evento()
+    public async Task Llm_no_disponible_503_emite_un_evento_con_identidad_valida_y_sin_consultas()
     {
-        using var f = Crear();
+        using var f = new FabricaE2E
+        {
+            Llm = new LlmGuion(LlmGuion.Falla(new TutorFlow.Application.Llm.LlmNoDisponibleException("sin llave", 401))),
+        };
 
-        var r = await PostAsync(f.CreateClient(), ConUsuario(Usuario("estudiante", "EST-001"), "¿Cuál es mi promedio?"));
+        var r = await PostAsync(f.CreateClient(), ConUsuario(Usuario("estudiante", "EST-001"), "¿Qué dice el reglamento de la asistencia?"));
 
         await AfirmarProblema(r, HttpStatusCode.ServiceUnavailable);
-        var e = Unico(f);
-        Assert.Equal(503, e.Resultado);
-        Assert.True(e.IdentidadValida);
-        Assert.Empty(e.EstudiantesConsultados);
+        var e = Assert.Single(f.EventosPregunta());
+        Assert.Equal(503, e.GetProperty("resultado").GetInt32());
+        Assert.True(e.GetProperty("identidadValida").GetBoolean());
+        Assert.Equal(0, e.GetProperty("estudiantesConsultados").GetArrayLength());
     }
 
     [Fact]
