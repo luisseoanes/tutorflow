@@ -144,6 +144,15 @@
 - **Impacto:** el plan de §6 conserva su orden; T-07 se parte según dependencias reales. Ningún criterio se relaja: los mutantes y criterios no aplicables se reportan como "pendientes", nunca como aprobados.
 - **Pendiente del candidato:** revisar ambos ajustes.
 
+### INT-011 · 2026-11-25 · F2 · Corrección del orquestador (sin intervención humana; registrada por transparencia)
+- **Qué pasó:**
+  1. **T-06 rechazada en G6 (ciclo 1).** IA dejó los adaptadores HTTP de los proveedores LLM en `src/TutorFlow.Application/Llm/`, contra `AGENTS.md` §4 (la E/S solo en Infrastructure). Se corrigió moviéndolos a `src/TutorFlow.Infrastructure/Llm/` y se integró en `7d10398`.
+  2. **Error del brief de T-07a, atribuible al orquestador.** El brief pidió aplicar los umbrales de SPEC §7.6 a `bm25`. SPEC los aplica a la **estrategia elegida** ("Recall@4 … no aplica a full-context"), y los criterios `[ret]` se refieren a la "estrategia por defecto". Al seguir el brief, el runner de Arnés dio un falso rojo bloqueante.
+  3. **Hallazgo real que aflora el runner:** `bm25` hoy **no** cumple los umbrales (Recall@4 0.8333, MRR 0.75). Falla en q04 (falta `evaluacion_y_calificaciones.md#Sección 2` en el top 4) y en la consulta coloquial RAG-12-a ("con cuánto paso una materia?", top 4 vacío).
+- **Acción del orquestador:** devolvió T-07a para evaluar criterios y umbrales sobre la estrategia por defecto (hoy `full-context`, provisional hasta T-10) y **reportar siempre** las demás estrategias como experimento no bloqueante, sin suavizar los fallos. También pidió completar los parches de los mutantes M10 y M14 (T-06 ya integrada). La mejora de `bm25` queda como insumo para T-09/T-10: si T-10 elige `bm25` como estrategia por defecto, debe cumplir los umbrales antes.
+- **Impacto:** ningún umbral se relaja. Se corrige la aplicación del umbral para que coincida con SPEC.
+- **Evidencia:** handoffs de T-06 y T-07a; transcripción de la sesión.
+
 ---
 
 ## Notas de transparencia
