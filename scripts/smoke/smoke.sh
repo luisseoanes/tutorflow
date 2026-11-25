@@ -44,14 +44,16 @@ esperar_healthy() { # servicio, segundos
   return 1
 }
 
-echo "== Construyendo la imagen (fuera de la medicion de arranque) =="
-dc build tutorflow
+# Medicion de RES-01.b: el limite de 30 s corre desde que 'up' crea los contenedores (imagenes ya construidas, 'up --no-build')
+# hasta el primer 200 de /api/salud. El build (tutorflow y web) es previo, usa la cache de capas de BuildKit y NO cuenta.
+echo "== Construyendo las imagenes (fuera de la medicion de arranque; cache de capas) =="
+dc build
 dc down -v --remove-orphans >/dev/null 2>&1 || true
 
 # Criterio: RES-01.b
 echo "== RES-01.b: compose up en limpio, GET /api/salud 200 en menos de ${LIMITE_SALUD_S} s =="
 inicio=$SECONDS
-dc up -d
+dc up -d --no-build
 cuerpo=""
 codigo=""
 while :; do
@@ -71,7 +73,7 @@ fi
 
 # Criterio: RES-03.a
 echo "== RES-03.a: healthy, puertos y montaje de solo lectura =="
-for servicio in tutorflow mock-api; do
+for servicio in tutorflow mock-api web; do
   if esperar_healthy "$servicio" 60; then ok "$servicio healthy"; else fallo "$servicio no llego a healthy (estado: $(salud_servicio "$servicio"))"; fi
 done
 
@@ -104,6 +106,14 @@ if dc exec -T tutorflow sh -c 'touch /app/knowledge/.smoke-escritura' >/dev/null
 else
   ok "escribir en /app/knowledge falla (sistema de archivos de solo lectura)"
 fi
+
+# Interfaz web (INT-021; sin criterio propio en escenarios/: no lleva marcador 'Criterio')
+echo "== Web: la interfaz web queda healthy y responde en :3000 =="
+URL_WEB="${SMOKE_URL_WEB:-http://localhost:3000}"
+codigo_web="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL_WEB/" || true)"
+if [ "$codigo_web" = "200" ]; then ok "GET $URL_WEB/ -> 200"; else fallo "GET $URL_WEB/ -> ${codigo_web:-ninguno} (se esperaba 200)"; fi
+codigo_proxy="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL_WEB/api/salud" || true)"
+if [ "$codigo_proxy" = "200" ]; then ok "GET $URL_WEB/api/salud (proxy a la API) -> 200"; else fallo "proxy /api/salud en :3000 -> ${codigo_proxy:-ninguno}"; fi
 
 # Criterio: RES-03.b
 echo "== RES-03.b: sin LLM_API_KEY, AUTH-03 contra el contenedor real -> 403-acceso (L2a, sin LLM) =="
