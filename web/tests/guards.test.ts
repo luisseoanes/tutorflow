@@ -11,7 +11,8 @@ describe("guards en tiempo de ejecución", () => {
   });
 
   // Criterio: WEB-07.d
-  it.each([
+  it("rechaza formas inválidas de PreguntarResponse", () => {
+    const casos: [string, unknown][] = [
     ["null", null],
     ["array", []],
     ["string", "ok"],
@@ -24,8 +25,8 @@ describe("guards en tiempo de ejecución", () => {
     ["tokens string", { ...RESPUESTA_OK, tokens: "10" }],
     ["tokens NaN", { ...RESPUESTA_OK, tokens: Number.NaN }],
     ["costo string", { ...RESPUESTA_OK, costoUsd: "0.1" }],
-  ])("rechaza %s", (_nombre, valor) => {
-    expect(isPreguntarResponse(valor)).toBe(false);
+    ];
+    for (const [nombre, valor] of casos) expect(isPreguntarResponse(valor), nombre).toBe(false);
   });
 
   // Criterio: WEB-07.d

@@ -6,18 +6,25 @@ import { beforeAll, describe, expect, it } from "vitest";
 const SALIDA = `${process.cwd()}/node_modules/.tmp/bundle-test`;
 
 let archivos: [string, string][] = [];
+let errorDeBuild: unknown = null;
 
 beforeAll(async () => {
   rmSync(SALIDA, { recursive: true, force: true });
   mkdirSync(SALIDA, { recursive: true });
-  await build({ logLevel: "silent", build: { outDir: SALIDA, emptyOutDir: true } });
+  try {
+    await build({ logLevel: "silent", build: { outDir: SALIDA, emptyOutDir: true } });
+  } catch (e) {
+    errorDeBuild = e;
+  }
   archivos = readdirSync(SALIDA, { recursive: true })
     .filter((ruta) => /\.(js|css|html)$/.test(ruta))
     .map((ruta): [string, string] => [ruta, readFileSync(`${SALIDA}/${ruta}`, "utf8")]);
 }, 120_000);
 
 describe("bundle de producción", () => {
-  it("se generó (la prueba no es vacía)", () => {
+  // Criterio: WEB-14.b
+  it("el build de producción (vite build) termina sin errores y genera index.html, JS y CSS", () => {
+    expect(errorDeBuild).toBeNull();
     const nombres = archivos.map(([r]) => r);
     expect(nombres).toContain("index.html");
     expect(nombres.some((r) => r.endsWith(".js"))).toBe(true);
