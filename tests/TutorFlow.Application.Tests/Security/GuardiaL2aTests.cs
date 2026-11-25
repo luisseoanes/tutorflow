@@ -105,7 +105,6 @@ public class GuardiaL2aTests
     }
 
     [Fact]
-    [Trait("Criterio", "AUTH-17.a")]
     public void El_coordinador_no_alcanza_a_un_estudiante_de_otro_programa_por_nombre_ni_id()
     {
         var roster = Material();
@@ -120,7 +119,6 @@ public class GuardiaL2aTests
     }
 
     [Fact]
-    [Trait("Criterio", "AUTH-17.a")]
     public void El_coordinador_si_puede_referirse_a_estudiantes_de_sus_programas()
     {
         var roster = Material();
@@ -130,7 +128,6 @@ public class GuardiaL2aTests
     }
 
     [Fact]
-    [Trait("Criterio", "AUTH-17.a")]
     public void Un_id_inexistente_con_forma_de_id_se_trata_como_fuera_de_alcance()
     {
         var r = GuardiaReferenciasExplicitas.Evaluar("Notas de EST-999", Est001, Material());
