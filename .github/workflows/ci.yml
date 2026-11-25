@@ -1,5 +1,5 @@
 # CI de TutorFlow (FABRICA.md §5.2). Todos los jobs de este archivo son bloqueantes: no hay continue-on-error.
-# Llegan despues (no se crean vacios): smoke (T-07b) y evals-llm (T-10, no bloqueante).
+# Llega despues (no se crea vacio): evals-llm (T-10, no bloqueante).
 name: ci
 
 on:
@@ -167,3 +167,17 @@ jobs:
           fi
           echo "Rango evaluado: $RANGO"
           node scripts/lights-out/verificar.js --rango "$RANGO"
+
+  smoke:
+    name: smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Smoke en contenedor (RES-01.b, RES-03.a, RES-03.b; sin llave del proveedor)
+        run: bash scripts/smoke/smoke.sh
+      - name: Apagar compose (siempre)
+        if: always()
+        run: docker compose -p tutorflow-smoke -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml down -v --remove-orphans
