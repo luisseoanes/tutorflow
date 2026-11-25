@@ -151,7 +151,7 @@ Primera sesión de T-10, commit del runner `1666da3`. La batería (a) se **detuv
 **Qué cambió (INT-016, punto 1: se corrige el dataset, no la métrica ni el umbral).** 18 casos con flujo de herramientas ganaron `esperado.citas_permitidas` y `esperado.nota_citas`; se derivaron de la tabla de SPEC §7.5.2, de las citas de datos de §7.5.3 y de los valores golden de SPEC §5.9 (qué estudiante tiene perdidas, pérdida por inasistencia o asistencia `null`), no de lo que devolvió el producto. No se tocaron `citas`, `cifras`, `prohibido`, umbrales ni la métrica, y no se eliminó ningún caso. Casos tocados: q02, q03, q05, q06, ACAD-08-c, ACAD-09-b, ACAD-12-c, ACAD-13-c, ACAD-14-b, ACAD-15-c, ACAD-16-c, ACAD-19-c, AUTH-01-d, AUTH-02-b-nombre, AUTH-02-b-id, AUTH-15-d, AUTH-16-c, AUTH-20-b.
 
 | Corrida (crudo, sin cambios) | Precisión de citas antes | Precisión de citas después | Cobertura | Exactitud numérica | Casos OK antes → después |
-|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|
 | (a) `gemini-3.5-flash-lite` + `full-context` (`eval-20261125T171325Z-980131f-...-full-context.json`) | 0.5000 (NO CUMPLE) | **0.9800 (CUMPLE)** | 0.9259 (sin cambio) | 0.6500 (sin cambio, NO CUMPLE) | 38 → 38 |
 | (b) `gemini-3.5-flash-lite` + `bm25` (`eval-20261125T171939Z-980131f-...-bm25.json`) | 0.4444 (NO CUMPLE) | **0.9630 (CUMPLE)** | 0.8889 (sin cambio, NO CUMPLE) | 0.7000 (sin cambio, NO CUMPLE) | 38 → 36 |
 
@@ -328,7 +328,7 @@ El 400 por `temperature` es el defecto que corrigió T-06.5. Con el código corr
 ### Métricas SPEC §7.6 (umbral vigente INT-022; entre paréntesis el original)
 
 | Métrica | Umbral vigente (original) | (a) flash-lite + full-context (T-10.2, `cd31f51`) | (b) flash-lite + bm25 (T-10.2, `cd31f51`) | (d) Sonnet + full-context (`cbd0321`) | (e) Sonnet + bm25 (`cbd0321`) |
-|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|
 | Precisión de citas | >= 0.90 (0.90) | 0.8871 NO CUMPLE | 0.9107 CUMPLE | 0.6923 **NO CUMPLE** | 0.8462 **NO CUMPLE** |
 | Cobertura de citas | >= 0.90 (0.90) | 0.9630 CUMPLE | 0.8889 NO CUMPLE | 0.5556 **NO CUMPLE** | 0.5926 **NO CUMPLE** |
 | Exactitud de abstención | >= 0.90 (1.00) | 1.0000 CUMPLE | 1.0000 CUMPLE | 0.7273 **NO CUMPLE** | 0.6364 **NO CUMPLE** |
@@ -420,3 +420,25 @@ evals/correr-eval.sh a && evals/correr-eval.sh b && evals/correr-eval.sh c
 ```
 
 Cada corrida deja `evals/runs/eval-<fecha>-<sha>-<modelo>-<estrategia>.json`. Si el proveedor se queda sin cuota (429/503 seguidos), el runner se detiene y guarda la corrida como `PARCIAL`.
+
+## T-10.5 · Sonnet 5.5 tras D-16 (tope 20000, effort low)
+
+Corridas reales sobre T-06.6 (9ba43ef) con `LLM_MAX_TOKENS_PER_REQUEST=20000` fijado en `evals/compose.anthropic.yml`. 47 casos, 42 con LLM, 0 respuestas 429/503. Umbrales vigentes SPEC 7.6: todas las métricas >= 0.90. Precio 2/10 USD por M tokens (entrada/salida).
+
+| Combinación | Crudo | precisionCitas | coberturaCitas | exactAbstención | exactNumérica | cumpleUmbrales | Tokens | Costo USD | USD/1.000 preg. | Latencia p50/p95 (ms) | OK/FALLA |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| e) sonnet + bm25 | `runs/eval-20261125T221016Z-641279f-claude-sonnet-5-5-bm25.json` | 0.8806 | 1.0000 | 0.9091 | 1.0000 | no | 277.578 | 0.6346 | 13.50 | 2464 / 5431 | 41/6 |
+| d) sonnet + full-context | `runs/eval-20261125T221317Z-929374a-claude-sonnet-5-5-full-context.json` | 0.7375 | 1.0000 | 0.9091 | 1.0000 | no | 446.555 | 0.9765 | 20.78 | 2233 / 5864 | 38/9 |
+
+Validación previa q02 (d): 200, cifra 4.39, citas, sin abstención, 11.357 tokens: `runs/validacion-t105-sonnet-q02.json`.
+
+Comparación con T-10.4 (mismos 47 casos, tope 8000):
+
+| Combinación | cobertura | exact. abstención | exact. numérica | casos con `abstencion debe=False, abstuvo=True` | casos con `usoDatosEstudiante` esperado true y obtenido false | OK/FALLA |
+|---|---|---|---|---|---|---|
+| d T-10.4 | 0.5556 | 0.7273 | 0.65 | 2 (q02, q06) | 13 | 32/15 |
+| d T-10.5 | 1.0000 | 0.9091 | 1.0 | 0 | 0 | 38/9 |
+| e T-10.4 | 0.5926 | 0.6364 | 0.65 | 3 (q02, q03, q05) | 10 | 31/16 |
+| e T-10.5 | 1.0000 | 0.9091 | 1.0 | 0 | 0 | 41/6 |
+
+Las abstenciones anómalas en preguntas de datos desaparecen en ambas combinaciones. No se cumplen aún los umbrales por una sola métrica: precisionCitas (citas fuera de las permitidas, 0.88 y 0.74). Fallas restantes: RAG-10-a (responde con cita en vez de abstenerse; en las dos corridas) y, en bm25, RAG-10-b (patrón de hora de biblioteca); el resto son citas del reglamento fuera de las permitidas. Una sola corrida por combinación; no se sostienen conclusiones de varianza.
