@@ -200,6 +200,15 @@
 - **Pendiente del candidato:** revisar y aplicar el parche (o ajustarlo), hacer su commit, y autorizar después el inicio de T-12/T-13. Mientras tanto, la web no se implementa.
 - **Evidencia:** parche entregado en la conversación; este registro.
 
+### INT-016 · 2026-11-25 · F2 · Decisión (resultados reales de T-10)
+- **Qué pasó:** T-10 ejecutó con Gemini real las combinaciones (a) `gemini-3.5-flash-lite` + `full-context` y (b) `gemini-3.5-flash-lite` + `bm25`, ambas completas (47/47). **Ninguna cumple los umbrales de SPEC §7.6** (precisión de citas 0.50/0.44, exactitud numérica 0.65/0.70; (b) además cobertura 0.89). La combinación (c) `gemini-3.8-flash` quedó parcial (3/47) por 429 del proveedor. Se verificó contra el proveedor real la corrección T-06.2 (q02 → 200 con 4.39). Antes de eso, la primera sesión de T-10 se detuvo por el límite de uso de Claude y diagnosticó el 400 de Gemini (registrado en `evals/RESULTADOS.md`).
+- **Qué hizo el humano:**
+  1. **Precisión de citas: corregir el dataset, no la métrica ni el umbral.** Las citas deterministas que SPEC §7.5.2–§7.5.3 obliga a añadir a las herramientas pasan a `citas_permitidas` de cada caso, derivadas de la tabla de SPEC y no del resultado observado.
+  2. **Corregir y re-evaluar:** IA mejora el generador para que incluya en la redacción las cifras y textos clave de los resultados de herramientas y fragmentos, e investiga los 403 inesperados con `bm25` (q06, AUTH-02-b-nombre). Después Arnés repite (a) y (b), dentro del límite de 3 corridas por combinación (FABRICA §7.1).
+  3. **Omitir la combinación (c):** se documenta como NO EJECUTADA por falta de cuota del plan gratuito.
+- **Impacto:** tareas T-10.1 (Arnés, dataset), T-06.3 (IA, generador y diagnóstico de 403) y T-10.2 (Arnés, re-evaluación). Ningún umbral se relaja.
+- **Evidencia:** `evals/RESULTADOS.md` y crudos en `evals/runs/` (merge `ab57f94`).
+
 ---
 
 ## Notas de transparencia
