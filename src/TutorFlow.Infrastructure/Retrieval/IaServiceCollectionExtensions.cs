@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TutorFlow.Application.Ports;
+using TutorFlow.Infrastructure.Llm;
 using TutorFlow.Application.Retrieval;
 
 namespace TutorFlow.Infrastructure.Retrieval;
@@ -37,6 +38,7 @@ public static class IaServiceCollectionExtensions
                     $"RETRIEVAL_STRATEGY '{estrategia}' no disponible en ejecucion (full-context | bm25)."),
             };
         });
+        services.AddTutorFlowLlm(configuration);
         return services;
     }
 
