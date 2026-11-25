@@ -1,0 +1,8 @@
+# Solo QA: 8080 ocupado por otro stack; se remapean los puertos publicados (no toca el compose de Core).
+services:
+  tutorflow:
+    ports: !override
+      - "18080:8080"
+  web:
+    ports: !override
+      - "13000:3000"
