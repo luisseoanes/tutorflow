@@ -77,6 +77,8 @@ internal sealed class RosterFalso : IRosterProvider
 {
     public bool Caido { get; set; }
 
+    public RosterSnapshot Snapshot { get; set; } = new([], [], [], DateTimeOffset.UnixEpoch);
+
     public Task<RosterSnapshot> ObtenerAsync(CancellationToken ct)
     {
         if (Caido)
@@ -84,7 +86,7 @@ internal sealed class RosterFalso : IRosterProvider
             throw new DependenciaNoDisponibleException("roster caido");
         }
 
-        return Task.FromResult(new RosterSnapshot([], [], [], DateTimeOffset.UnixEpoch));
+        return Task.FromResult(Snapshot);
     }
 }
 
@@ -105,5 +107,19 @@ internal sealed class AuditoriaMemoria : IAuditLog
     {
         Roster.Enqueue(evento);
         return Task.CompletedTask;
+    }
+}
+
+/// <summary>Cliente LLM espia: cuenta las invocaciones (L2 debe rechazar ANTES de llamarlo).</summary>
+internal sealed class LlmEspia : ILlmClient
+{
+    private int _invocaciones;
+
+    public int Invocaciones => Volatile.Read(ref _invocaciones);
+
+    public Task<LlmResponse> CompletarAsync(LlmRequest solicitud, CancellationToken ct)
+    {
+        Interlocked.Increment(ref _invocaciones);
+        return Task.FromResult(new LlmResponse("(llm espia)", [], new UsoTokens(0, 0)));
     }
 }
