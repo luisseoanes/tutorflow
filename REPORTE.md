@@ -13,8 +13,8 @@ TutorFlow es un asistente académico (.NET 8, Minimal API, puerto 8080) que resp
 | Contrato HTTP, dominio académico, autorización L1–L5, auditoría | Implementado · Probado (635 pruebas) · mutantes 16/16 detectados |
 | CI (11 jobs: 10 bloqueantes + evals-llm manual) | Verde en `ceae2a0`; las 3 corridas rojas de `main` fueron bloqueos reales de trazabilidad (§13) |
 | Interfaz web (P2) | Implementado · Probado · Revisado (QA r4 APPROVED) · aceptada por el humano (INT-024) |
-| Calidad RAG con LLM real | Evaluado con Gemini flash-lite: **ninguna combinación cumple todos los umbrales** (§9). Comparación con Claude Sonnet 5.5: **pendiente (T-10.4 en curso)** |
-| Proveedor Anthropic (default de SPEC) | Defecto real hallado por la primera llamada real (HTTP 400 por `temperature`), corregido en T-06.5; **validación real pendiente** |
+| Calidad RAG con LLM real | Evaluado con Gemini flash-lite (T-10.2) y Claude Sonnet 5.5 (T-10.4): **ninguna combinación cumple todos los umbrales** (§9). La más cercana: Gemini flash-lite + bm25 (solo falla cobertura de citas, 0.889) |
+| Proveedor Anthropic (default de `.env.example`) | Dos defectos reales hallados solo con llamadas reales: (1) HTTP 400 por `temperature`, corregido en T-06.5; (2) **abstenciones en preguntas de datos aun con la herramienta permitida** (13 y 10 casos), causa **sin diagnosticar** (§9, §17). Para ejecutar TutorFlow hoy se recomienda `openai-compatible` + Gemini flash-lite + `bm25` |
 
 **TutorFlow no se declara completo**: el criterio `[eval]` RAG-10.b (la estrategia por defecto cumple los umbrales de SPEC §7.6) no está satisfecho.
 
@@ -32,7 +32,7 @@ TutorFlow es un asistente académico (.NET 8, Minimal API, puerto 8080) que resp
 |---|---|
 | Core | T-01, T-02, T-05a–T-05h, T-08, T-08.1, T-13, T-13.1–T-13.3 |
 | IA | T-03, T-06, T-06.1–T-06.5, T-09 |
-| Arnés | T-00, T-04, T-07a (+.1–.3), T-07b, T-10, T-10.1–T-10.3, T-11 (intermedia), T-12, T-12.1/T-12.2 · T-10.4 en curso |
+| Arnés | T-00, T-04, T-07a (+.1–.3), T-07b, T-10, T-10.1–T-10.4, T-11, T-12, T-12.1/T-12.2 |
 | QA (independiente) | T-14 r1–r4 sobre T-13 |
 | Orquestador | Briefs, compuertas G1–G9, verificación independiente, merges `--no-ff`, INTERVENCIONES |
 
@@ -73,11 +73,17 @@ Umbrales SPEC §7.6 (v1.6): precisión y cobertura de citas ≥ 0.90; abstenció
 | T-10 (dataset v1) | 980131f | bm25 | 0.44 | 0.89 | 1.00 | 0.70 | No |
 | T-10.2 (dataset v2) | cd31f51 | full-context | 0.887 | 0.963 | 1.00 | 0.85 | No |
 | T-10.2 (dataset v2) | cd31f51 | bm25 | 0.911 | **0.889** | 1.00 | 0.95 | No |
-| T-10.4 Sonnet 5.5 | (pendiente) | full-context / bm25 | — | — | — | — | Pendiente |
+| T-10.4 Sonnet 5.5 | cbd0321 | full-context | 0.692 | 0.556 | 0.727 | 0.65 | No |
+| T-10.4 Sonnet 5.5 | cbd0321 | bm25 | 0.846 | 0.593 | 0.636 | 0.65 | No |
 
 `[ret]` (determinista, bm25): Recall@4 1.00, MRR 0.917 — cumple. `vector`/`hybrid`: implementados y probados offline, **no evaluados** con LLM (no hay llave de embeddings).
 
-**Por qué no se cumplen los umbrales (lectura de las respuestas crudas, T-06.4):** la mayoría de fallos eran **instrucciones insuficientes del prompt** (cifras reformateadas "0.3" en vez de "30%", denominador omitido en faltas, herramientas de datos invocadas en preguntas solo normativas, citas de más). Se corrigieron en T-06.4 sin cifras del dataset en el prompt. El resto es **límite del modelo** (flash-lite, capa gratuita) o **interpretación del dataset** (q04, Art. 7 en ACAD-08-c/AUTH-16-c) pendiente de decisión humana. La atribución por caso con evidencia (mismo commit, flash-lite contra Sonnet) es el objeto de T-10.4 y se añadirá aquí; no se afirma "es culpa del modelo" sin esos datos.
+**Por qué no se cumplen los umbrales (lectura de las respuestas crudas, T-06.4):** la mayoría de fallos eran **instrucciones insuficientes del prompt** (cifras reformateadas "0.3" en vez de "30%", denominador omitido en faltas, herramientas de datos invocadas en preguntas solo normativas, citas de más). Se corrigieron en T-06.4 sin cifras del dataset en el prompt. El resto es **límite del modelo** (flash-lite, capa gratuita) o **interpretación del dataset** (q04, Art. 7 en ACAD-08-c/AUTH-16-c) pendiente de decisión humana.
+
+**T-10.4 (Sonnet 5.5) — lo que muestra y lo que no:**
+- Sonnet resolvió 4 casos que flash-lite fallaba (q04, RAG-06-a, RAG-07-a, RAG-10-c): **indicio** de límite del modelo en esos casos, no prueba, porque las corridas difieren también en código (T-05h, T-06.4, T-06.5; INT-025).
+- Pero Sonnet empeoró en total (32 y 31 casos OK de 47, frente a 41 con flash-lite). **13 de 15 fallos (full-context) y 10 de 16 (bm25) son la frase de abstención en preguntas de datos**, con la herramienta invocada y permitida (p. ej. q02 "¿Cuál es mi promedio?", 200 con `citas: []`), mientras preguntas similares (q03) salen bien. Con flash-lite no hubo ningún fallo de ese tipo. Una abstención sin ninguna cita implica que se descartó toda la generación, incluidas las citas deterministas de herramienta: apunta a un **defecto de integración del adaptador Anthropic** (p. ej. salida final que el validador no reconoce como JSON), no a calidad del modelo. **No está diagnosticado.**
+- Conclusión honesta: **no se puede afirmar que el incumplimiento de umbrales se deba a la calidad del modelo.** Con flash-lite, los fallos restantes son mayoritariamente de modelo/dataset tras corregir el prompt; con Sonnet, los números están dominados por el defecto de integración.
 
 ## 10. Métricas de tokens y costos reales
 
@@ -89,7 +95,10 @@ Umbrales SPEC §7.6 (v1.6): precisión y cobertura de citas ≥ 0.90; abstenció
 | T-10 (b) bm25 | 72 438 | US$ 0.029 | US$ 0.62 |
 | T-10.2 (a) full-context | 193 108 | US$ 0.066 | **US$ 1.40** |
 | T-10.2 (b) bm25 | 107 993 | US$ 0.041 | **US$ 0.87** |
-| T-10.4 Sonnet 5.5 (2/10 USD por M) | pendiente | pendiente | pendiente |
+| T-10.4 (d) Sonnet 5.5 + full-context (2/10 USD por M, gasto real) | 361 610 | US$ 0.80 | US$ 19.03 |
+| T-10.4 (e) Sonnet 5.5 + bm25 | 277 029 | US$ 0.64 | US$ 15.31 |
+
+Por 1.000 preguntas se calcula como costo medio por pregunta que usa el LLM × 1.000 (5 de 47 preguntas se resuelven sin LLM: 400/403). Con la configuración recomendada (Gemini flash-lite + bm25): **≈ US$ 0.87–0.98 por 1.000 preguntas** a precio de pago.
 
 **Fábrica (agentes de Claude Code), medido desde las transcripciones locales de la sesión (34 archivos):**
 
@@ -108,7 +117,7 @@ Umbrales SPEC §7.6 (v1.6): precisión y cobertura de citas ≥ 0.90; abstenció
 
 - Variables: `LLM_PROVIDER` (`anthropic` | `openai-compatible`), `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_PRICE_INPUT_PER_MTOK`, `LLM_PRICE_OUTPUT_PER_MTOK`, `LLM_MAX_TOKENS_PER_REQUEST`, `RETRIEVAL_STRATEGY` (por defecto `full-context`). Ver `.env.example` y `README.md`.
 - Evaluado: `openai-compatible` + `gemini-3.5-flash-lite` (endpoint compatible con OpenAI de Gemini, reenviando `extra_content` de forma opaca).
-- `anthropic`: defecto con modelos Claude 5 (`temperature` rechazado con HTTP 400; thinking no preservado) hallado en la primera llamada real y corregido en T-06.5 con pruebas grabadas. **Validación real con `claude-sonnet-5-5`: pendiente (T-10.4).**
+- `anthropic`: defecto con modelos Claude 5 (`temperature` rechazado con HTTP 400; thinking no preservado) hallado en la primera llamada real y corregido en T-06.5 con pruebas grabadas. Validado con `claude-sonnet-5-5` en T-10.4: sin errores HTTP (0×400, 0×429, 0×503 en 94 preguntas), pero con abstenciones anómalas en preguntas de datos (§9). **Configuración recomendada para ejecutar:** `LLM_PROVIDER=openai-compatible`, `LLM_MODEL=gemini-3.5-flash-lite`, `RETRIEVAL_STRATEGY=bm25`.
 
 ## 12. Resultado de Docker Compose
 
@@ -130,7 +139,7 @@ Jobs bloqueantes: `build-test`, `trazabilidad`, `secretos` (gitleaks v8.24.3 sob
 ## 15. Limitaciones conocidas
 
 1. Sin autenticación real (la identidad llega en el cuerpo).
-2. Umbrales de calidad RAG no cumplidos con Gemini flash-lite; relajación de dos umbrales decidida después de ver resultados (INT-022).
+2. Umbrales de calidad RAG no cumplidos con ningún modelo evaluado (Gemini flash-lite, Claude Sonnet 5.5); relajación de dos umbrales decidida después de ver resultados (INT-022).
 3. Latencia p95 de full-context 12.9 s (> 10 s objetivo de SPEC §10.1); bm25 7.6 s.
 4. Estado en memoria del adaptador LLM para `extra_content`/thinking (un reinicio entre rondas de una misma petición lo perdería; no ocurre en una petición normal).
 5. L2a de entrada rechaza preguntas con un código de asignatura con forma de id.
@@ -146,7 +155,7 @@ Jobs bloqueantes: `build-test`, `trazabilidad`, `secretos` (gitleaks v8.24.3 sob
 
 - Pruebas ocultas que comparen texto generado (cifras/citas) pueden fallar en 1–2 de cada 20 casos con flash-lite.
 - El formato de citas de datos (D-04: `"Datos del estudiante"`/`"Datos del programa"`) es una interpretación documentada; otra lectura del evaluador fallaría.
-- El proveedor por defecto (`anthropic`) queda validado solo con respuestas grabadas hasta que termine T-10.4.
+- **El proveedor `anthropic` (valor de `.env.example`) produce abstenciones en preguntas de datos con modelos Claude 5 (T-10.4), causa sin diagnosticar.** Si el evaluador ejecuta con una llave de Anthropic, las pruebas ocultas que pidan datos del estudiante pueden fallar. Siguiente paso: capturar la salida cruda del proveedor en un caso (q02) y corregir el adaptador o el validador con una prueba grabada.
 - Variabilidad del LLM: 47 casos y una corrida por combinación no permiten conclusiones estadísticas fuertes.
 
 ## 18. Instrucciones reproducibles desde cero
