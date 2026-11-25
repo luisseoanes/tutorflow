@@ -140,7 +140,7 @@ Jobs bloqueantes: `build-test`, `trazabilidad`, `secretos` (gitleaks v8.24.3 sob
 
 ## 16. Intervenciones humanas
 
-24 entradas en `INTERVENCIONES.md` (INT-001..INT-024) más notas de transparencia NT-01/NT-02. Tipos: ratificación de decisiones de especificación (D-01..D-15), autorizaciones de tareas, cambios de configuración que los agentes no pueden hacer (p. ej. `.gitignore`, parches de `SPEC.md` aplicados por el humano), decisiones de producto (perfil web, D-15 ampliado, umbrales INT-022, experimento Sonnet INT-023) y la aceptación de la web (INT-024). El humano no escribió código ni pruebas.
+25 entradas en `INTERVENCIONES.md` (INT-001..INT-025) más notas de transparencia NT-01/NT-02. Tipos: ratificación de decisiones de especificación (D-01..D-15), autorizaciones de tareas, cambios de configuración que los agentes no pueden hacer (p. ej. `.gitignore`, parches de `SPEC.md` aplicados por el humano), decisiones de producto (perfil web, D-15 ampliado, umbrales INT-022, experimento Sonnet INT-023) y la aceptación de la web (INT-024). El humano no escribió código ni pruebas.
 
 ## 17. Riesgos residuales
 

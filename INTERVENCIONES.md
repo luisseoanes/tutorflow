@@ -274,6 +274,11 @@
 - **Historia de la revisión:** r1 APPROVED → el orquestador detectó en trazabilidad que WEB-14.b no tenía marcador → T-13.1 → r2 APPROVED → el orquestador reprodujo un e2e intermitente de contraste (5/6) que r2 no vio → T-13.2 → r3 APPROVED con un medio (teclado intermitente) → T-13.3 → r4 APPROVED.
 - **Acción del orquestador:** integra T-13, las ramas de QA r1–r4 y T-12.1/T-12.2 con `merge --no-ff` y verifica la CI.
 
+### INT-025 · 2026-11-25 · F2 · Decisión (alcance de T-10.4 por tiempo de entrega)
+- **Instrucción del candidato:** "corta gemini ya las teniamos".
+- **Decisión:** T-10.4 ejecuta solo Claude Sonnet 5.5 (`claude-sonnet-5-5`) con full-context y bm25. No se usa la 3.ª corrida de Gemini flash-lite; la referencia de Gemini es T-10.2 (`cd31f51`).
+- **Consecuencia (declarada en RESULTADOS y REPORTE):** la comparación mezcla modelo y código (T-05h, T-06.4 y T-06.5 entre ambas corridas), así que la atribución "límite del modelo" queda como indicio, no como prueba.
+
 ---
 
 ## Notas de transparencia
