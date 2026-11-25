@@ -56,9 +56,13 @@ dotnet run --project evals/TutorFlow.Evals -- ret --json-out <ruta>     # JSON e
 # En la fábrica (SDK en Docker): docker compose -f scripts/sdk/compose.yml run --rm sdk dotnet run --project evals/TutorFlow.Evals -- ret
 ```
 
-Carga el corpus real (`q10/material/reglamento`, cuarentena `bienestar_y_becas.md#Anexo` por defecto). Para cada caso del dataset con al menos un criterio `[ret]` (los criterios `[ret]` se leen de `escenarios/`) y expectativas de recuperación evalúa:
+Carga el corpus real (`q10/material/reglamento`, cuarentena `bienestar_y_becas.md#Anexo` por defecto). Los criterios `[ret]` se leen de `escenarios/`; se evalúan los casos del dataset con algún criterio `[ret]` y expectativas de recuperación.
 
-- `bm25` (top 4): **todos** los `chunks_relevantes` deben estar en el top 4 y ningún `chunks_prohibidos` (`*` final = prefijo) en el resultado.
-- `full-context`: los `chunks_relevantes` deben estar en el resultado y los `chunks_prohibidos` ausentes.
+**Regla (SPEC §7.6 y criterios `[ret]`: "en el top 4 de la estrategia por defecto").** Los criterios y los umbrales se evalúan sobre la **estrategia por defecto**, que es la que resuelve `RETRIEVAL_STRATEGY` (variable de entorno; si está vacía, `IaServiceCollectionExtensions.DefaultStrategy` de IA, hoy `full-context`, provisional hasta T-10; el runner referencia esa constante, no la duplica).
 
-Métricas de `bm25` con los umbrales de SPEC §7.6 (Recall@4 ≥ 0.95, MRR ≥ 0.85): un caso cuenta como acierto de Recall@4 si todos sus relevantes están en el top 4; el rango del MRR es el del primer relevante encontrado (0 si ninguno). Los casos sin `chunks_relevantes` no cuentan. Sale con código 1 si un criterio `[ret]` falla, no tiene caso evaluable o no se cumple un umbral. Los umbrales y casos no se relajan: un fallo es un hallazgo para el rol IA.
+- `full-context` como defecto: exige presencia de `chunks_relevantes` y ausencia de `chunks_prohibidos` (`*` final = prefijo). Recall@4 y MRR **no aplican** (SPEC §7.6).
+- `bm25` como defecto: todos los `chunks_relevantes` en el top 4 y ningún prohibido, más los umbrales Recall@4 ≥ 0.95 y MRR ≥ 0.85. Un caso es acierto de Recall@4 si **todos** sus relevantes están en el top 4; el rango del MRR es el del primer relevante (0 si ninguno).
+- Las demás estrategias disponibles se evalúan y se **reportan siempre** (tabla, métricas y top-4 real de los casos que no cumplen; también en el JSON) como "experimento, no bloqueante": insumo de T-09/T-10.
+- Código de salida 1 solo si falla un criterio `[ret]` o un umbral aplicable sobre la estrategia por defecto, o falta un caso. Los umbrales y casos no se relajan.
+
+**Advertencia:** si T-10 elige `bm25` como estrategia por defecto, hoy no cumple (Recall@4 = 0.8333, MRR = 0.7500; fallan `q04`/ACAD-07.a y `RAG-12-a`/RAG-12.a). Se puede comprobar con `RETRIEVAL_STRATEGY=bm25`.

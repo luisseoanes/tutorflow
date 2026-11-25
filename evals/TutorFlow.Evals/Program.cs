@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using TutorFlow.Application.Ports;
 using TutorFlow.Application.Retrieval;
 
 // Runner [ret] determinista (SPEC 7.6, AGENTS 6). Sin LLM, sin red, sin llaves.
@@ -67,23 +68,77 @@ internal static class RetRunner
 
     private sealed record Caso(string Id, string Pregunta, IReadOnlyList<string> Criterios, IReadOnlyList<string> Relevantes, IReadOnlyList<string> Prohibidos);
 
-    private sealed record Resultado(
+    private sealed record Eval(
+        string Estrategia,
         Caso Caso,
-        IReadOnlyList<string> Top4,
-        int FullContextChunks,
-        int? RangoBm25,
-        bool Bm25Hit,
-        bool FullHit,
-        IReadOnlyList<string> Bm25Prohibidos,
-        IReadOnlyList<string> FullProhibidos)
+        IReadOnlyList<string> Chunks,
+        int? Rango,
+        bool Hit,
+        IReadOnlyList<string> ProhibidosPresentes)
     {
-        public bool Ok => (Caso.Relevantes.Count == 0 || (Bm25Hit && FullHit)) && Bm25Prohibidos.Count == 0 && FullProhibidos.Count == 0;
+        public bool Ok => (Caso.Relevantes.Count == 0 || Hit) && ProhibidosPresentes.Count == 0;
+    }
+
+    private static readonly string[] EstrategiasDisponibles = ["full-context", "bm25"];
+
+    /// <summary>Estrategia por defecto: RETRIEVAL_STRATEGY del entorno o, si esta vacia, el default de IA (una unica fuente).</summary>
+    private static string EstrategiaPorDefecto()
+    {
+        var v = Environment.GetEnvironmentVariable("RETRIEVAL_STRATEGY");
+        return (string.IsNullOrWhiteSpace(v) ? TutorFlow.Infrastructure.Retrieval.IaServiceCollectionExtensions.DefaultStrategy : v)
+            .Trim().ToLowerInvariant();
+    }
+
+    private static List<Eval> Evaluar(string estrategia, IRetriever retriever, IReadOnlyList<Caso> casos)
+    {
+        var lista = new List<Eval>();
+        foreach (var c in casos)
+        {
+            var ids = retriever.RecuperarAsync(c.Pregunta, CancellationToken.None).GetAwaiter().GetResult().Select(f => f.ChunkId).ToList();
+            int? rango = null;
+            for (var i = 0; estrategia != "full-context" && i < ids.Count; i++)
+            {
+                if (c.Relevantes.Contains(ids[i], StringComparer.Ordinal))
+                {
+                    rango = i + 1;
+                    break;
+                }
+            }
+
+            lista.Add(new Eval(
+                estrategia,
+                c,
+                ids,
+                rango,
+                c.Relevantes.Count > 0 && c.Relevantes.All(r => ids.Contains(r, StringComparer.Ordinal)),
+                Prohibidos(c, ids)));
+        }
+
+        return lista;
+    }
+
+    // Metricas de una estrategia con ranking. Un caso es acierto de Recall@4 si TODOS sus relevantes estan en el top 4;
+    // el rango del MRR es el del primer relevante (0 si ninguno). Los casos sin relevantes no cuentan.
+    private static (double Recall, double Mrr, int Casos) Metricas(IReadOnlyList<Eval> evals)
+    {
+        var rel = evals.Where(e => e.Caso.Relevantes.Count > 0).ToList();
+        if (rel.Count == 0)
+        {
+            return (0.0, 0.0, 0);
+        }
+
+        return (rel.Count(e => e.Hit) / (double)rel.Count, rel.Average(e => e.Rango is int k ? 1.0 / k : 0.0), rel.Count);
     }
 
     private static int Ejecutar(string raiz, string cuarentena, bool json, string? jsonOut)
     {
         var retIds = LeerCriteriosRet(Path.Combine(raiz, "escenarios"));
         var casos = LeerDataset(Path.Combine(raiz, "evals", "dataset.jsonl"));
+        var porDefecto = EstrategiaPorDefecto();
+        if (!EstrategiasDisponibles.Contains(porDefecto))
+        {
+            throw new InvalidOperationException($"RETRIEVAL_STRATEGY '{porDefecto}' no esta disponible en el runner [ret] ({string.Join(" | ", EstrategiasDisponibles)}).");
+        }
 
         var docs = Directory.EnumerateFiles(Path.Combine(raiz, "q10", "material", "reglamento"), "*.md")
             .OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal)
@@ -96,54 +151,36 @@ internal static class RetRunner
 
         var q = cuarentena.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var catalog = new Catalogo(KnowledgeIndexer.Build(docs, q));
-        var bm25 = new Bm25Retriever(catalog, TopK);
-        var full = new FullContextRetriever(catalog);
+        var retrievers = new Dictionary<string, IRetriever>
+        {
+            ["full-context"] = new FullContextRetriever(catalog),
+            ["bm25"] = new Bm25Retriever(catalog, TopK),
+        };
 
-        // Se evaluan los casos con expectativas de recuperacion que llevan al menos un criterio [ret].
+        // Casos con expectativas de recuperacion y al menos un criterio [ret].
         var evaluados = casos
             .Where(c => c.Criterios.Any(retIds.Contains) && (c.Relevantes.Count > 0 || c.Prohibidos.Count > 0))
             .ToList();
-        var resultados = new List<Resultado>();
-        foreach (var c in evaluados)
-        {
-            var top = bm25.RecuperarAsync(c.Pregunta, CancellationToken.None).GetAwaiter().GetResult().Select(f => f.ChunkId).ToList();
-            var fc = full.RecuperarAsync(c.Pregunta, CancellationToken.None).GetAwaiter().GetResult().Select(f => f.ChunkId).ToList();
-            int? rango = null;
-            for (var i = 0; i < top.Count; i++)
-            {
-                if (c.Relevantes.Contains(top[i], StringComparer.Ordinal))
-                {
-                    rango = i + 1;
-                    break;
-                }
-            }
+        var porEstrategia = EstrategiasDisponibles.ToDictionary(e => e, e => Evaluar(e, retrievers[e], evaluados));
+        var gate = porEstrategia[porDefecto];
+        var conRanking = porDefecto != "full-context";
 
-            resultados.Add(new Resultado(
-                c,
-                top,
-                fc.Count,
-                rango,
-                c.Relevantes.Count > 0 && c.Relevantes.All(r => top.Contains(r, StringComparer.Ordinal)),
-                c.Relevantes.Count > 0 && c.Relevantes.All(r => fc.Contains(r, StringComparer.Ordinal)),
-                Prohibidos(c, top),
-                Prohibidos(c, fc)));
-        }
+        var inv = CultureInfo.InvariantCulture;
+        var fallos = new List<string>();
+        var sb = new StringBuilder();
+        sb.AppendLine($"Runner [ret] determinista (corpus real, cuarentena: {string.Join(", ", q)})");
+        sb.AppendLine($"Estrategia por defecto (bloqueante): {porDefecto}  [RETRIEVAL_STRATEGY o default de IA; provisional hasta T-10]");
+        sb.AppendLine();
 
-        // Metricas bm25 (solo casos con chunk relevante). Un caso es acierto si TODOS sus relevantes estan en el top 4;
-        // el rango del MRR es el del primer relevante.
-        var conRel = resultados.Where(r => r.Caso.Relevantes.Count > 0).ToList();
-        var recall = conRel.Count == 0 ? 0.0 : conRel.Count(r => r.Bm25Hit) / (double)conRel.Count;
-        var mrr = conRel.Count == 0 ? 0.0 : conRel.Average(r => r.RangoBm25 is int k ? 1.0 / k : 0.0);
-        var fullPres = conRel.Count == 0 ? 0.0 : conRel.Count(r => r.FullHit) / (double)conRel.Count;
-        var conProh = resultados.Where(r => r.Caso.Prohibidos.Count > 0).ToList();
-        var bm25Aus = conProh.Count(r => r.Bm25Prohibidos.Count == 0);
-        var fullAus = conProh.Count(r => r.FullProhibidos.Count == 0);
+        // --- Tabla bloqueante: estrategia por defecto ---
+        sb.AppendLine($"## Estrategia por defecto: {porDefecto}");
+        sb.AppendLine();
+        TablaCasos(sb, gate, inv);
 
         var filas = new List<(string Id, string Estado, string Casos)>();
-        var fallos = new List<string>();
         foreach (var id in retIds.OrderBy(x => x, StringComparer.Ordinal))
         {
-            var rs = resultados.Where(r => r.Caso.Criterios.Contains(id)).ToList();
+            var rs = gate.Where(r => r.Caso.Criterios.Contains(id)).ToList();
             string estado;
             if (rs.Count == 0)
             {
@@ -157,32 +194,10 @@ internal static class RetRunner
             else
             {
                 estado = "FALLA";
-                fallos.Add($"criterio {id}: falla en {string.Join(", ", rs.Where(r => !r.Ok).Select(r => r.Caso.Id))}");
+                fallos.Add($"criterio {id} ({porDefecto}): falla en {string.Join(", ", rs.Where(r => !r.Ok).Select(r => r.Caso.Id))}");
             }
 
             filas.Add((id, estado, string.Join(",", rs.Select(r => r.Caso.Id))));
-        }
-
-        // Un caso fallido que no pertenece a ningun criterio [ret] listado tampoco puede pasar inadvertido.
-        foreach (var r in resultados.Where(r => !r.Ok && !r.Caso.Criterios.Any(retIds.Contains)))
-        {
-            fallos.Add($"caso {r.Caso.Id}: falla");
-        }
-
-        var inv = CultureInfo.InvariantCulture;
-        var sb = new StringBuilder();
-        sb.AppendLine("Runner [ret] determinista (corpus real, cuarentena: " + string.Join(", ", q) + ")");
-        sb.AppendLine();
-        sb.AppendLine("| Caso | Rango bm25 | bm25 top-4 | full-context | Prohibidos (bm25/full) | Estado |");
-        sb.AppendLine("|---|---|---|---|---|---|");
-        foreach (var r in resultados)
-        {
-            var rel = r.Caso.Relevantes.Count == 0 ? "-" : r.Bm25Hit ? "OK" : "FALLA";
-            var fc = r.Caso.Relevantes.Count == 0 ? "-" : r.FullHit ? "OK" : "FALLA";
-            var pr = r.Caso.Prohibidos.Count == 0
-                ? "-"
-                : $"{(r.Bm25Prohibidos.Count == 0 ? "ausentes" : "PRESENTES " + string.Join(";", r.Bm25Prohibidos))}/{(r.FullProhibidos.Count == 0 ? "ausentes" : "PRESENTES " + string.Join(";", r.FullProhibidos))}";
-            sb.AppendLine($"| {r.Caso.Id} | {(r.RangoBm25?.ToString(inv) ?? "-")} | {rel} | {fc} | {pr} | {(r.Ok ? "OK" : "FALLA")} |");
         }
 
         sb.AppendLine();
@@ -193,26 +208,66 @@ internal static class RetRunner
             sb.AppendLine($"| {f.Id} | {f.Estado} | {f.Casos} |");
         }
 
-        var recallOk = recall >= UmbralRecall;
-        var mrrOk = mrr >= UmbralMrr;
-        if (!recallOk)
+        sb.AppendLine();
+        var m = Metricas(gate);
+        bool? recallOk = null;
+        bool? mrrOk = null;
+        if (conRanking)
         {
-            fallos.Add($"umbral: Recall@4 {recall.ToString("F4", inv)} < {UmbralRecall.ToString("F2", inv)}");
+            recallOk = m.Recall >= UmbralRecall;
+            mrrOk = m.Mrr >= UmbralMrr;
+            sb.AppendLine($"- {porDefecto}: Recall@4 = {m.Recall.ToString("F4", inv)} (umbral >= {UmbralRecall.ToString("F2", inv)}: {(recallOk == true ? "OK" : "NO CUMPLE")}) sobre {m.Casos} casos");
+            sb.AppendLine($"- {porDefecto}: MRR = {m.Mrr.ToString("F4", inv)} (umbral >= {UmbralMrr.ToString("F2", inv)}: {(mrrOk == true ? "OK" : "NO CUMPLE")})");
+            if (recallOk != true)
+            {
+                fallos.Add($"umbral ({porDefecto}): Recall@4 {m.Recall.ToString("F4", inv)} < {UmbralRecall.ToString("F2", inv)}");
+            }
+
+            if (mrrOk != true)
+            {
+                fallos.Add($"umbral ({porDefecto}): MRR {m.Mrr.ToString("F4", inv)} < {UmbralMrr.ToString("F2", inv)}");
+            }
+        }
+        else
+        {
+            sb.AppendLine($"- {porDefecto}: Recall@4 y MRR no aplican (SPEC 7.6); presencia de relevantes en {gate.Count(e => e.Caso.Relevantes.Count > 0 && e.Hit)}/{m.Casos} casos.");
         }
 
-        if (!mrrOk)
+        // --- Experimento: demas estrategias (informativo, no bloqueante) ---
+        var experimento = new Dictionary<string, (double Recall, double Mrr, int Casos, List<Eval> Evals)>();
+        foreach (var e in EstrategiasDisponibles.Where(x => x != porDefecto))
         {
-            fallos.Add($"umbral: MRR {mrr.ToString("F4", inv)} < {UmbralMrr.ToString("F2", inv)}");
+            var ev = porEstrategia[e];
+            var me = Metricas(ev);
+            experimento[e] = (me.Recall, me.Mrr, me.Casos, ev);
+            sb.AppendLine();
+            sb.AppendLine($"## Experimento (no bloqueante): {e}");
+            sb.AppendLine();
+            TablaCasos(sb, ev, inv);
+            sb.AppendLine();
+            if (e == "full-context")
+            {
+                sb.AppendLine($"- {e}: Recall@4 y MRR no aplican (SPEC 7.6); presencia de relevantes en {ev.Count(x => x.Caso.Relevantes.Count > 0 && x.Hit)}/{me.Casos} casos.");
+            }
+            else
+            {
+                sb.AppendLine($"- {e}: Recall@4 = {me.Recall.ToString("F4", inv)} (umbral de referencia {UmbralRecall.ToString("F2", inv)}: {(me.Recall >= UmbralRecall ? "cumple" : "no cumple")}) sobre {me.Casos} casos");
+                sb.AppendLine($"- {e}: MRR = {me.Mrr.ToString("F4", inv)} (umbral de referencia {UmbralMrr.ToString("F2", inv)}: {(me.Mrr >= UmbralMrr ? "cumple" : "no cumple")})");
+            }
+
+            var malos = ev.Where(x => !x.Ok).ToList();
+            if (malos.Count > 0)
+            {
+                sb.AppendLine($"- {e}: casos que no cumplen (top real recuperado):");
+                foreach (var x in malos)
+                {
+                    sb.AppendLine($"  - {x.Caso.Id} \"{x.Caso.Pregunta}\": esperado [{string.Join("; ", x.Caso.Relevantes)}]; recuperado [{string.Join("; ", x.Chunks)}]");
+                }
+            }
         }
 
         sb.AppendLine();
-        sb.AppendLine("Metricas por estrategia");
-        sb.AppendLine($"- bm25: Recall@4 = {recall.ToString("F4", inv)} (umbral >= {UmbralRecall.ToString("F2", inv)}: {(recallOk ? "OK" : "NO CUMPLE")}) sobre {conRel.Count} casos");
-        sb.AppendLine($"- bm25: MRR = {mrr.ToString("F4", inv)} (umbral >= {UmbralMrr.ToString("F2", inv)}: {(mrrOk ? "OK" : "NO CUMPLE")})");
-        sb.AppendLine($"- bm25: chunks prohibidos ausentes en {bm25Aus}/{conProh.Count} casos");
-        sb.AppendLine($"- full-context: chunk relevante presente en {conRel.Count(r => r.FullHit)}/{conRel.Count} casos (presencia {fullPres.ToString("F4", inv)}); prohibidos ausentes en {fullAus}/{conProh.Count} casos");
-        sb.AppendLine();
-        sb.AppendLine(fallos.Count == 0 ? "RESULTADO: OK" : "RESULTADO: FALLA");
+        sb.AppendLine(fallos.Count == 0 ? "RESULTADO: OK (estrategia por defecto)" : "RESULTADO: FALLA (estrategia por defecto)");
         foreach (var f in fallos)
         {
             sb.AppendLine("  - " + f);
@@ -226,34 +281,45 @@ internal static class RetRunner
             var fecha = DateTime.UtcNow.ToString("yyyyMMdd'T'HHmmss'Z'", inv);
             var ruta = jsonOut ?? Path.Combine(raiz, "evals", "runs", $"ret-{fecha}-{sha}.json");
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(ruta))!);
+            object CasoJson(Eval r) => new
+            {
+                id = r.Caso.Id,
+                pregunta = r.Caso.Pregunta,
+                criterios = r.Caso.Criterios,
+                relevantes = r.Caso.Relevantes,
+                prohibidos = r.Caso.Prohibidos,
+                recuperado = r.Chunks,
+                rango = r.Rango,
+                hit = r.Hit,
+                prohibidosPresentes = r.ProhibidosPresentes,
+                ok = r.Ok,
+            };
             var doc = new
             {
                 modo = "ret",
                 commit = Git(raiz, "rev-parse HEAD"),
                 fecha = DateTime.UtcNow.ToString("o", inv),
                 cuarentena = q,
-                umbrales = new { recallAt4 = UmbralRecall, mrr = UmbralMrr },
-                metricas = new
+                estrategiaPorDefecto = porDefecto,
+                umbrales = new { recallAt4 = UmbralRecall, mrr = UmbralMrr, aplicanA = conRanking ? porDefecto : "ninguna (full-context: no aplica)" },
+                porDefecto = new
                 {
-                    bm25 = new { recallAt4 = recall, mrr, casos = conRel.Count, prohibidosAusentes = bm25Aus, casosConProhibidos = conProh.Count },
-                    fullContext = new { presencia = fullPres, casos = conRel.Count, prohibidosAusentes = fullAus, casosConProhibidos = conProh.Count },
+                    estrategia = porDefecto,
+                    bloqueante = true,
+                    recallAt4 = conRanking ? (double?)m.Recall : null,
+                    mrr = conRanking ? (double?)m.Mrr : null,
+                    casos = m.Casos,
+                    criterios = filas.Select(f => new { id = f.Id, estado = f.Estado, casos = f.Casos }),
+                    detalle = gate.Select(CasoJson),
                 },
-                criterios = filas.Select(f => new { id = f.Id, estado = f.Estado, casos = f.Casos }),
-                casos = resultados.Select(r => new
+                experimento = experimento.Select(kv => new
                 {
-                    id = r.Caso.Id,
-                    pregunta = r.Caso.Pregunta,
-                    criterios = r.Caso.Criterios,
-                    relevantes = r.Caso.Relevantes,
-                    prohibidos = r.Caso.Prohibidos,
-                    bm25Top4 = r.Top4,
-                    rangoBm25 = r.RangoBm25,
-                    fullContextChunks = r.FullContextChunks,
-                    bm25Hit = r.Bm25Hit,
-                    fullHit = r.FullHit,
-                    bm25ProhibidosPresentes = r.Bm25Prohibidos,
-                    fullProhibidosPresentes = r.FullProhibidos,
-                    ok = r.Ok,
+                    estrategia = kv.Key,
+                    bloqueante = false,
+                    recallAt4 = kv.Key == "full-context" ? null : (double?)kv.Value.Recall,
+                    mrr = kv.Key == "full-context" ? null : (double?)kv.Value.Mrr,
+                    casos = kv.Value.Casos,
+                    detalle = kv.Value.Evals.Select(CasoJson),
                 }),
                 resultado = fallos.Count == 0 ? "OK" : "FALLA",
                 fallos,
@@ -264,6 +330,18 @@ internal static class RetRunner
         }
 
         return fallos.Count == 0 ? 0 : 1;
+    }
+
+    private static void TablaCasos(StringBuilder sb, IReadOnlyList<Eval> evals, CultureInfo inv)
+    {
+        sb.AppendLine("| Caso | Rango | Relevantes | Prohibidos | Estado |");
+        sb.AppendLine("|---|---|---|---|---|");
+        foreach (var r in evals)
+        {
+            var rel = r.Caso.Relevantes.Count == 0 ? "-" : r.Hit ? "OK" : "FALLA";
+            var pr = r.Caso.Prohibidos.Count == 0 ? "-" : r.ProhibidosPresentes.Count == 0 ? "ausentes" : "PRESENTES " + string.Join(";", r.ProhibidosPresentes);
+            sb.AppendLine($"| {r.Caso.Id} | {(r.Rango?.ToString(inv) ?? "-")} | {rel} | {pr} | {(r.Ok ? "OK" : "FALLA")} |");
+        }
     }
 
     private static List<string> Prohibidos(Caso c, IReadOnlyList<string> ids) =>

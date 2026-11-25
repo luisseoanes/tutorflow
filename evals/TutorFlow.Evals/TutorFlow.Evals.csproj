@@ -6,5 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\TutorFlow.Application\TutorFlow.Application.csproj" />
+    <!-- Solo para leer IaServiceCollectionExtensions.DefaultStrategy (unica fuente de la estrategia por defecto). -->
+    <ProjectReference Include="..\..\src\TutorFlow.Infrastructure\TutorFlow.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
