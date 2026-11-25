@@ -23,6 +23,7 @@ logs/raw/
 # --- Artefactos de trabajo de agentes ---
 handoff.md
 .worktrees/
+.claude/worktrees/
 
 # --- .NET ---
 bin/
