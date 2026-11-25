@@ -1,6 +1,6 @@
 # evals/
 
-Conjunto etiquetado de TutorFlow (SPEC §7.6). Contiene solo datos: el runner `[ret]`/`[eval]` llega en T-07 y T-10.
+Conjunto etiquetado de TutorFlow (SPEC §7.6). Datos y runners: el runner `[ret]` (T-07a) está en `evals/TutorFlow.Evals/`; el runner `[eval]` llega en T-10.
 
 ## `dataset.jsonl`
 
@@ -46,3 +46,19 @@ Reglas de interpretación (para los runners):
 ## `runs/` y `RESULTADOS.md`
 
 Aún no existen. `RESULTADOS.md` solo se escribe con ejecuciones reales; los archivos crudos van en `evals/runs/<fecha>-<sha>.json`.
+
+## Runner `[ret]` (determinista, sin LLM ni red)
+
+```bash
+dotnet run --project evals/TutorFlow.Evals -- ret                       # tabla + métricas; exit 1 si algo falla
+dotnet run --project evals/TutorFlow.Evals -- ret --json                # además escribe evals/runs/ret-<fecha>-<sha>.json
+dotnet run --project evals/TutorFlow.Evals -- ret --json-out <ruta>     # JSON en una ruta concreta (CI)
+# En la fábrica (SDK en Docker): docker compose -f scripts/sdk/compose.yml run --rm sdk dotnet run --project evals/TutorFlow.Evals -- ret
+```
+
+Carga el corpus real (`q10/material/reglamento`, cuarentena `bienestar_y_becas.md#Anexo` por defecto). Para cada caso del dataset con al menos un criterio `[ret]` (los criterios `[ret]` se leen de `escenarios/`) y expectativas de recuperación evalúa:
+
+- `bm25` (top 4): **todos** los `chunks_relevantes` deben estar en el top 4 y ningún `chunks_prohibidos` (`*` final = prefijo) en el resultado.
+- `full-context`: los `chunks_relevantes` deben estar en el resultado y los `chunks_prohibidos` ausentes.
+
+Métricas de `bm25` con los umbrales de SPEC §7.6 (Recall@4 ≥ 0.95, MRR ≥ 0.85): un caso cuenta como acierto de Recall@4 si todos sus relevantes están en el top 4; el rango del MRR es el del primer relevante encontrado (0 si ninguno). Los casos sin `chunks_relevantes` no cuentan. Sale con código 1 si un criterio `[ret]` falla, no tiene caso evaluable o no se cumple un umbral. Los umbrales y casos no se relajan: un fallo es un hallazgo para el rol IA.
