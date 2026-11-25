@@ -119,6 +119,13 @@
 - **Impacto:** nueva tarea T-00 antes de T-01; los comandos de verificación usan el contenedor. No cambia SPEC, AGENTS ni FABRICA.
 - **Evidencia:** transcripción de la sesión; el commit de T-00.
 
+### INT-008 · 2026-11-25 · F2 · Decisión
+- **Qué pasó:** antes de despachar T-01, el orquestador detectó una contradicción en `FABRICA.md`. La ficha de Core (§4.2) pide "métodos de extensión DI vacíos de cada módulo", pero la tabla única de propiedad (§4.1) reserva `{Application,Infrastructure}/{Retrieval,Llm}/**` a IA. Crear el stub `AddTutorFlowIa` obligaría a Core a escribir en rutas de IA. Se detuvo T-01 y se consultó.
+- **Qué hizo el humano:** eligió que T-01 **no** cree el stub de IA. Core crea solo `AddTutorFlowCore` y los puertos. IA crea `AddTutorFlowIa` en sus rutas (T-03/T-06) y Core lo enlaza en `Program.cs` en T-08. Prevalece §4.1 sin excepciones.
+- **Impacto:** el brief de T-01 lo refleja. FABRICA no se modifica; la ficha §4.2 se interpreta como "cada módulo crea su propio método de registro".
+- **Hallazgo adicional (pendiente del candidato):** los worktrees de agentes viven en `.claude/worktrees/`, que `.gitignore` no excluye. Aparecen como no rastreados en `main` y un `git add -A` podría incorporarlos. Mientras el candidato no actualice `.gitignore` (archivo humano), los briefs exigen hacer `git add` solo con rutas explícitas, y la compuerta G1 lo verifica.
+- **Evidencia:** transcripción de la sesión.
+
 ---
 
 ## Notas de transparencia
