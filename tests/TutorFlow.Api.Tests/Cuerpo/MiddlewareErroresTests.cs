@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using TutorFlow.Api.Tests.Infra;
 using TutorFlow.Application.Errores;
+using TutorFlow.Application.Llm;
 using TutorFlow.Application.Preguntar;
 using TutorFlow.Domain.Academico;
 using TutorFlow.Domain.Authorization;
@@ -93,19 +94,21 @@ public class MiddlewareErroresTests
     {
         new DependenciaNoDisponibleException("x"),
         new DatoAcademicoInvalidoException("x"),
-        new PendienteDeIntegracionException("x"),
+        new LlmNoDisponibleException("x", 503),
     };
 
     [Fact]
     [Trait("Contrato", "SPEC-3.3")]
-    public async Task Flujo_real_hasta_el_roster_termina_en_503_pendiente_de_integracion_nunca_200()
+    public async Task LlmNoDisponible_responde_503_problem_json_sin_el_mensaje_ni_el_cuerpo_del_proveedor()
     {
-        using var f = new FabricaApi();
+        using var f = Con(new LlmNoDisponibleException("llave test-key-NOT-REAL; cuerpo {\"error\":\"secreto-del-proveedor\"}", 401));
 
         var r = await PostAsync(f.CreateClient(), Peticion);
 
         await AfirmarProblema(r, HttpStatusCode.ServiceUnavailable);
-        using var doc = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        Assert.Contains("pendiente de integracion", doc.RootElement.GetProperty("title").GetString(), StringComparison.OrdinalIgnoreCase);
+        var cuerpo = await r.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("test-key-NOT-REAL", cuerpo, StringComparison.Ordinal);
+        Assert.DoesNotContain("secreto-del-proveedor", cuerpo, StringComparison.Ordinal);
+        Assert.DoesNotContain("401", JsonDocument.Parse(cuerpo).RootElement.GetProperty("detail").GetString(), StringComparison.Ordinal);
     }
 }
