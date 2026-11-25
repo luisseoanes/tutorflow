@@ -108,6 +108,17 @@
 - **Impacto:** `CLAUDE.md`, `.claude/**` y este archivo. No se modificaron SPEC, AGENTS, FABRICA ni los escenarios.
 - **Evidencia:** el commit de configuración; transcripción de la sesión (la exportará Arnés en F2).
 
+### INT-007 · 2026-11-25 · F2 · Dirección + Decisión
+- **Qué pasó:** el candidato autorizó T-01 y el inicio de F2. Al verificar el entorno, el orquestador detectó que el equipo **no tiene el SDK de .NET** (`dotnet` no existe). Docker Desktop 29.9.2 sí está disponible. `AGENTS.md` §10 prohíbe a los agentes instalar herramientas globales, por lo que se escaló.
+- **Qué hizo el humano:** eligió ejecutar el SDK dentro de Docker (imagen oficial `mcr.microsoft.com/dotnet/sdk:8.0`) en lugar de instalarlo localmente.
+- **Acción del orquestador:**
+  - Para no ampliar permisos, propone invocar el SDK con `docker compose -f scripts/sdk/compose.yml run --rm sdk dotnet …`, que ya está permitido por `Bash(docker compose *)`. **No se modifica `.claude/settings.json`**, cuya edición está bloqueada para los agentes.
+  - Crea la tarea previa **T-00 (Arnés)**, que no figura en `FABRICA.md` §6, porque el archivo cae en `scripts/**`, ruta de Arnés.
+  - Las compuertas G3/G4 y todos los comandos `dotnet` de los briefs se ejecutarán con ese envoltorio. La CI (GitHub Actions) usará su propio SDK.
+- **Por qué:** desbloquear F2 sin instalar herramientas globales ni ampliar permisos.
+- **Impacto:** nueva tarea T-00 antes de T-01; los comandos de verificación usan el contenedor. No cambia SPEC, AGENTS ni FABRICA.
+- **Evidencia:** transcripción de la sesión; el commit de T-00.
+
 ---
 
 ## Notas de transparencia
