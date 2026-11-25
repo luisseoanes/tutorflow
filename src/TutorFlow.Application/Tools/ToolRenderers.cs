@@ -83,9 +83,7 @@ internal static class ToolRenderers
                 if (a.Inasistencias is { } faltas)
                 {
                     w.WriteNumber("inasistencias", faltas);
-                    // Porcentaje informativo (2 decimales); la decision de perdida es la del dominio (enteros).
-                    var porcentaje = Math.Round(faltas * 100m / a.ClasesProgramadas!.Value, 2, MidpointRounding.AwayFromZero);
-                    w.WriteNumber("porcentajeInasistencia", porcentaje);
+                    PeriodoAcademico.Num(w, "porcentajeInasistencia", Inasistencia.Porcentaje(a.ClasesProgramadas, a.Inasistencias));
                 }
                 else
                 {

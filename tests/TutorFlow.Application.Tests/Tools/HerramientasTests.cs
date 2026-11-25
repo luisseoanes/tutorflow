@@ -125,6 +125,18 @@ public class HerramientasTests
     }
 
     [Fact]
+    public async Task El_estudiante_propio_ausente_del_roster_se_deniega_sin_leer()
+    {
+        var (d, f) = Crear(ausenteDelRoster: "EST-001");
+
+        var ex = await Assert.ThrowsAsync<AccesoDenegadoException>(
+            () => d.DespacharAsync(Est("EST-001"), Inv("obtener_notas"), default));
+
+        Assert.Equal("politica", ex.Motivo);
+        Assert.Empty(f.Lecturas);
+    }
+
+    [Fact]
     public void Los_esquemas_son_estrictos_y_distinguen_el_rol()
     {
         var (d, _) = Crear();

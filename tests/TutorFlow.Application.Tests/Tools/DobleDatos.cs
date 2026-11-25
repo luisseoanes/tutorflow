@@ -115,17 +115,21 @@ internal sealed class FuenteEspia : IAcademicDataSource
     }
 }
 
-internal sealed class RosterEnMemoria : IRosterProvider
+internal sealed class RosterEnMemoria(string? sin = null) : IRosterProvider
 {
-    public Task<RosterSnapshot> ObtenerAsync(CancellationToken ct) => Task.FromResult(MaterialDatos.Roster());
+    public Task<RosterSnapshot> ObtenerAsync(CancellationToken ct)
+    {
+        var r = MaterialDatos.Roster();
+        return Task.FromResult(sin is null ? r : r with { Estudiantes = r.Estudiantes.Where(e => e.Id != sin).ToList() });
+    }
 }
 
 internal static class Armado
 {
-    public static (ToolDispatcher D, FuenteEspia F) Crear()
+    public static (ToolDispatcher D, FuenteEspia F) Crear(string? ausenteDelRoster = null)
     {
         var f = new FuenteEspia();
-        return (new ToolDispatcher(f, new RosterEnMemoria(), new AuthorizationPolicy()), f);
+        return (new ToolDispatcher(f, new RosterEnMemoria(ausenteDelRoster), new AuthorizationPolicy()), f);
     }
 
     public static InvocacionPropuesta Inv(string nombre, string argsJson = "{}")

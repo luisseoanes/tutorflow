@@ -71,9 +71,14 @@ public sealed class ToolDispatcher : IToolDispatcher
             throw Denegar(principal, MotivoHerramienta);
         }
 
-        // programa(X) sale del roster, nunca de la pregunta ni del LLM; si X no esta, ProgramaId = null y la politica deniega.
+        // programa(X) sale del roster, nunca de la pregunta ni del LLM; si X no esta se deniega antes de leer.
         var roster = await _roster.ObtenerAsync(ct).ConfigureAwait(false);
         var programa = roster.Estudiantes.FirstOrDefault(e => string.Equals(e.Id, objetivo, StringComparison.Ordinal))?.ProgramaId;
+        if (programa is null)
+        {
+            // SPEC 6.1: un objetivo ausente del roster se deniega, tambien si es el propio estudiante.
+            throw Denegar(principal, MotivoPolitica);
+        }
 
         // L4: autorizar ANTES de cualquier lectura.
         var decision = _politica.Authorize(principal, new RecursoAcademico(TipoRecurso.DatosEstudiante, objetivo, programa));

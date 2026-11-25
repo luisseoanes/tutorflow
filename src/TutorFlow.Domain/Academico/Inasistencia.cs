@@ -26,4 +26,18 @@ public static class Inasistencia
 
         return (long)inasistencias.Value * 100 > 15L * clasesProgramadas.Value;
     }
+
+    /// <summary>
+    /// Porcentaje de inasistencia con 2 decimales (AwayFromZero); null si no hay registro de inasistencias.
+    /// Misma validacion de dato corrupto que <see cref="Pierde"/>. Informativo: la decision de perdida usa <see cref="Pierde"/>.
+    /// </summary>
+    public static decimal? Porcentaje(int? clasesProgramadas, int? inasistencias)
+    {
+        if (Pierde(clasesProgramadas, inasistencias) is null)
+        {
+            return null;
+        }
+
+        return Math.Round(inasistencias!.Value * 100m / clasesProgramadas!.Value, 2, MidpointRounding.AwayFromZero);
+    }
 }
