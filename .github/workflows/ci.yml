@@ -1,5 +1,5 @@
 # CI de TutorFlow (FABRICA.md §5.2). Todos los jobs de este archivo son bloqueantes: no hay continue-on-error.
-# Llegan despues (no se crean vacios): retrieval, mutantes y smoke (T-07) y evals-llm (T-10, no bloqueante).
+# Llegan despues (no se crean vacios): smoke (T-07b) y evals-llm (T-10, no bloqueante).
 name: ci
 
 on:
@@ -31,6 +31,72 @@ jobs:
         run: dotnet build TutorFlow.sln -warnaserror
       - name: Pruebas [dom] [app] [api]
         run: dotnet test TutorFlow.sln --no-build
+
+  retrieval:
+    name: retrieval
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-dotnet@v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Evals [ret] con los umbrales de SPEC 7.6 (sin LLM, sin llaves)
+        run: dotnet run --project evals/TutorFlow.Evals -- ret --json-out evals/runs/ret-ci.json
+      - name: Publicar el resultado crudo
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: ret
+          path: evals/runs/ret-ci.json
+          if-no-files-found: ignore
+
+  mutantes:
+    name: mutantes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      BASE_PR: ${{ github.event.pull_request.base.sha }}
+      HEAD_PR: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Decidir si aplica (FABRICA 5.2)
+        id: cambios
+        run: |
+          # En push a main siempre; en PR solo si cambian Domain, Application o Infrastructure/{Retrieval,Llm}.
+          if [ -z "$BASE_PR" ]; then
+            echo "aplica=true" >> "$GITHUB_OUTPUT"
+            echo "push a main: los mutantes corren siempre"
+          elif git diff --name-only "$BASE_PR...$HEAD_PR" | grep -Eq '^src/(TutorFlow\.Domain/|TutorFlow\.Application/|TutorFlow\.Infrastructure/(Retrieval|Llm)/)'; then
+            echo "aplica=true" >> "$GITHUB_OUTPUT"
+            echo "el PR toca codigo cubierto por mutantes"
+          else
+            echo "aplica=false" >> "$GITHUB_OUTPUT"
+            echo "el PR no toca Domain, Application ni Infrastructure/{Retrieval,Llm}: mutantes omitidos"
+          fi
+      - uses: actions/setup-node@v4.4.0
+        if: steps.cambios.outputs.aplica == 'true'
+        with:
+          node-version: "20"
+      - uses: actions/setup-dotnet@v4.3.1
+        if: steps.cambios.outputs.aplica == 'true'
+        with:
+          global-json-file: global.json
+      - name: Mutantes (M1-M16 aplicables; PENDIENTE no cuenta como aprobado)
+        if: steps.cambios.outputs.aplica == 'true'
+        run: node scripts/mutantes/mutantes.js --json mutantes.json
+      - name: Publicar el resultado
+        if: always() && steps.cambios.outputs.aplica == 'true'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: mutantes
+          path: mutantes.json
+          if-no-files-found: ignore
 
   trazabilidad:
     name: trazabilidad
