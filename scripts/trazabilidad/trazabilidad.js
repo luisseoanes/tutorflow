@@ -20,10 +20,11 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const NIVELES = ['dom', 'app', 'api', 'ret', 'cont', 'eval'];
-const BLOQUEANTES = new Set(['dom', 'app', 'api', 'ret', 'cont']);
+const NIVELES = ['dom', 'app', 'api', 'ret', 'cont', 'eval', 'web', 'e2e', 'qa'];
+// web/e2e/qa (T-12): evidencia en web/** (marcadores) o en informes APPROVED de qa/revisiones/.
+const BLOQUEANTES = new Set(['dom', 'app', 'api', 'ret', 'cont', 'web', 'e2e', 'qa']);
 const SEVERIDADES_EXIGIDAS = new Set(['Crítica', 'Alta']);
-const ID_CRITERIO = /^(AUTH|ACAD|RAG|ADV|RES)-\d{2}\.[a-z]$/;
+const ID_CRITERIO = /^(AUTH|ACAD|RAG|ADV|RES|WEB)-\d{2}\.[a-z]$/;
 const CARPETA_POR_NIVEL = {
   dom: ['TutorFlow.Domain.Tests', 'TutorFlow.Architecture.Tests'],
   app: ['TutorFlow.Application.Tests'],
@@ -68,7 +69,7 @@ function leerEscenarios(raiz) {
     const lineas = fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/);
     let actual = null;
     for (const linea of lineas) {
-      const h = linea.match(/^###\s+((?:AUTH|ACAD|RAG|ADV|RES)-\d{2})\s+·\s+(.*)$/);
+      const h = linea.match(/^###\s+((?:AUTH|ACAD|RAG|ADV|RES|WEB)-\d{2})\s+·\s+(.*)$/);
       if (h) {
         actual = { id: h[1], titulo: h[2].trim(), severidad: null, lapida: /fusionado/i.test(h[2]), archivo: f };
         if (actual.lapida) lapidas.push(actual.id);
@@ -78,7 +79,7 @@ function leerEscenarios(raiz) {
       if (!actual) continue;
       const s = linea.match(/\*\*Severidad:\*\*\s*([^\s·*]+)/);
       if (s && !actual.severidad) { actual.severidad = s[1]; continue; }
-      const c = linea.match(/^\s+-\s+([a-z])\.\s+`\[(dom|app|api|ret|cont|eval)\]`\s*(.*)$/);
+      const c = linea.match(/^\s+-\s+([a-z])\.\s+`\[(dom|app|api|ret|cont|eval|web|e2e|qa)\]`\s*(.*)$/);
       if (c && !actual.lapida) {
         if (!actual.severidad) throw new Error(`Escenario ${actual.id} sin severidad antes de sus criterios (${f})`);
         const id = `${actual.id}.${c[1]}`;
@@ -138,6 +139,65 @@ function leerMarcadores(raiz) {
   return items;
 }
 
+// ---------- marcadores del frontend (web, e2e) ----------
+// Formato (T-12): en web/**/*.test.ts(x) y web/**/*.spec.ts(x), una linea `// Criterio: WEB-05.a[, WEB-05.b]`
+// inmediatamente antes (hasta 3 lineas) del it()/test()/describe() que prueba el criterio.
+function leerMarcadoresWeb(raiz, avisos) {
+  const items = [];
+  const base = path.join(raiz, 'web');
+  const esPrueba = (p) => /\.(test|spec)\.(ts|tsx)$/.test(p);
+  const ignorar = (p) => /[\\/](dist|build|coverage|playwright-report|test-results)[\\/]/.test(p);
+  for (const f of walk(base, (p) => esPrueba(p) && !ignorar(p))) {
+    const rel = path.relative(raiz, f).split(path.sep).join('/');
+    const lineas = fs.readFileSync(f, 'utf8').split(/\r?\n/);
+    const enE2e = rel.startsWith('web/e2e/');
+    lineas.forEach((l, i) => {
+      const m = l.match(/^\s*\/\/\s*Criterio:\s*(.+)$/);
+      if (!m) return;
+      let nombre = null;
+      for (let j = i + 1; j <= i + 3 && j < lineas.length; j++) {
+        const t = lineas[j].match(/^\s*(?:it|test|describe)(?:\.\w+)?\(\s*(['"`])(.*?)\1/);
+        if (t) { nombre = t[2]; break; }
+      }
+      if (nombre === null) avisos.push(`${rel}:${i + 1}: marcador 'Criterio:' sin it()/test()/describe() en las 3 lineas siguientes`);
+      for (const id of m[1].split(/[,\s]+/).filter(Boolean)) {
+        items.push({ id, fuente: 'web', archivo: rel, nombre: nombre || `(linea ${i + 1})`, proyecto: enE2e ? 'e2e' : 'web' });
+      }
+    });
+  }
+  return items;
+}
+
+// ---------- informes de la revision independiente (qa) ----------
+// Formato (T-12): qa/revisiones/T-<nn>-r<n>.md (AGENTS.md §13.4) con 'Resultado: APPROVED' y una seccion
+// '## Criterios [qa] verificados' que lista los ids (WEB-xx.y). Solo cuenta el informe de mayor ronda por tarea.
+function leerInformesQa(raiz, avisos) {
+  const items = [];
+  const dir = path.join(raiz, 'qa', 'revisiones');
+  if (!fs.existsSync(dir)) return items;
+  const ultimo = new Map(); // tarea -> {n, f}
+  for (const f of fs.readdirSync(dir)) {
+    const m = f.match(/^(T-\d{2})-r(\d+)\.md$/);
+    if (!m) continue;
+    const n = Number(m[2]);
+    if (!ultimo.has(m[1]) || ultimo.get(m[1]).n < n) ultimo.set(m[1], { n, f });
+  }
+  for (const [tarea, { f }] of ultimo) {
+    const rel = `qa/revisiones/${f}`;
+    const src = fs.readFileSync(path.join(dir, f), 'utf8');
+    if (!/^\s*-?\s*[*]*Resultado:?[*]*:?\s*[*]*\s*APPROVED\b/m.test(src)) {
+      avisos.push(`${rel}: la ultima ronda de ${tarea} no es APPROVED; no satisface criterios [qa]`);
+      continue;
+    }
+    const sec = src.match(/^##\s+Criterios \[qa\] verificados\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/m);
+    if (!sec) { avisos.push(`${rel}: APPROVED sin la seccion '## Criterios [qa] verificados'`); continue; }
+    for (const id of sec[1].match(/\b[A-Z]+-\d{2}\.[a-z]\b/g) || []) {
+      items.push({ id, fuente: 'qa', archivo: rel, nombre: f, proyecto: 'qa' });
+    }
+  }
+  return items;
+}
+
 // ---------- dataset ----------
 function leerDataset(raiz, errores) {
   const ruta = path.join(raiz, 'evals', 'dataset.jsonl');
@@ -191,6 +251,10 @@ function resolverAsignacion(raiz, criterios, errores) {
   return tareaDe;
 }
 
+function asignacionTareas(raiz) {
+  return JSON.parse(fs.readFileSync(path.join(raiz, 'scripts', 'trazabilidad', 'asignacion.json'), 'utf8')).tareas;
+}
+
 function tareasIntegradas(raiz) {
   let salida = '';
   try {
@@ -218,14 +282,19 @@ function main() {
   const tareaDe = resolverAsignacion(opt.raiz, criterios, errores);
   const pruebas = leerPruebas(opt.raiz);
   const marcadores = leerMarcadores(opt.raiz);
+  const marcadoresWeb = leerMarcadoresWeb(opt.raiz, avisos);
+  const informesQa = leerInformesQa(opt.raiz, avisos);
   const { items: delDataset, casos } = leerDataset(opt.raiz, errores);
 
-  const integradas = opt.completo ? null : (opt.integradas || tareasIntegradas(opt.raiz));
-  const exigida = (tarea) => opt.completo || integradas.includes(tarea);
+  const integradasGit = opt.integradas || tareasIntegradas(opt.raiz);
+  const integradas = opt.completo ? null : integradasGit;
+  // Tareas con "solo_si_integrada" (T-13, T-14: la web es P2) se exigen solo cuando estan integradas, tambien en --completo.
+  const soloSiIntegrada = new Set(Object.entries(asignacionTareas(opt.raiz)).filter(([, d]) => d.solo_si_integrada).map(([t]) => t));
+  const exigida = (tarea) => (opt.completo && !soloSiIntegrada.has(tarea)) || integradasGit.includes(tarea);
 
   // (a) ids inexistentes
   const evidencia = new Map(); // id -> [items]
-  for (const it of [...pruebas, ...marcadores, ...delDataset]) {
+  for (const it of [...pruebas, ...marcadores, ...marcadoresWeb, ...informesQa, ...delDataset]) {
     if (!ID_CRITERIO.test(it.id)) { errores.push(`(a) ${it.fuente} ${it.archivo} ${it.nombre}: id de criterio mal formado '${it.id}'`); continue; }
     if (!criterios.has(it.id)) {
       const lap = lapidas.includes(it.id.split('.')[0]) ? ' (escenario fusionado: lapida)' : '';
@@ -244,7 +313,9 @@ function main() {
     const fuentesValidas = c.nivel === 'eval' ? ['dataset']
       : c.nivel === 'ret' ? ['dataset', 'test']
         : c.nivel === 'cont' ? ['test', 'smoke']
-          : ['test'];
+          : c.nivel === 'web' || c.nivel === 'e2e' ? ['web']
+            : c.nivel === 'qa' ? ['qa']
+              : ['test'];
     const validas = ev.filter((e) => fuentesValidas.includes(e.fuente));
     const exigidoAqui = exigida(tarea);
     let estado;
@@ -265,6 +336,11 @@ function main() {
         if (e.fuente === 'test' && !CARPETA_POR_NIVEL[c.nivel].includes(e.proyecto)) {
           avisos.push(`${c.id} [${c.nivel}] probado en ${e.proyecto} (se esperaba ${CARPETA_POR_NIVEL[c.nivel].join(' o ')})`);
         }
+      }
+    }
+    if (c.nivel === 'web' || c.nivel === 'e2e') {
+      for (const e of validas) {
+        if (e.proyecto !== c.nivel) avisos.push(`${c.id} [${c.nivel}] probado en ${e.archivo} (se esperaba ${c.nivel === 'e2e' ? 'web/e2e/' : 'fuera de web/e2e/'})`);
       }
     }
     filas.push({
@@ -296,7 +372,7 @@ function main() {
   out.push('', '`*` = tarea exigida en este modo.', '');
   out.push('## Resumen', '');
   out.push(`- Criterios: ${resumen.totalCriterios} · con prueba/caso: ${resumen.ok} · FALTA: ${resumen.falta} · pendientes (tarea no integrada): ${resumen.pendientes} · no exigidos: ${resumen.noExigidos}`);
-  out.push(`- Casos en el dataset: ${resumen.casosDataset} · pruebas con Trait Criterio: ${pruebas.length}`);
+  out.push(`- Casos en el dataset: ${resumen.casosDataset} · pruebas con Trait Criterio: ${pruebas.length} · marcadores web: ${marcadoresWeb.length} · informes qa: ${informesQa.length}`);
   if (avisos.length) { out.push('', '## Avisos (no bloquean)', ...avisos.map((a) => `- ${a}`)); }
   if (errores.length) { out.push('', '## ERRORES (bloquean)', ...errores.map((e) => `- ${e}`)); }
   out.push('', errores.length ? `RESULTADO: FALLA (${errores.length} error(es))` : 'RESULTADO: OK');

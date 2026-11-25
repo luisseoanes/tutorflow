@@ -1,0 +1,40 @@
+# Herramientas del frontend en Docker para la fabrica (T-12, como scripts/sdk/ de INT-007): nada se instala en el host.
+# Uso desde la raiz del repo o worktree:
+#   docker compose -f scripts/web/compose.yml run --rm node npm ci
+#   docker compose -f scripts/web/compose.yml run --rm node npm test
+#   docker compose -f scripts/web/compose.yml run --rm node npx tsc --noEmit
+#   docker compose -f scripts/web/compose.yml run --rm node npm run build
+#   docker compose -f scripts/web/compose.yml run --rm playwright npx playwright test
+# Los e2e contra la app real levantan antes el compose principal (perfil web, sin llave) y la alcanzan por
+# host.docker.internal (puertos publicados 3000 y 8080); ver scripts/web/README.md.
+name: tutorflow-web-tools
+
+x-comun: &comun
+  working_dir: /work/web
+  volumes:
+    - ../..:/work
+    # node_modules vive en un volumen (binarios de Linux), no en el host; lo comparten node y playwright.
+    - web-node-modules:/work/web/node_modules
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  environment:
+    CI: "true"
+    # La app servida por el compose principal, vista desde el contenedor. Playwright la usa como baseURL y para la API real.
+    E2E_BASE_URL: http://host.docker.internal:3000
+    E2E_API_URL: http://host.docker.internal:8080
+    npm_config_update_notifier: "false"
+
+services:
+  node:
+    <<: *comun
+    image: node:22.12.0-bookworm-slim
+
+  # La version de la imagen DEBE coincidir con la de @playwright/test en web/package.json (version exacta, sin ^ ni ~).
+  playwright:
+    <<: *comun
+    image: mcr.microsoft.com/playwright:v1.49.1-noble
+    ipc: host
+    init: true
+
+volumes:
+  web-node-modules:

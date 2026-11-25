@@ -189,6 +189,133 @@ jobs:
         if: always()
         run: docker compose -p tutorflow-smoke -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml down -v --remove-orphans
 
+  # Propiedad de rutas (FABRICA 5.2, T-12): cada commit con 'Agente: X' solo toca las rutas de X (scripts/propiedad/rutas.json).
+  propiedad:
+    name: propiedad
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      BASE_PR: ${{ github.event.pull_request.base.sha }}
+      HEAD_PR: ${{ github.event.pull_request.head.sha }}
+      BEFORE_PUSH: ${{ github.event.before }}
+      SHA_PUSH: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "20"
+      - name: Autoprueba del verificador (casos rojos y verdes sobre un repo temporal)
+        run: node scripts/propiedad/verificar.js --autoprueba
+      - name: Rutas por Agente en los commits del rango
+        run: |
+          if [ -n "$BASE_PR" ]; then
+            RANGO="$BASE_PR..$HEAD_PR"
+          elif [ -z "$BEFORE_PUSH" ] || [ "$BEFORE_PUSH" = "0000000000000000000000000000000000000000" ]; then
+            RANGO="$SHA_PUSH"
+          else
+            RANGO="$BEFORE_PUSH..$SHA_PUSH"
+          fi
+          echo "Rango evaluado: $RANGO"
+          node scripts/propiedad/verificar.js --rango "$RANGO"
+
+  # Interfaz web (SPEC-WEB, FABRICA 5.2). Bloqueante cuando corre: en PR solo si el PR toca web/**; en main siempre que exista web/.
+  # Mientras web/package.json no exista (T-13 sin integrar) los pasos se omiten y lo dicen: no es un verde por haber probado algo.
+  web:
+    name: web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BASE_PR: ${{ github.event.pull_request.base.sha }}
+      HEAD_PR: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Decidir si aplica
+        id: cambios
+        run: |
+          if [ ! -f web/package.json ]; then
+            echo "aplica=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::web/ no existe aun (web/package.json ausente): el job web NO ejecuto nada. No es una verificacion de la web."
+          elif [ -n "$BASE_PR" ] && ! git diff --name-only "$BASE_PR...$HEAD_PR" | grep -Eq '^(web/|scripts/web/)'; then
+            echo "aplica=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::El PR no toca web/**: el job web se omite."
+          else
+            echo "aplica=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4.4.0
+        if: steps.cambios.outputs.aplica == 'true'
+        with:
+          node-version: "22.12.0"
+      - name: npm ci
+        if: steps.cambios.outputs.aplica == 'true'
+        working-directory: web
+        run: npm ci
+      - name: tsc --noEmit (strict)
+        if: steps.cambios.outputs.aplica == 'true'
+        working-directory: web
+        run: npx tsc --noEmit
+      - name: Pruebas [web] (Vitest, axe en jsdom)
+        if: steps.cambios.outputs.aplica == 'true'
+        working-directory: web
+        run: npm test
+      - name: vite build
+        if: steps.cambios.outputs.aplica == 'true'
+        working-directory: web
+        run: npm run build
+
+  # Playwright [e2e] contra el servicio web + API SIN llave (override de T-07b). Nunca usa secretos ni consume cuota del LLM.
+  web-e2e:
+    name: web-e2e
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_PR: ${{ github.event.pull_request.base.sha }}
+      HEAD_PR: ${{ github.event.pull_request.head.sha }}
+      PROYECTO: tutorflow-web-e2e
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Decidir si aplica
+        id: cambios
+        run: |
+          if [ ! -f web/package.json ] || [ ! -f web/Dockerfile ]; then
+            echo "aplica=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::web/ no existe aun (falta web/package.json o web/Dockerfile): el job web-e2e NO ejecuto nada. No es una verificacion de la web."
+          elif [ -n "$BASE_PR" ] && ! git diff --name-only "$BASE_PR...$HEAD_PR" | grep -Eq '^(web/|scripts/web/|docker-compose\.yml|src/|Dockerfile)'; then
+            echo "aplica=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::El PR no toca web/**, compose ni la API: el job web-e2e se omite."
+          else
+            echo "aplica=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Levantar API sin llave + servicio web (perfil web, override de T-07b)
+        if: steps.cambios.outputs.aplica == 'true'
+        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml --profile web up -d --build --wait
+      - name: Playwright [e2e] (imagen oficial fijada, scripts/web/compose.yml)
+        if: steps.cambios.outputs.aplica == 'true'
+        run: docker compose -f scripts/web/compose.yml run --rm playwright sh -c "npm ci && npx playwright test"
+      - name: Publicar informe y trazas de Playwright
+        if: always() && steps.cambios.outputs.aplica == 'true'
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: web-e2e
+          path: |
+            web/playwright-report
+            web/test-results
+          if-no-files-found: ignore
+      - name: Logs de los servicios si fallo
+        if: failure() && steps.cambios.outputs.aplica == 'true'
+        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml --profile web logs --no-color --tail 80
+      - name: Apagar compose (siempre)
+        if: always() && steps.cambios.outputs.aplica == 'true'
+        run: docker compose -p "$PROYECTO" -f docker-compose.yml -f scripts/smoke/compose.sin-llave.yml --profile web down -v --remove-orphans
+
   # NO bloqueante (FABRICA.md §5.2): llama al LLM real. Solo por ejecucion manual y se omite limpiamente sin el secreto LLM_API_KEY.
   evals-llm:
     name: evals-llm
